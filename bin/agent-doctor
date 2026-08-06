@@ -1,0 +1,121 @@
+#!/usr/bin/env bash
+set -u
+
+installation_only=false
+case "${1:-}" in
+  "") ;;
+  --installation-only) installation_only=true ;;
+  *)
+    echo "Usage: bin/agent-doctor [--installation-only]" >&2
+    exit 2
+    ;;
+esac
+
+versions_file="$(dirname "$0")/../.devcontainer/agent-versions.env"
+if [[ ! -r "$versions_file" ]]; then
+  echo "Agent version contract is missing: $versions_file" >&2
+  exit 1
+fi
+
+# shellcheck disable=SC1090
+source "$versions_file"
+
+status=0
+
+check_version() {
+  local label="$1"
+  local expected="$2"
+  shift 2
+
+  local output
+  if output="$("$@" 2>&1)"; then
+    local normalized_output
+    normalized_output="$(printf '%s' "$output" | tr '[:space:]' ' ' | tr -s ' ')"
+    if [[ " $normalized_output " == *" $expected "* ]]; then
+      printf '%-24s %s\n' "$label" "$output"
+    else
+      printf '%-24s version mismatch: expected %s, found %s\n' "$label" "$expected" "$output"
+      status=1
+    fi
+  else
+    printf '%-24s unavailable\n' "$label"
+    status=1
+  fi
+}
+
+check_authentication() {
+  local label="$1"
+  local sign_in_command="$2"
+  shift 2
+
+  if "$@" >/dev/null 2>&1; then
+    printf '%-24s authenticated\n' "$label"
+  else
+    printf '%-24s sign in with: %s\n' "$label" "$sign_in_command"
+    status=1
+  fi
+}
+
+check_version "Claude Code" "$CLAUDE_CODE_VERSION" claude --version
+check_version "Codex" "$CODEX_VERSION" codex --version
+check_version "First Draft CLI" "$FIRSTDRAFT_CLI_VERSION" firstdraft --version
+
+if [[ "$installation_only" == "true" ]]; then
+  if claude auth status --help >/dev/null 2>&1 &&
+    claude plugin list --help >/dev/null 2>&1 &&
+    codex login status --help >/dev/null 2>&1 &&
+    codex login --device-auth --help >/dev/null 2>&1; then
+    printf '%-24s available\n' "Agent command contract"
+  else
+    printf '%-24s unavailable\n' "Agent command contract"
+    status=1
+  fi
+  exit "$status"
+fi
+
+check_authentication "Claude authentication" "claude auth login" claude auth status --text
+check_authentication "Codex authentication" "codex login --device-auth" codex login status
+
+if [[ -n "${FIRSTDRAFT_API_TOKEN:-}" ]]; then
+  printf '%-24s present (value not shown)\n' "First Draft CLI token"
+else
+  printf '%-24s absent (Claude plugin may be configured separately)\n' "First Draft CLI token"
+fi
+
+if [[ -n "${FIRSTDRAFT_API_URL:-}" ]]; then
+  printf '%-24s override configured (value not shown)\n' "First Draft CLI origin"
+else
+  printf '%-24s https://firstdraft.com (CLI default)\n' "First Draft CLI origin"
+fi
+
+skill_path="$HOME/.agents/skills/create-full-stack-app"
+if [[ -r "$skill_path/SKILL.md" ]] &&
+  [[ "$(git -C "$skill_path" rev-parse HEAD 2>/dev/null)" == "$FIRSTDRAFT_SKILLS_REVISION" ]]; then
+  printf '%-24s %s\n' "First Draft Codex Skill" "$FIRSTDRAFT_SKILLS_REVISION"
+else
+  printf '%-24s missing or revision mismatch\n' "First Draft Codex Skill"
+  status=1
+fi
+
+if claude plugin list --json 2>/dev/null | node -e '
+  let input = "";
+  process.stdin.on("data", (chunk) => { input += chunk; });
+  process.stdin.on("end", () => {
+    let parsed;
+    try {
+      parsed = JSON.parse(input);
+    } catch {
+      process.exit(2);
+    }
+    const plugins = Array.isArray(parsed) ? parsed : parsed.plugins;
+    if (!Array.isArray(plugins)) process.exit(2);
+    process.exit(plugins.some((plugin) => plugin.id === "firstdraft@firstdraft-skills" && plugin.enabled) ? 0 : 1);
+  });
+'; then
+  printf '%-24s installed and enabled\n' "First Draft Claude plugin"
+else
+  printf '%-24s start claude and accept the project plugin installation\n' "First Draft Claude plugin"
+  status=1
+fi
+
+exit "$status"

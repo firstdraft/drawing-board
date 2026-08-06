@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+devcontainer_dir="$(cd "$(dirname "$0")" && pwd)"
+
+# shellcheck disable=SC1091
+source "$devcontainer_dir/agent-versions.env"
+
+if [[ "$(id -u)" == "0" ]]; then
+  echo "Agent setup must run as the non-root devcontainer user." >&2
+  exit 1
+fi
+
+export NPM_CONFIG_CACHE="${NPM_CONFIG_CACHE:-$HOME/.cache/npm}"
+export PATH="$HOME/.local/bin:$PATH"
+
+skills_cache_root="$HOME/.cache/firstdraft/skills"
+mkdir -p "$HOME/.agents/skills" "$skills_cache_root" "$NPM_CONFIG_CACHE" "$HOME/.local"
+
+npm install --global --prefix "$HOME/.local" \
+  "@anthropic-ai/claude-code@$CLAUDE_CODE_VERSION" \
+  "@firstdraft.com/cli@$FIRSTDRAFT_CLI_VERSION" \
+  "@openai/codex@$CODEX_VERSION"
+
+skills_checkout="$skills_cache_root/$FIRSTDRAFT_SKILLS_REVISION"
+skill_source="$skills_checkout/skills/create-full-stack-app"
+
+if [[ ! -d "$skills_checkout/.git" ]]; then
+  if [[ -e "$skills_checkout" ]]; then
+    echo "Incomplete First Draft Skill cache at $skills_checkout; preserve it for inspection." >&2
+    exit 1
+  fi
+
+  temporary_checkout="$(mktemp -d "$skills_cache_root/.checkout.XXXXXX")"
+  git -C "$temporary_checkout" init --quiet
+  git -C "$temporary_checkout" remote add origin https://github.com/firstdraft/skills.git
+  git -C "$temporary_checkout" fetch --quiet --depth=1 origin "$FIRSTDRAFT_SKILLS_REVISION"
+  git -C "$temporary_checkout" checkout --quiet --detach FETCH_HEAD
+  mv "$temporary_checkout" "$skills_checkout"
+fi
+
+if [[ "$(git -C "$skills_checkout" rev-parse HEAD)" != "$FIRSTDRAFT_SKILLS_REVISION" ]]; then
+  echo "First Draft Skill cache revision does not match the configured revision." >&2
+  exit 1
+fi
+
+if [[ ! -r "$skill_source/SKILL.md" ]]; then
+  echo "The configured First Draft Skill is missing SKILL.md." >&2
+  exit 1
+fi
+
+codex_plugin_name="$(node -e '
+  const path = require("node:path");
+  const manifest = require(path.resolve(process.argv[1], ".claude-plugin/plugin.json"));
+  process.stdout.write(`${manifest.name}:create-full-stack-app`);
+' "$skills_checkout")"
+if [[ "$codex_plugin_name" != "$FIRSTDRAFT_CODEX_SKILL_NAME" ]]; then
+  echo "The configured Codex Skill name does not match the pinned source plugin." >&2
+  exit 1
+fi
+
+skill_link="$HOME/.agents/skills/create-full-stack-app"
+if [[ -e "$skill_link" && ! -L "$skill_link" ]]; then
+  echo "$skill_link already exists and is not a managed symlink; preserving it." >&2
+  exit 1
+fi
+ln -sfn "$skill_source" "$skill_link"
+
+claude --version
+codex --version
+firstdraft --version
