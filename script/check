@@ -36,21 +36,34 @@ case "$staging_status" in
     ;;
 esac
 
-if ! node -e '
+if ! FIRSTDRAFT_CLAUDE_PLUGIN_ID="$FIRSTDRAFT_CLAUDE_PLUGIN_ID" node -e '
   const settings = JSON.parse(require("node:fs").readFileSync(".claude/settings.json", "utf8"));
-  const options = settings.pluginConfigs?.["firstdraft@firstdraft-skills"]?.options;
-  process.exit(options?.api_url === "https://firstdraft.com" ? 0 : 1);
+  const pluginId = process.env.FIRSTDRAFT_CLAUDE_PLUGIN_ID;
+  const enabledIds = Object.keys(settings.enabledPlugins ?? {});
+  const configuredIds = Object.keys(settings.pluginConfigs ?? {});
+  const options = settings.pluginConfigs?.[pluginId]?.options;
+  const valid = enabledIds.length === 1 && enabledIds[0] === pluginId &&
+    settings.enabledPlugins[pluginId] === true && configuredIds.length === 1 &&
+    configuredIds[0] === pluginId && options?.api_url === "https://firstdraft.com";
+  process.exit(valid ? 0 : 1);
 '; then
-  echo "Claude plugin configuration must default to https://firstdraft.com." >&2
+  echo "Claude plugin configuration must use the pinned ID and production origin." >&2
   exit 1
 fi
 
-settings_skill_ref="$(node -e '
+claude_marketplace_name="${FIRSTDRAFT_CLAUDE_PLUGIN_ID#*@}"
+if [[ -z "$claude_marketplace_name" || "$claude_marketplace_name" == "$FIRSTDRAFT_CLAUDE_PLUGIN_ID" ]]; then
+  echo "The configured Claude plugin ID must include its marketplace." >&2
+  exit 1
+fi
+
+settings_skill_ref="$(FIRSTDRAFT_CLAUDE_MARKETPLACE="$claude_marketplace_name" node -e '
   const settings = JSON.parse(require("node:fs").readFileSync(".claude/settings.json", "utf8"));
-  process.stdout.write(settings.extraKnownMarketplaces?.["firstdraft-skills"]?.source?.ref ?? "");
+  const marketplace = process.env.FIRSTDRAFT_CLAUDE_MARKETPLACE;
+  process.stdout.write(settings.extraKnownMarketplaces?.[marketplace]?.source?.ref ?? "");
 ')"
 if [[ "$settings_skill_ref" != "$FIRSTDRAFT_SKILLS_REVISION" ]]; then
-  echo "Claude and Codex must use the same immutable First Draft Skill revision." >&2
+  echo "The configured Claude marketplace must use the pinned First Draft Skill revision." >&2
   exit 1
 fi
 

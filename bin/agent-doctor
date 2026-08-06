@@ -97,7 +97,7 @@ else
   status=1
 fi
 
-if claude plugin list --json 2>/dev/null | node -e '
+if claude plugin list --json 2>/dev/null | FIRSTDRAFT_CLAUDE_PLUGIN_ID="$FIRSTDRAFT_CLAUDE_PLUGIN_ID" node -e '
   let input = "";
   process.stdin.on("data", (chunk) => { input += chunk; });
   process.stdin.on("end", () => {
@@ -109,7 +109,8 @@ if claude plugin list --json 2>/dev/null | node -e '
     }
     const plugins = Array.isArray(parsed) ? parsed : parsed.plugins;
     if (!Array.isArray(plugins)) process.exit(2);
-    process.exit(plugins.some((plugin) => plugin.id === "firstdraft@firstdraft-skills" && plugin.enabled) ? 0 : 1);
+    const pluginId = process.env.FIRSTDRAFT_CLAUDE_PLUGIN_ID;
+    process.exit(plugins.some((plugin) => plugin.id === pluginId && plugin.enabled) ? 0 : 1);
   });
 '; then
   printf '%-24s installed and enabled\n' "First Draft Claude plugin"
