@@ -49,6 +49,18 @@ if [[ ! -r "$skill_source/SKILL.md" ]]; then
   exit 1
 fi
 
+claude_plugin_id="$(node -e '
+  const path = require("node:path");
+  const marketplace = require(path.resolve(process.argv[1], ".claude-plugin/marketplace.json"));
+  const plugin = marketplace.plugins?.length === 1 ? marketplace.plugins[0] : {};
+  const id = plugin.name && marketplace.name ? `${plugin.name}@${marketplace.name}` : "";
+  process.stdout.write(id);
+' "$skills_checkout")"
+if [[ "$claude_plugin_id" != "$FIRSTDRAFT_CLAUDE_PLUGIN_ID" ]]; then
+  echo "The configured Claude plugin ID does not match the pinned marketplace." >&2
+  exit 1
+fi
+
 codex_plugin_name="$(node -e '
   const path = require("node:path");
   const manifest = require(path.resolve(process.argv[1], ".claude-plugin/plugin.json"));
