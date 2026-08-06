@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+# Keep these shared configurations in strict JSON, a machine-checkable subset
+# of the JSONC accepted by the devcontainer reader.
+node -e 'JSON.parse(require("node:fs").readFileSync(".devcontainer/devcontainer.json", "utf8"))'
+node -e 'JSON.parse(require("node:fs").readFileSync(".claude/settings.json", "utf8"))'
+
+# shellcheck disable=SC1091
+source .devcontainer/agent-versions.env
+
+for script in .devcontainer/setup-agents bin/agent-doctor bin/review-plan-with-claude bin/review-plan-with-codex script/check script/devcontainer-smoke; do
+  bash -n "$script"
+  if [[ ! -x "$script" ]]; then
+    echo "$script must be executable." >&2
+    exit 1
+  fi
+done
+
+set +e
+grep -En 'FIRSTDRAFT_API_URL.*staging|"api_url"[[:space:]]*:[[:space:]]*"https://staging' \
+  .devcontainer/agent-versions.env .devcontainer/devcontainer.json .devcontainer/setup-agents .claude/settings.json
+staging_status=$?
+set -e
+case "$staging_status" in
+  0)
+    echo "Staging must not be the checked-in default." >&2
+    exit 1
+    ;;
+  1) ;;
+  *)
+    echo "The staging-default check could not inspect its inputs." >&2
+    exit 1
+    ;;
+esac
+
+if ! node -e '
+  const settings = JSON.parse(require("node:fs").readFileSync(".claude/settings.json", "utf8"));
+  const options = settings.pluginConfigs?.["firstdraft@firstdraft-skills"]?.options;
+  process.exit(options?.api_url === "https://firstdraft.com" ? 0 : 1);
+'; then
+  echo "Claude plugin configuration must default to https://firstdraft.com." >&2
+  exit 1
+fi
+
+settings_skill_ref="$(node -e '
+  const settings = JSON.parse(require("node:fs").readFileSync(".claude/settings.json", "utf8"));
+  process.stdout.write(settings.extraKnownMarketplaces?.["firstdraft-skills"]?.source?.ref ?? "");
+')"
+if [[ "$settings_skill_ref" != "$FIRSTDRAFT_SKILLS_REVISION" ]]; then
+  echo "Claude and Codex must use the same immutable First Draft Skill revision." >&2
+  exit 1
+fi
+
+set +e
+git grep --untracked -IEn '(fd_[A-Za-z0-9_-]{20,}|FIRSTDRAFT_API_TOKEN=.+|gh[opsu]_[A-Za-z0-9]{20,})' \
+  -- . ':(exclude)script/check'
+credential_status=$?
+set -e
+case "$credential_status" in
+  0)
+    echo "A credential-like value was found in the repository." >&2
+    exit 1
+    ;;
+  1) ;;
+  *)
+    echo "The credential scan could not inspect the repository." >&2
+    exit 1
+    ;;
+esac
+
+echo "Drawing Board contract checks passed."

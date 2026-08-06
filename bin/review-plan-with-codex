@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ ! -r .firstdraft/foundation-plan.json ]]; then
+  echo "No readable .firstdraft/foundation-plan.json exists yet." >&2
+  exit 1
+fi
+
+exec codex --sandbox read-only --ask-for-approval never exec \
+  "Review the current .firstdraft/foundation-plan.json using the installed create-full-stack-app Skill and its references. Work read-only: do not edit files, invoke network commands, request Compile, or change external state. Lead with material product ambiguities, contradictions, invalid structure, unsupported assumptions, and missing decisions that would change the Foundation Plan. Preserve intentional unsupported product meaning. Include exact JSON paths. If there are no material findings, say so plainly."
