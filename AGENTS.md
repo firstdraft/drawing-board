@@ -13,8 +13,11 @@ GitHub repository; never treat this repository as the generated Rails applicatio
   Git diff.
 - Use the `firstdraft` CLI supplied by the active Claude plugin or the pinned standalone installation. Do not call
   the service with improvised HTTP or install another CLI version.
-- The default service is `https://firstdraft.com`. Use staging only when the user has deliberately configured both
-  the standalone CLI and Claude plugin for staging before the first successful push.
+- The standalone CLI defaults to `https://firstdraft.com`, while setup configures this qualification release's
+  Claude plugin for `https://staging.firstdraft.com`. Claude plugin options live in Claude's user-scoped
+  configuration and secure credential storage, never in this repository. For Claude-only installation diagnostics,
+  use `bin/agent-doctor --installation-only`. When Codex or the standalone CLI is configured, use the full
+  `bin/agent-doctor` to confirm both clients target the same service before the first successful push.
 
 ## Collaboration and credentials
 

@@ -6,7 +6,6 @@ cd "$(dirname "$0")/.."
 # Keep these shared configurations in strict JSON, a machine-checkable subset
 # of the JSONC accepted by the devcontainer reader.
 node -e 'JSON.parse(require("node:fs").readFileSync(".devcontainer/devcontainer.json", "utf8"))'
-node -e 'JSON.parse(require("node:fs").readFileSync(".claude/settings.json", "utf8"))'
 
 # shellcheck disable=SC1091
 source .devcontainer/agent-versions.env
@@ -19,35 +18,31 @@ for script in .devcontainer/setup-agents bin/agent-doctor bin/review-plan-with-c
   fi
 done
 
+if [[ "$FIRSTDRAFT_CLI_DEFAULT_API_URL" != "https://firstdraft.com" || \
+  "$FIRSTDRAFT_CLAUDE_PLUGIN_DEFAULT_API_URL" != "https://staging.firstdraft.com" ]]; then
+  echo "The standalone and Claude plugin origins must match the documented qualification contract." >&2
+  exit 1
+fi
+
 set +e
-grep -En 'FIRSTDRAFT_API_URL.*staging|"api_url"[[:space:]]*:[[:space:]]*"https://staging' \
-  .devcontainer/agent-versions.env .devcontainer/devcontainer.json .devcontainer/setup-agents .claude/settings.json
-staging_status=$?
+grep -En '(^|[^A-Z_])FIRSTDRAFT_API_URL([[:space:]]*=|[[:space:]]*":)' \
+  .devcontainer/devcontainer.json .devcontainer/setup-agents
+configured_origin_status=$?
 set -e
-case "$staging_status" in
+case "$configured_origin_status" in
   0)
-    echo "Staging must not be the checked-in default." >&2
+    echo "The devcontainer must not export a First Draft origin; users select it before their first push." >&2
     exit 1
     ;;
   1) ;;
   *)
-    echo "The staging-default check could not inspect its inputs." >&2
+    echo "The configured-origin check could not inspect its inputs." >&2
     exit 1
     ;;
 esac
 
-if ! FIRSTDRAFT_CLAUDE_PLUGIN_ID="$FIRSTDRAFT_CLAUDE_PLUGIN_ID" node -e '
-  const settings = JSON.parse(require("node:fs").readFileSync(".claude/settings.json", "utf8"));
-  const pluginId = process.env.FIRSTDRAFT_CLAUDE_PLUGIN_ID;
-  const enabledIds = Object.keys(settings.enabledPlugins ?? {});
-  const configuredIds = Object.keys(settings.pluginConfigs ?? {});
-  const options = settings.pluginConfigs?.[pluginId]?.options;
-  const valid = enabledIds.length === 1 && enabledIds[0] === pluginId &&
-    settings.enabledPlugins[pluginId] === true && configuredIds.length === 1 &&
-    configuredIds[0] === pluginId && options?.api_url === "https://firstdraft.com";
-  process.exit(valid ? 0 : 1);
-'; then
-  echo "Claude plugin configuration must use the pinned ID and production origin." >&2
+if [[ -e .claude/settings.json ]]; then
+  echo "Claude plugin installation is owned by setup-agents, not project settings." >&2
   exit 1
 fi
 
@@ -57,13 +52,23 @@ if [[ -z "$claude_marketplace_name" || "$claude_marketplace_name" == "$FIRSTDRAF
   exit 1
 fi
 
-settings_skill_ref="$(FIRSTDRAFT_CLAUDE_MARKETPLACE="$claude_marketplace_name" node -e '
-  const settings = JSON.parse(require("node:fs").readFileSync(".claude/settings.json", "utf8"));
-  const marketplace = process.env.FIRSTDRAFT_CLAUDE_MARKETPLACE;
-  process.stdout.write(settings.extraKnownMarketplaces?.[marketplace]?.source?.ref ?? "");
-')"
-if [[ "$settings_skill_ref" != "$FIRSTDRAFT_SKILLS_REVISION" ]]; then
-  echo "The configured Claude marketplace must use the pinned First Draft Skill revision." >&2
+if [[ ! "$FIRSTDRAFT_SKILLS_REVISION" =~ ^[0-9a-f]{40}$ ]]; then
+  echo "The First Draft Skill revision must be one exact commit SHA." >&2
+  exit 1
+fi
+
+for version in \
+  "$FIRSTDRAFT_CLI_VERSION" \
+  "$FIRSTDRAFT_CLAUDE_PLUGIN_VERSION" \
+  "$FIRSTDRAFT_CLAUDE_PLUGIN_CLI_VERSION"; do
+  if [[ ! "$version" =~ ^0\.[0-9]+\.[0-9]+$ ]]; then
+    echo "First Draft release versions must use ordinary pre-1.0 SemVer." >&2
+    exit 1
+  fi
+done
+
+if [[ "$FIRSTDRAFT_CLAUDE_PLUGIN_ID" != "firstdraft@$claude_marketplace_name" ]]; then
+  echo "The configured Claude plugin ID must use the First Draft marketplace name." >&2
   exit 1
 fi
 

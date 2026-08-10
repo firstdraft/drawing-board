@@ -2,6 +2,8 @@
 set -euo pipefail
 
 devcontainer_dir="$(cd "$(dirname "$0")" && pwd)"
+repository_root="$(cd "$devcontainer_dir/.." && pwd)"
+cd "$repository_root"
 
 # shellcheck disable=SC1091
 source "$devcontainer_dir/agent-versions.env"
@@ -49,6 +51,7 @@ if [[ ! -r "$skill_source/SKILL.md" ]]; then
   exit 1
 fi
 
+# shellcheck disable=SC2016
 claude_plugin_id="$(node -e '
   const path = require("node:path");
   const marketplace = require(path.resolve(process.argv[1], ".claude-plugin/marketplace.json"));
@@ -61,6 +64,36 @@ if [[ "$claude_plugin_id" != "$FIRSTDRAFT_CLAUDE_PLUGIN_ID" ]]; then
   exit 1
 fi
 
+# shellcheck disable=SC2016
+claude_plugin_release="$(node -e '
+  const path = require("node:path");
+  const marketplace = require(path.resolve(process.argv[1], ".claude-plugin/marketplace.json"));
+  const plugin = marketplace.plugins?.length === 1 ? marketplace.plugins[0] : {};
+  process.stdout.write([
+    plugin.version,
+    plugin.source?.source,
+    plugin.source?.package,
+    plugin.source?.version,
+    plugin.source?.registry,
+  ].join("\t"));
+' "$skills_checkout")"
+IFS=$'\t' read -r \
+  claude_plugin_version \
+  claude_plugin_source \
+  claude_plugin_package \
+  claude_plugin_package_version \
+  claude_plugin_registry \
+  <<<"$claude_plugin_release"
+if [[ "$claude_plugin_version" != "$FIRSTDRAFT_CLAUDE_PLUGIN_VERSION" || \
+  "$claude_plugin_source" != "npm" || \
+  "$claude_plugin_package" != "@firstdraft.com/claude-code" || \
+  "$claude_plugin_package_version" != "$FIRSTDRAFT_CLAUDE_PLUGIN_VERSION" || \
+  "$claude_plugin_registry" != "https://registry.npmjs.org/" ]]; then
+  echo "The configured Claude plugin release does not match the pinned marketplace." >&2
+  exit 1
+fi
+
+# shellcheck disable=SC2016
 codex_plugin_name="$(node -e '
   const path = require("node:path");
   const manifest = require(path.resolve(process.argv[1], ".claude-plugin/plugin.json"));
@@ -77,6 +110,109 @@ if [[ -e "$skill_link" && ! -L "$skill_link" ]]; then
   exit 1
 fi
 ln -sfn "$skill_source" "$skill_link"
+
+# Marketplace refs pin branches or tags, not commit SHAs. Register the verified
+# local checkout so Claude and Codex share one exact source revision.
+claude plugin marketplace add "$skills_checkout" --scope local </dev/null
+
+claude_marketplace_record() {
+  # shellcheck disable=SC2016
+  claude plugin marketplace list --json | \
+    FIRSTDRAFT_CLAUDE_MARKETPLACE="${FIRSTDRAFT_CLAUDE_PLUGIN_ID#*@}" node -e '
+      const marketplaces = JSON.parse(require("node:fs").readFileSync(0, "utf8"));
+      if (!Array.isArray(marketplaces)) process.exit(2);
+      const marketplace = marketplaces.find(({ name }) =>
+        name === process.env.FIRSTDRAFT_CLAUDE_MARKETPLACE,
+      );
+      if (!marketplace) return;
+      process.stdout.write(`${marketplace.source}\t${marketplace.path}`);
+    '
+}
+
+IFS=$'\t' read -r registered_marketplace_source registered_marketplace_path \
+  <<<"$(claude_marketplace_record)"
+if [[ "$registered_marketplace_source" != "directory" || \
+  "$registered_marketplace_path" != "$skills_checkout" || \
+  "$(git -C "$registered_marketplace_path" rev-parse HEAD 2>/dev/null)" != \
+    "$FIRSTDRAFT_SKILLS_REVISION" ]]; then
+  echo "Claude did not register the pinned First Draft marketplace checkout." >&2
+  exit 1
+fi
+
+claude_plugin_record() {
+  # shellcheck disable=SC2016
+  claude plugin list --json | \
+    FIRSTDRAFT_CLAUDE_PLUGIN_ID="$FIRSTDRAFT_CLAUDE_PLUGIN_ID" node -e '
+      let input = "";
+      process.stdin.on("data", (chunk) => { input += chunk; });
+      process.stdin.on("end", () => {
+        const parsed = JSON.parse(input);
+        const plugins = Array.isArray(parsed) ? parsed : parsed.plugins;
+        if (!Array.isArray(plugins)) process.exit(2);
+        const plugin = plugins.find(({ id, scope }) =>
+          id === process.env.FIRSTDRAFT_CLAUDE_PLUGIN_ID && scope === "local",
+        );
+        if (!plugin) return;
+        process.stdout.write(`${plugin.version}\t${plugin.scope}\t${plugin.enabled}`);
+      });
+    '
+}
+
+plugin_record="$(claude_plugin_record)"
+if [[ -z "$plugin_record" ]]; then
+  claude plugin install "$FIRSTDRAFT_CLAUDE_PLUGIN_ID" \
+    --scope local \
+    --config "api_url=$FIRSTDRAFT_CLAUDE_PLUGIN_DEFAULT_API_URL" \
+    </dev/null
+
+  claude_user_settings="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/settings.json"
+  if ! FIRSTDRAFT_CLAUDE_PLUGIN_ID="$FIRSTDRAFT_CLAUDE_PLUGIN_ID" \
+    FIRSTDRAFT_CLAUDE_PLUGIN_DEFAULT_API_URL="$FIRSTDRAFT_CLAUDE_PLUGIN_DEFAULT_API_URL" \
+    node -e '
+      const settings = JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8"));
+      const apiUrl = settings.pluginConfigs?.[process.env.FIRSTDRAFT_CLAUDE_PLUGIN_ID]
+        ?.options?.api_url;
+      process.exit(apiUrl === process.env.FIRSTDRAFT_CLAUDE_PLUGIN_DEFAULT_API_URL ? 0 : 1);
+    ' "$claude_user_settings"; then
+    echo "Claude did not store the configured First Draft API URL." >&2
+    exit 1
+  fi
+else
+  IFS=$'\t' read -r installed_plugin_version installed_plugin_scope installed_plugin_enabled \
+    <<<"$plugin_record"
+  if [[ "$installed_plugin_version" != "$FIRSTDRAFT_CLAUDE_PLUGIN_VERSION" ]]; then
+    claude plugin update "$FIRSTDRAFT_CLAUDE_PLUGIN_ID" --scope "$installed_plugin_scope" </dev/null
+  fi
+fi
+
+IFS=$'\t' read -r installed_plugin_version installed_plugin_scope installed_plugin_enabled \
+  <<<"$(claude_plugin_record)"
+if [[ "$installed_plugin_scope" != "local" ]]; then
+  echo "The First Draft Claude plugin was not installed at local scope." >&2
+  exit 1
+fi
+if [[ "$installed_plugin_enabled" != "true" ]]; then
+  claude plugin enable "$FIRSTDRAFT_CLAUDE_PLUGIN_ID" --scope local </dev/null
+fi
+
+IFS=$'\t' read -r installed_plugin_version installed_plugin_scope installed_plugin_enabled \
+  <<<"$(claude_plugin_record)"
+if [[ "$installed_plugin_version" != "$FIRSTDRAFT_CLAUDE_PLUGIN_VERSION" || \
+  "$installed_plugin_scope" != "local" || \
+  "$installed_plugin_enabled" != "true" ]]; then
+  echo "The installed First Draft Claude plugin does not match the configured release." >&2
+  exit 1
+fi
+
+IFS=$'\t' read -r registered_marketplace_source registered_marketplace_path \
+  <<<"$(claude_marketplace_record)"
+if [[ "$registered_marketplace_source" != "directory" || \
+  "$registered_marketplace_path" != "$skills_checkout" || \
+  "$(git -C "$registered_marketplace_path" rev-parse HEAD 2>/dev/null)" != \
+    "$FIRSTDRAFT_SKILLS_REVISION" ]]; then
+  echo "The installed plugin is not backed by the pinned First Draft marketplace checkout." >&2
+  exit 1
+fi
 
 claude --version
 codex --version

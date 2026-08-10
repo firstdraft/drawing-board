@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -u
 
+repository_root="$(cd "$(dirname "$0")/.." && pwd)" || exit 1
+cd "$repository_root" || exit 1
+
 installation_only=false
 case "${1:-}" in
   "") ;;
@@ -11,7 +14,7 @@ case "${1:-}" in
     ;;
 esac
 
-versions_file="$(dirname "$0")/../.devcontainer/agent-versions.env"
+versions_file="$repository_root/.devcontainer/agent-versions.env"
 if [[ ! -r "$versions_file" ]]; then
   echo "Agent version contract is missing: $versions_file" >&2
   exit 1
@@ -56,13 +59,144 @@ check_authentication() {
   fi
 }
 
+check_claude_plugin() {
+  local plugin_record
+  # shellcheck disable=SC2016
+  if ! plugin_record="$(claude plugin list --json 2>/dev/null | \
+    FIRSTDRAFT_CLAUDE_PLUGIN_ID="$FIRSTDRAFT_CLAUDE_PLUGIN_ID" node -e '
+      let input = "";
+      process.stdin.on("data", (chunk) => { input += chunk; });
+      process.stdin.on("end", () => {
+        const parsed = JSON.parse(input);
+        const plugins = Array.isArray(parsed) ? parsed : parsed.plugins;
+        if (!Array.isArray(plugins)) process.exit(2);
+        const matches = plugins.filter(({ id }) => id === process.env.FIRSTDRAFT_CLAUDE_PLUGIN_ID);
+        const plugin = matches.find(({ scope }) => scope === "local");
+        if (plugin) {
+          process.stdout.write(`local\t${plugin.version}\t${plugin.enabled}`);
+        } else if (matches.length > 0) {
+          process.stdout.write(`other\t${matches.map(({ scope }) => scope).join(",")}\t`);
+        }
+      });
+    ')"; then
+    printf '%-24s unavailable\n' "First Draft Claude plugin"
+    status=1
+    return
+  fi
+
+  if [[ -z "$plugin_record" ]]; then
+    printf '%-24s install with: claude plugin install %s --scope local\n' \
+      "First Draft Claude plugin" "$FIRSTDRAFT_CLAUDE_PLUGIN_ID"
+    status=1
+    return
+  fi
+
+  local record_kind installed_version installed_enabled
+  IFS=$'\t' read -r record_kind installed_version installed_enabled <<<"$plugin_record"
+  if [[ "$record_kind" == "other" ]]; then
+    printf '%-24s local install missing (found %s scope); rerun .devcontainer/setup-agents\n' \
+      "First Draft Claude plugin" "$installed_version"
+    status=1
+    return
+  fi
+  if [[ "$installed_version" != "$FIRSTDRAFT_CLAUDE_PLUGIN_VERSION" ]]; then
+    printf '%-24s version mismatch: expected %s, found %s (local scope)\n' \
+      "First Draft Claude plugin" "$FIRSTDRAFT_CLAUDE_PLUGIN_VERSION" \
+      "$installed_version"
+    status=1
+    return
+  fi
+  if [[ "$installed_enabled" != "true" ]]; then
+    printf '%-24s disabled (local scope); enable with: claude plugin enable %s --scope local\n' \
+      "First Draft Claude plugin" "$FIRSTDRAFT_CLAUDE_PLUGIN_ID"
+    status=1
+    return
+  fi
+
+  printf '%-24s %s, enabled (local scope)\n' \
+    "First Draft Claude plugin" "$installed_version"
+}
+
+check_origins() {
+  local cli_origin="${FIRSTDRAFT_API_URL:-$FIRSTDRAFT_CLI_DEFAULT_API_URL}"
+  cli_origin="${cli_origin%/}"
+  case "$cli_origin" in
+    "$FIRSTDRAFT_CLI_DEFAULT_API_URL"|"$FIRSTDRAFT_CLAUDE_PLUGIN_DEFAULT_API_URL")
+      printf '%-24s %s\n' "First Draft CLI origin" "$cli_origin"
+      ;;
+    *)
+      printf '%-24s unrecognized override (value not shown)\n' "First Draft CLI origin"
+      status=1
+      cli_origin=""
+      ;;
+  esac
+
+  local claude_settings_root="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+  local claude_settings="$claude_settings_root/settings.json"
+  local claude_origin=""
+  if [[ -r "$claude_settings" ]]; then
+    # Claude's documented userConfig contract stores non-sensitive options here.
+    # Reverify this reader whenever the pinned Claude Code version changes.
+    # shellcheck disable=SC2016
+    if ! claude_origin="$(
+      FIRSTDRAFT_CLAUDE_PLUGIN_ID="$FIRSTDRAFT_CLAUDE_PLUGIN_ID" \
+        FIRSTDRAFT_PRODUCTION_ORIGIN="$FIRSTDRAFT_CLI_DEFAULT_API_URL" \
+        FIRSTDRAFT_STAGING_ORIGIN="$FIRSTDRAFT_CLAUDE_PLUGIN_DEFAULT_API_URL" \
+        node -e '
+          const settings = JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8"));
+          const configuredOrigin = settings.pluginConfigs?.[process.env.FIRSTDRAFT_CLAUDE_PLUGIN_ID]
+            ?.options?.api_url;
+          const origin = configuredOrigin?.replace(/\/$/, "");
+          const allowed = [
+            process.env.FIRSTDRAFT_PRODUCTION_ORIGIN,
+            process.env.FIRSTDRAFT_STAGING_ORIGIN,
+          ];
+          if (origin !== undefined && !allowed.includes(origin)) process.exit(2);
+          process.stdout.write(origin ?? "");
+        ' "$claude_settings"
+    )"; then
+      printf '%-24s unrecognized user setting (value not shown); configure inside Claude with /plugin\n' \
+        "Claude plugin origin"
+      status=1
+      return
+    fi
+  fi
+
+  if [[ -z "$claude_origin" ]]; then
+    printf '%-24s not configured or unrecognized; configure inside Claude with /plugin\n' \
+      "Claude plugin origin"
+    status=1
+    return
+  fi
+
+  printf '%-24s %s\n' "Claude plugin origin" "$claude_origin"
+  if [[ -z "$cli_origin" ]]; then
+    printf '%-24s cannot compare; standalone origin is unrecognized\n' \
+      "First Draft origins"
+  elif [[ "$cli_origin" != "$claude_origin" ]]; then
+    printf '%-24s origins differ; align both clients before the first push\n' \
+      "First Draft origins"
+    status=1
+  else
+    printf '%-24s aligned\n' "First Draft origins"
+  fi
+}
+
 check_version "Claude Code" "$CLAUDE_CODE_VERSION" claude --version
 check_version "Codex" "$CODEX_VERSION" codex --version
 check_version "First Draft CLI" "$FIRSTDRAFT_CLI_VERSION" firstdraft --version
+check_claude_plugin
 
 if [[ "$installation_only" == "true" ]]; then
   if claude auth status --help >/dev/null 2>&1 &&
+    claude plugin marketplace add --help >/dev/null 2>&1 &&
+    claude plugin marketplace list --help >/dev/null 2>&1 &&
+    claude plugin marketplace update --help >/dev/null 2>&1 &&
+    claude plugin enable --help >/dev/null 2>&1 &&
+    claude plugin install --help >/dev/null 2>&1 &&
     claude plugin list --help >/dev/null 2>&1 &&
+    claude plugin list --available --help >/dev/null 2>&1 &&
+    claude plugin update --help >/dev/null 2>&1 &&
     codex login status --help >/dev/null 2>&1 &&
     codex login --device-auth --help >/dev/null 2>&1; then
     printf '%-24s available\n' "Agent command contract"
@@ -79,14 +213,12 @@ check_authentication "Codex authentication" "codex login --device-auth" codex lo
 if [[ -n "${FIRSTDRAFT_API_TOKEN:-}" ]]; then
   printf '%-24s present (value not shown)\n' "First Draft CLI token"
 else
-  printf '%-24s absent (Claude plugin may be configured separately)\n' "First Draft CLI token"
+  printf '%-24s absent; set the Codespaces secret for Codex and the standalone CLI\n' \
+    "First Draft CLI token"
+  status=1
 fi
 
-if [[ -n "${FIRSTDRAFT_API_URL:-}" ]]; then
-  printf '%-24s override configured (value not shown)\n' "First Draft CLI origin"
-else
-  printf '%-24s https://firstdraft.com (CLI default)\n' "First Draft CLI origin"
-fi
+check_origins
 
 skill_path="$HOME/.agents/skills/create-full-stack-app"
 if [[ -r "$skill_path/SKILL.md" ]] &&
@@ -94,28 +226,6 @@ if [[ -r "$skill_path/SKILL.md" ]] &&
   printf '%-24s %s\n' "First Draft Codex Skill" "$FIRSTDRAFT_SKILLS_REVISION"
 else
   printf '%-24s missing or revision mismatch\n' "First Draft Codex Skill"
-  status=1
-fi
-
-if claude plugin list --json 2>/dev/null | FIRSTDRAFT_CLAUDE_PLUGIN_ID="$FIRSTDRAFT_CLAUDE_PLUGIN_ID" node -e '
-  let input = "";
-  process.stdin.on("data", (chunk) => { input += chunk; });
-  process.stdin.on("end", () => {
-    let parsed;
-    try {
-      parsed = JSON.parse(input);
-    } catch {
-      process.exit(2);
-    }
-    const plugins = Array.isArray(parsed) ? parsed : parsed.plugins;
-    if (!Array.isArray(plugins)) process.exit(2);
-    const pluginId = process.env.FIRSTDRAFT_CLAUDE_PLUGIN_ID;
-    process.exit(plugins.some((plugin) => plugin.id === pluginId && plugin.enabled) ? 0 : 1);
-  });
-'; then
-  printf '%-24s installed and enabled\n' "First Draft Claude plugin"
-else
-  printf '%-24s start claude and accept the project plugin installation\n' "First Draft Claude plugin"
   status=1
 fi
 
