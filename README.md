@@ -15,6 +15,7 @@ request here, and the product flow does not require a GitHub personal access tok
 2. In that repository, select **Code → Codespaces → Create codespace on main**.
 3. Wait for the post-create setup to finish. Create a First Draft API token at
    <https://staging.firstdraft.com/api-tokens>. This is not a GitHub PAT.
+1. On <https://staging.firstdraft.com/projects>, click to "Connect GitHub App" and install it in your GitHub account.
 4. Open the generated `.env` file in the Codespace editor. Paste the token into the `FIRSTDRAFT_API_TOKEN` entry,
    save the file, and leave the staging URL unchanged. `.env` is mode `0600` and ignored by
    Git; do not paste its contents into agent chat or a shell command. It is a pragmatic development credential file
