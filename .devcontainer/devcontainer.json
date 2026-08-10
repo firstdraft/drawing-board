@@ -12,7 +12,7 @@
     "DISABLE_AUTOUPDATER": "1"
   },
   "remoteEnv": {
-    "PATH": "/home/node/.local/bin:${containerEnv:PATH}"
+    "PATH": "${containerWorkspaceFolder}/bin:/home/node/.local/bin:${containerEnv:PATH}"
   },
   "mounts": [
     "source=firstdraft-drawing-board-claude-${devcontainerId},target=/home/node/.claude,type=volume",

@@ -13,19 +13,22 @@ name the Skill or translate the request into a command.
   state: never print, paste, commit, edit as Plan content, or expose it to another service.
 - `.firstdraft/` is deliberately ignored by Git. Review the current Plan directly; do not infer its state from a
   Git diff.
-- Use the `firstdraft` CLI supplied by the active Claude plugin or the pinned standalone installation. Do not call
-  the service with improvised HTTP or install another CLI version.
-- The standalone CLI defaults to `https://firstdraft.com`, while setup configures this qualification release's
-  Claude plugin for `https://staging.firstdraft.com`. Claude plugin options live in Claude's user-scoped
-  configuration and secure credential storage, never in this repository. For Claude-only installation diagnostics,
-  use `bin/agent-doctor --installation-only`. When Codex or the standalone CLI is configured, use the full
-  `bin/agent-doctor` to confirm both clients target the same service before the first successful push.
+- Use `bin/firstdraft` for every First Draft command. When the installed Skill shows `firstdraft ...`, pass those
+  same arguments to this repository wrapper. It loads the ignored `.env`, requires staging, and launches the exact
+  pinned standalone CLI for both Claude and Codex. Do not bypass it, call the service with improvised HTTP, or
+  install another CLI version. If Codex's sandbox blocks the expected staging request, request approval for that
+  exact wrapper command; do not work around the sandbox or broaden network access.
+- Setup creates `.env` from `.env.example` without overwriting it. The user pastes the staging First Draft token
+  there once. Never read, print, edit, or commit `.env`; do not ask for `/plugin` configuration, Codespaces secrets,
+  shell exports, or a GitHub PAT. Use `bin/agent-doctor --installation-only` for installation diagnostics and the
+  full `bin/agent-doctor` to add validation of the shared wrapper and `.env` without printing the token.
 
 ## Collaboration and credentials
 
 - Keep one agent as the Plan writer at a time. The other agent may perform a read-only review with
   `bin/review-plan-with-claude` or `bin/review-plan-with-codex`.
-- Never print, log, commit, or request a First Draft token in chat. `bin/agent-doctor` reports presence only.
+- Never print, log, commit, or request a First Draft token in chat. The local `.env` is agent-readable development
+  credential delivery, not isolation from either agent; `bin/agent-doctor` reports presence only.
 - Never request a GitHub personal access token. Publication uses the GitHub account already connected to First Draft
   and creates a fresh private repository, not a branch or pull request in this Drawing Board.
 - Do not publish or release packages from this repository.

@@ -18,37 +18,55 @@ for script in .devcontainer/setup-agents bin/agent-doctor bin/review-plan-with-c
   fi
 done
 
-if [[ "$FIRSTDRAFT_CLI_DEFAULT_API_URL" != "https://firstdraft.com" || \
-  "$FIRSTDRAFT_CLAUDE_PLUGIN_DEFAULT_API_URL" != "https://staging.firstdraft.com" ]]; then
-  echo "The standalone and Claude plugin origins must match the documented qualification contract." >&2
+node --check bin/firstdraft
+if [[ ! -x bin/firstdraft ]]; then
+  echo "bin/firstdraft must be executable." >&2
+  exit 1
+fi
+node script/check-firstdraft-wrapper.mjs
+
+expected_bin_entries=$'bin/agent-doctor\nbin/firstdraft\nbin/review-plan-with-claude\nbin/review-plan-with-codex'
+actual_bin_entries="$(find bin -mindepth 1 -maxdepth 1 -print | sort)"
+if [[ "$actual_bin_entries" != "$expected_bin_entries" ]]; then
+  echo "Review the devcontainer PATH contract before adding another file under bin/." >&2
   exit 1
 fi
 
-set +e
-grep -En '(^|[^A-Z_])FIRSTDRAFT_API_URL([[:space:]]*=|[[:space:]]*":)' \
-  .devcontainer/devcontainer.json .devcontainer/setup-agents
-configured_origin_status=$?
-set -e
-case "$configured_origin_status" in
-  0)
-    echo "The devcontainer must not export a First Draft origin; users select it before their first push." >&2
-    exit 1
-    ;;
-  1) ;;
-  *)
-    echo "The configured-origin check could not inspect its inputs." >&2
-    exit 1
-    ;;
-esac
+if [[ "$(cat .env.example)" != $'FIRSTDRAFT_API_URL=https://staging.firstdraft.com\nFIRSTDRAFT_API_TOKEN=' ]]; then
+  echo ".env.example must select staging and leave its token blank." >&2
+  exit 1
+fi
+if ! git check-ignore --quiet .env || git ls-files --error-unmatch .env >/dev/null 2>&1; then
+  echo ".env must be ignored and untracked." >&2
+  exit 1
+fi
+
+workspace_path="$(node -e '
+  const configuration = JSON.parse(require("node:fs").readFileSync(".devcontainer/devcontainer.json"));
+  process.stdout.write(configuration.remoteEnv?.PATH ?? "");
+')"
+if [[ "$workspace_path" != '${containerWorkspaceFolder}/bin:/home/node/.local/bin:${containerEnv:PATH}' ]]; then
+  echo "The devcontainer PATH must prefer the Drawing Board wrapper." >&2
+  exit 1
+fi
+
+if [[ "$FIRSTDRAFT_CLI_DEFAULT_API_URL" != "https://firstdraft.com" || \
+  "$FIRSTDRAFT_STAGING_API_URL" != "https://staging.firstdraft.com" ]]; then
+  echo "The pinned releases no longer match the documented staging-wrapper contract." >&2
+  exit 1
+fi
 
 if [[ -e .claude/settings.json ]]; then
-  echo "Claude plugin installation is owned by setup-agents, not project settings." >&2
+  echo "Claude settings must remain user-scoped, not committed to the Drawing Board." >&2
   exit 1
 fi
 
-claude_marketplace_name="${FIRSTDRAFT_CLAUDE_PLUGIN_ID#*@}"
-if [[ -z "$claude_marketplace_name" || "$claude_marketplace_name" == "$FIRSTDRAFT_CLAUDE_PLUGIN_ID" ]]; then
-  echo "The configured Claude plugin ID must include its marketplace." >&2
+if [[ "$FIRSTDRAFT_CLAUDE_SKILL_NAME" != "create-full-stack-app" ]]; then
+  echo "The Claude Skill name must match the canonical Skill." >&2
+  exit 1
+fi
+if [[ "$FIRSTDRAFT_CODEX_SKILL_NAME" != "firstdraft:create-full-stack-app" ]]; then
+  echo "The Codex Skill name must match the canonical namespaced Skill." >&2
   exit 1
 fi
 
@@ -57,18 +75,8 @@ if [[ ! "$FIRSTDRAFT_SKILLS_REVISION" =~ ^[0-9a-f]{40}$ ]]; then
   exit 1
 fi
 
-for version in \
-  "$FIRSTDRAFT_CLI_VERSION" \
-  "$FIRSTDRAFT_CLAUDE_PLUGIN_VERSION" \
-  "$FIRSTDRAFT_CLAUDE_PLUGIN_CLI_VERSION"; do
-  if [[ ! "$version" =~ ^0\.[0-9]+\.[0-9]+$ ]]; then
-    echo "First Draft release versions must use ordinary pre-1.0 SemVer." >&2
-    exit 1
-  fi
-done
-
-if [[ "$FIRSTDRAFT_CLAUDE_PLUGIN_ID" != "firstdraft@$claude_marketplace_name" ]]; then
-  echo "The configured Claude plugin ID must use the First Draft marketplace name." >&2
+if [[ ! "$FIRSTDRAFT_CLI_VERSION" =~ ^0\.[0-9]+\.[0-9]+$ ]]; then
+  echo "The First Draft CLI version must use ordinary pre-1.0 SemVer." >&2
   exit 1
 fi
 
