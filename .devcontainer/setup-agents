@@ -217,3 +217,7 @@ fi
 claude --version
 codex --version
 firstdraft --version
+
+printf '\nDrawing Board setup complete.\n'
+printf 'Next: run `claude`, configure First Draft in `/plugin`, and describe the app you want.\n'
+printf 'A successful Compile returns a fresh private GitHub repository; it does not modify this Drawing Board.\n'

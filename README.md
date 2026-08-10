@@ -1,44 +1,41 @@
 # First Draft Drawing Board
 
-Start an application by talking with Claude Code or Codex in one shared, disposable workspace. The agent interviews
-you, maintains a Foundation Plan, and can ask First Draft to compile a valid candidate into a **separate private
-GitHub repository**.
+This template is a disposable workspace for describing one application. The intended path is deliberately simple:
 
-This repository is the drawing board, not the generated Rails application. After Compile succeeds, continue in a
-new checkout or Codespace created from the GitHub repository URL returned by First Draft.
+**Use this template → create a Codespace → run `claude` → describe the app → receive a new private GitHub repository.**
 
-## Start in a Codespace
+This repository remains the drawing board. A successful Compile creates the application in a **fresh private
+repository** owned by the GitHub account connected to First Draft. It does not add generated files or open a pull
+request here, and the product flow does not require a GitHub personal access token.
+
+## Make an app with Claude
 
 1. Select **Use this template** on GitHub and create your own repository.
 2. In that repository, select **Code → Codespaces → Create codespace on main**.
-3. Wait for the post-create setup to install the pinned agent tooling and First Draft Claude plugin.
-4. Authenticate Claude Code in the Codespace terminal:
-
-   ```sh
-   claude auth login
-   ```
-
-5. Create a First Draft API token at <https://staging.firstdraft.com/api-tokens>. Setup has already configured the
-   plugin's non-secret URL for staging, so the token must come from staging too. Keep the token out of agent chats,
-   shell commands, and repository files.
-6. If setup appeared incomplete, run `bin/agent-doctor --installation-only`. This checks the installed tools and
-   plugin without inspecting or printing the sensitive token.
-7. Start Claude from the repository root and trust the repository:
+3. Wait for the post-create setup to finish, then run Claude from the repository root:
 
    ```sh
    claude
    ```
 
-   Run `/plugin`, select **Installed → First Draft → Configure**, and enter the token only in the sensitive
-   token field. Project and local `pluginConfigs` are not supported by Claude, so do not put the token or URL in a
-   checked-in or ignored project settings file.
-8. Say, for example:
+   Complete Claude's sign-in and trust prompts if they appear.
+4. The first time you use First Draft in this Codespace, create a First Draft API token at
+   <https://staging.firstdraft.com/api-tokens>. This is not a GitHub PAT. In Claude, run `/plugin`, select
+   **Installed → First Draft → Configure**, and enter it only in the sensitive token field. Setup has already
+   selected staging's non-secret URL; do not put the token or URL in a repository file or agent chat.
+5. Say what you want in ordinary language, for example:
 
-   > Let's make an app that helps me inventory my home.
+   > Make me an app that helps me inventory my home.
+6. Answer Claude's follow-up questions and approve the exact Compile when you are ready. On success, Claude reports
+   the URL of the fresh private application repository. Open that repository in a new checkout or Codespace to
+   continue working on the generated app.
 
-The current First Draft path is experimental and intentionally narrow. The installed Skill tells the agent which
-Foundation Plan features and generated surfaces are currently supported. Compile creates a private GitHub
-repository; it does not deploy the application.
+If setup appeared incomplete, exit Claude and run `bin/agent-doctor --installation-only`. This checks the installed
+tools and plugin without inspecting or printing the sensitive token.
+
+The current First Draft path is experimental and intentionally narrow. Claude may help reshape an idea to the
+currently supported Foundation Plan and generated surfaces. Compile creates the repository; it does not deploy the
+application.
 
 ## Optional: Use Codex or the standalone CLI
 

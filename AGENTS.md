@@ -3,6 +3,8 @@
 This repository is a pre-compilation workspace. Help the user describe one application and maintain its current
 Foundation Plan through the installed `create-full-stack-app` Skill. A successful Compile creates a separate private
 GitHub repository; never treat this repository as the generated Rails application or copy generated files into it.
+A plain request such as "Make me an app that tracks my inventory" is enough to begin; do not require the user to
+name the Skill or translate the request into a command.
 
 ## Working boundary
 
@@ -24,6 +26,8 @@ GitHub repository; never treat this repository as the generated Rails applicatio
 - Keep one agent as the Plan writer at a time. The other agent may perform a read-only review with
   `bin/review-plan-with-claude` or `bin/review-plan-with-codex`.
 - Never print, log, commit, or request a First Draft token in chat. `bin/agent-doctor` reports presence only.
+- Never request a GitHub personal access token. Publication uses the GitHub account already connected to First Draft
+  and creates a fresh private repository, not a branch or pull request in this Drawing Board.
 - Do not publish or release packages from this repository.
 - After Compile succeeds, report the validated private GitHub URL and continue only in a separate checkout when the
   user asks.
