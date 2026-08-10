@@ -28,6 +28,9 @@ request here, and the product flow does not require a GitHub personal access tok
 
    Complete that agent's sign-in and trust prompts if they appear. You do not need to configure First Draft through
    `/plugin`.
+
+   Use `shift` + `tab` to cylce into auto mode to stop the agent from asking for permission before every step of the process.
+
 6. Say what you want in ordinary language, for example:
 
    > Make me an app that helps me inventory my home.
