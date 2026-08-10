@@ -31,90 +31,36 @@ bin/agent-doctor --installation-only
 claude --effort high --permission-mode plan --allowed-tools "Read,Glob,Grep,Skill" --version >/dev/null
 codex --sandbox read-only --ask-for-approval never exec --help >/dev/null
 
-# shellcheck disable=SC2016
-plugin_record="$(claude plugin list --json | \
-  FIRSTDRAFT_CLAUDE_PLUGIN_ID="$FIRSTDRAFT_CLAUDE_PLUGIN_ID" node -e '
-    const parsed = JSON.parse(require("node:fs").readFileSync(0, "utf8"));
-    const plugins = Array.isArray(parsed) ? parsed : parsed.plugins;
-    if (!Array.isArray(plugins)) process.exit(2);
-    const plugin = plugins.find(({ id, scope }) =>
-      id === process.env.FIRSTDRAFT_CLAUDE_PLUGIN_ID && scope === "local",
-    );
-    if (!plugin) process.exit(1);
-    process.stdout.write(`${plugin.version}\t${plugin.scope}\t${plugin.enabled}\t${plugin.installPath}`);
-  ')"
-IFS=$'\t' read -r plugin_version plugin_scope plugin_enabled plugin_install_path <<<"$plugin_record"
-test "$plugin_version" = "$FIRSTDRAFT_CLAUDE_PLUGIN_VERSION"
-test "$plugin_scope" = "local"
-test "$plugin_enabled" = "true"
-test -d "$plugin_install_path"
+test "$(command -v firstdraft)" = "$PWD/bin/firstdraft"
+test ! -L .env
+test -f .env
+test -O .env
+test "$(stat -c '%a' .env)" = "600"
 
-marketplace_name="${FIRSTDRAFT_CLAUDE_PLUGIN_ID#*@}"
-# shellcheck disable=SC2016
-marketplace_record="$(claude plugin marketplace list --json | \
-  FIRSTDRAFT_CLAUDE_MARKETPLACE="$marketplace_name" node -e '
-    const marketplaces = JSON.parse(require("node:fs").readFileSync(0, "utf8"));
-    if (!Array.isArray(marketplaces)) process.exit(2);
-    const marketplace = marketplaces.find(({ name }) =>
-      name === process.env.FIRSTDRAFT_CLAUDE_MARKETPLACE,
-    );
-    if (!marketplace) process.exit(1);
-    process.stdout.write(`${marketplace.source}\t${marketplace.path}`);
-  ')"
-IFS=$'\t' read -r marketplace_source marketplace_path <<<"$marketplace_record"
-test "$marketplace_source" = "directory"
-test "$(git -C "$marketplace_path" rev-parse HEAD)" = "$FIRSTDRAFT_SKILLS_REVISION"
+FIRSTDRAFT_STAGING_API_URL="$FIRSTDRAFT_STAGING_API_URL" node -e '
+  const {parseEnv} = require("node:util");
+  const parsed = parseEnv(require("node:fs").readFileSync(".env", "utf8"));
+  const valid = Object.keys(parsed).sort().join(",") ===
+      "FIRSTDRAFT_API_TOKEN,FIRSTDRAFT_API_URL" &&
+    parsed.FIRSTDRAFT_API_URL === process.env.FIRSTDRAFT_STAGING_API_URL &&
+    parsed.FIRSTDRAFT_API_TOKEN === "";
+  process.exit(valid ? 0 : 1);
+'
 
-claude plugin list --available --json | node -e '
-    const parsed = JSON.parse(require("node:fs").readFileSync(0, "utf8"));
-    const valid = !Array.isArray(parsed) &&
-      Array.isArray(parsed.installed) &&
-      Array.isArray(parsed.available);
-    process.exit(valid ? 0 : 1);
-  '
-
-# shellcheck disable=SC2016
-FIRSTDRAFT_CLAUDE_PLUGIN_VERSION="$FIRSTDRAFT_CLAUDE_PLUGIN_VERSION" \
-  FIRSTDRAFT_CLAUDE_PLUGIN_DEFAULT_API_URL="$FIRSTDRAFT_CLAUDE_PLUGIN_DEFAULT_API_URL" \
-  FIRSTDRAFT_CLAUDE_PLUGIN_PATH="$plugin_install_path" \
-  node -e '
-    const path = require("node:path");
-    const manifest = require(path.join(
-      process.env.FIRSTDRAFT_CLAUDE_PLUGIN_PATH,
-      ".claude-plugin",
-      "plugin.json",
-    ));
-    const options = manifest.userConfig ?? {};
-    const valid = manifest.version === process.env.FIRSTDRAFT_CLAUDE_PLUGIN_VERSION &&
-      Object.keys(options).sort().join(",") === "api_token,api_url" &&
-      options.api_url.required === true &&
-      options.api_url.default === process.env.FIRSTDRAFT_CLAUDE_PLUGIN_DEFAULT_API_URL &&
-      options.api_token.required === true &&
-      options.api_token.sensitive === true;
-    process.exit(valid ? 0 : 1);
-  '
-assert_version "$FIRSTDRAFT_CLAUDE_PLUGIN_CLI_VERSION" \
-  "$plugin_install_path/bin/firstdraft" --version
-
-claude_user_settings="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/settings.json"
-FIRSTDRAFT_CLAUDE_PLUGIN_ID="$FIRSTDRAFT_CLAUDE_PLUGIN_ID" \
-  FIRSTDRAFT_CLAUDE_PLUGIN_DEFAULT_API_URL="$FIRSTDRAFT_CLAUDE_PLUGIN_DEFAULT_API_URL" \
-  node -e '
-    const settings = JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8"));
-    const options = settings.pluginConfigs?.[process.env.FIRSTDRAFT_CLAUDE_PLUGIN_ID]?.options;
-    const valid = options?.api_url === process.env.FIRSTDRAFT_CLAUDE_PLUGIN_DEFAULT_API_URL &&
-      !Object.prototype.hasOwnProperty.call(options, "api_token");
-    process.exit(valid ? 0 : 1);
-  ' "$claude_user_settings"
-
-skill_path="$HOME/.agents/skills/create-full-stack-app"
-test -r "$skill_path/SKILL.md"
-test "$(git -C "$skill_path" rev-parse HEAD)" = "$FIRSTDRAFT_SKILLS_REVISION"
+claude_skill_path="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/skills/$FIRSTDRAFT_CLAUDE_SKILL_NAME"
+codex_skill_path="$HOME/.agents/skills/create-full-stack-app"
+expected_skill_path="$HOME/.cache/firstdraft/skills/$FIRSTDRAFT_SKILLS_REVISION/skills/create-full-stack-app"
+for skill_path in "$claude_skill_path" "$codex_skill_path"; do
+  test -L "$skill_path"
+  test -r "$skill_path/SKILL.md"
+  test "$(git -C "$skill_path" rev-parse HEAD)" = "$FIRSTDRAFT_SKILLS_REVISION"
+  test "$(cd "$skill_path" && pwd -P)" = "$expected_skill_path"
+done
 
 prompt_input="$(codex debug prompt-input "Use the create-full-stack-app Skill.")"
-skill_target="$(cd "$skill_path" && pwd -P)/SKILL.md"
+skill_target="$(cd "$codex_skill_path" && pwd -P)/SKILL.md"
 CODEX_SKILL_NAME="$FIRSTDRAFT_CODEX_SKILL_NAME" \
-  CODEX_SKILL_LINK="$skill_path/SKILL.md" \
+  CODEX_SKILL_LINK="$codex_skill_path/SKILL.md" \
   CODEX_SKILL_TARGET="$skill_target" \
   node -e '
   const input = JSON.parse(require("node:fs").readFileSync(0, "utf8"));
