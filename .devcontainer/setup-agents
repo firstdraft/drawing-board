@@ -124,8 +124,9 @@ claude_marketplace_record() {
       const marketplace = marketplaces.find(({ name }) =>
         name === process.env.FIRSTDRAFT_CLAUDE_MARKETPLACE,
       );
-      if (!marketplace) return;
-      process.stdout.write(`${marketplace.source}\t${marketplace.path}`);
+      if (marketplace) {
+        process.stdout.write(`${marketplace.source}\t${marketplace.path}`);
+      }
     '
 }
 
