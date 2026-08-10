@@ -27,6 +27,8 @@ request here, and the product flow does not require a GitHub personal access tok
    # or: codex
    ```
 
+   If using claude, do not select "Full screen mode" in a codespace.
+   
    Complete that agent's sign-in and trust prompts if they appear. You do not need to configure First Draft through
    `/plugin`.
 
