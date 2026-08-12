@@ -44,11 +44,12 @@ application.
 
 ## The shared First Draft command
 
-The repository puts its own `bin/firstdraft` ahead of global executables. That wrapper reads only
-`FIRSTDRAFT_API_URL` and `FIRSTDRAFT_API_TOKEN` from the ignored `.env`, rejects another origin, checks the pinned
-CLI version, and then launches that CLI. Claude, Codex, and direct terminal commands therefore use the same
-credential and staging origin. No shell `source`, Codespaces secret, GitHub PAT, or `/plugin` configuration is
-required.
+The Codespace puts this repository's `bin/firstdraft` ahead of global executables, and the agent instructions call
+that wrapper explicitly in every environment. The wrapper reads only `FIRSTDRAFT_API_URL` and
+`FIRSTDRAFT_API_TOKEN` from the ignored `.env`, rejects another origin, checks the pinned CLI version, and then
+launches that CLI. Claude and Codex therefore use the same credential and staging origin. On a local clone, the
+current directory is not automatically on `PATH`; invoke `bin/firstdraft` explicitly instead of relying on a bare
+`firstdraft` command. No shell `source`, Codespaces secret, GitHub PAT, or `/plugin` configuration is required.
 
 Authenticate Codex when you choose it:
 
@@ -56,9 +57,10 @@ Authenticate Codex when you choose it:
 codex login --device-auth
 ```
 
-Start Codex from the repository root with `codex`. Bare `firstdraft` commands there resolve to the same repository
-wrapper the agents use. Codex keeps local command network access off by default and may ask you to approve an
-expected staging First Draft request; approve only the exact `bin/firstdraft` command you intend to run.
+Start Codex from the repository root with `codex`. In a Codespace, bare `firstdraft` terminal commands resolve to
+the same repository wrapper the agents use; on a local clone, use `bin/firstdraft`. Codex keeps local command
+network access off by default and may ask you to approve an expected staging First Draft request; approve only the
+exact `bin/firstdraft` command you intend to run.
 
 ## Production and staging
 
