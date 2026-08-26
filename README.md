@@ -2,8 +2,8 @@
 
 This template is a disposable workspace for describing one application. The intended path is deliberately simple:
 
-**Use this template → create a Codespace → add one First Draft token → run `claude` or `codex` → describe
-the app → receive a new private GitHub repository.**
+**Use this template → create a Codespace → sign in to First Draft → connect its GitHub App → add one API
+token → run `claude` or `codex` → describe the app → receive a new private GitHub repository.**
 
 This repository remains the drawing board. A successful Compile creates the application in a **fresh private
 repository** owned by the GitHub account connected to First Draft. It does not add generated files or open a pull
@@ -13,13 +13,22 @@ request here, and the product flow does not require a GitHub personal access tok
 
 1. Select **Use this template** on GitHub and create your own repository.
 2. In that repository, select **Code → Codespaces → Create codespace on main**.
-3. Wait for the post-create setup to finish. Create a First Draft API token at
+3. Wait for the post-create setup to finish. Open <https://staging.firstdraft.com> and select **Sign in with
+   GitHub**. Use the personal GitHub account that should own the generated repository.
+4. On the First Draft Projects page, select **Connect GitHub App** and install it on that personal account. When
+   GitHub asks about repository access, **Only select repositories** is sufficient even though the generated
+   repository does not exist yet: GitHub automatically gives an App access to repositories it creates.
+
+   First Draft requests **Administration: write** to create the private repository, **Contents: write** to publish
+   the generated source, and **Workflows: write** to include its `.github/workflows` files. GitHub also grants the
+   App **Metadata: read**.
+5. Create a First Draft API token at
    <https://staging.firstdraft.com/api-tokens>. This is not a GitHub PAT.
-4. Open the generated `.env` file in the Codespace editor. Paste the token into the `FIRSTDRAFT_API_TOKEN` entry,
+6. Open the generated `.env` file in the Codespace editor. Paste the token into the `FIRSTDRAFT_API_TOKEN` entry,
    save the file, and leave the staging URL unchanged. `.env` is mode `0600` and ignored by
    Git; do not paste its contents into agent chat or a shell command. It is a pragmatic development credential file
    that Claude and Codex can read, not a secret boundary between the token and either agent.
-5. Run either agent from the repository root:
+7. Run either agent from the repository root:
 
    ```sh
    claude
@@ -28,11 +37,14 @@ request here, and the product flow does not require a GitHub personal access tok
 
    Complete that agent's sign-in and trust prompts if they appear. You do not need to configure First Draft through
    `/plugin`.
-6. Say what you want in ordinary language, for example:
+8. Say what you want in ordinary language, for example:
 
    > Make me an app that helps me inventory my home.
-7. Answer the agent's follow-up questions. On success, it reports the URL of the fresh private application
-   repository. Open that repository in a new checkout or Codespace to continue working on the generated app.
+9. Answer the agent's follow-up questions. On success, it reports the URL of the fresh private application
+   repository. Open that repository in a new checkout or Codespace to continue working on the generated app. The
+   exact submitted Plan is at `.firstdraft/submitted-foundation-plan.json`; the complete reviewed GapSet is at
+   `.firstdraft/gaps.json`. Unlike this Drawing Board's ignored `.firstdraft/`, both files are committed in the
+   generated repository.
 
 If setup appeared incomplete, exit the agent and run `bin/agent-doctor --installation-only`. If a First Draft
 command reports an authentication or origin problem, run `bin/agent-doctor`; it validates `.env` and reports token
