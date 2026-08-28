@@ -46,7 +46,10 @@ export function filesystemInventory(root, relativePaths) {
 
     const permissions = statistics.mode & 0o777;
     if (![0o644, 0o755].includes(permissions)) {
-      throw new Error(`Unsupported generated application mode at ${relativePath}: ${permissions.toString(8)}`);
+      throw new Error(
+        `Unsupported generated application mode at ${relativePath}: ${permissions.toString(8)}. ` +
+          "Compile again into a fresh absent directory instead of changing generated modes.",
+      );
     }
 
     return {

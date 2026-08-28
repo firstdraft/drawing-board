@@ -43,7 +43,8 @@ repository. A later coordinated CLI/Skill/pin packet will activate direct materi
 The initializer follows the generated application's own ignore rules. The only artifact-owned paths allowed to
 bypass those rules are `.firstdraft/submitted-foundation-plan.json` and `.firstdraft/gaps.json`. Any other ignored
 path is preserved and stops initialization; a future generated ignored file must update this narrow allowlist and
-its exact-byte fixture in the same coordinated release.
+its exact-byte fixture in the same coordinated release. Canonical `0644` and `0755` modes are part of the generated
+artifact contract; a mismatch requires a fresh compile into an absent directory rather than local mode repair.
 
 ## Work on the template
 
@@ -52,6 +53,9 @@ Create a branch from current `main`, make the smallest coherent change, and run:
 ```sh
 script/check
 ```
+
+Run the check through the pinned toolchain or inside the Dev Container; it requires the pinned Ruby and Node on
+`PATH`.
 
 Changes to Dev Container setup, Features, agent installation, pins, or lifecycle also require the smoke inside the
 built container. The simplest manual route is to open a Codespace on the branch and run:
