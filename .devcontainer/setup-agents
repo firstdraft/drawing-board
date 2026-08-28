@@ -128,4 +128,5 @@ firstdraft --version
 printf '\nDrawing Board setup complete.\n'
 printf 'Next: paste your staging First Draft token into the `FIRSTDRAFT_API_TOKEN` entry in `.env`.\n'
 printf 'Then run `claude` or `codex` and describe the app you want.\n'
-printf 'A successful Compile returns a fresh private GitHub repository; it does not modify this Drawing Board.\n'
+printf 'The ordinary Compile creates `./application`; the agent initializes and verifies it before continuing there.\n'
+printf 'Ask explicitly for a private GitHub repository if you want the separate Publication mode.\n'

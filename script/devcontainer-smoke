@@ -48,6 +48,9 @@ bin/agent-doctor --installation-only
 claude --effort high --permission-mode plan --allowed-tools "Read,Glob,Grep,Skill" --version >/dev/null
 codex --sandbox read-only --ask-for-approval never exec --help >/dev/null
 
+compile_help="$(firstdraft plan compile --help)"
+grep -F -- "--output" <<<"$compile_help" >/dev/null
+
 test "$(command -v firstdraft)" = "$PWD/bin/firstdraft"
 test "$(command -v ruby)" = "$HOME/.local/share/mise/shims/ruby"
 test ! -L .env
@@ -74,6 +77,7 @@ for skill_path in "$claude_skill_path" "$codex_skill_path"; do
   test "$(git -C "$skill_path" rev-parse HEAD)" = "$FIRSTDRAFT_SKILLS_REVISION"
   test "$(cd "$skill_path" && pwd -P)" = "$expected_skill_path"
 done
+grep -Fq "firstdraft_cli plan compile --output ./application" "$codex_skill_path/SKILL.md"
 
 prompt_input="$(codex debug prompt-input "Use the create-full-stack-app Skill.")"
 skill_target="$(cd "$codex_skill_path" && pwd -P)/SKILL.md"
