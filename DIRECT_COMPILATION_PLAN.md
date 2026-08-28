@@ -1,0 +1,181 @@
+# Direct Compilation in the Drawing Board workspace
+
+## Goal
+
+Let an agent author a Foundation Plan in a Drawing Board Codespace, compile it into `./application`, and continue
+developing and testing the generated Rails Foundation in that same Codespace. This is an additive path. GitHub
+remains the authentication provider, and the existing GitHub Publication flow remains available for callers that
+want a separate repository.
+
+The first useful slice is `./application`. Compiling into the Drawing Board repository root is a later packet after
+the nested flow has been used and evaluated.
+
+## Packet 1: direct artifact output in the CLI
+
+Exact implementation candidate before this document:
+
+- repository: `firstdraft/cli`;
+- base: `a251df7870491d5b9bdc390c27373933563f99fd`;
+- reviewed head: `89ca49b3046ae86e540886868887eb0e60970ad5`;
+- integrated main: `d38ef3e54a6476b3a91f22a17fe7bd47aa6d6d68`; and
+- tree-identical result: `e62ee3ff1fb6d188c5d2c5a6e5e0efd50b40245f`.
+
+`firstdraft plan compile --output <absent-directory>` is a distinct execution mode:
+
+1. Preflight the explicit output path before any network mutation. The target must be absent beneath an existing,
+   real parent directory.
+2. Push the exact Plan and wait for the matching valid Analysis using the current Plan flow.
+3. Re-read local state and exact Plan bytes before starting Compilation.
+4. Send one conditional, bodyless `POST` to the existing Service Compilation endpoint. Do not retry an ambiguous
+   start.
+5. Poll only the returned retained Compilation identity.
+6. Fetch and verify the existing Compilation artifact contract.
+7. Materialize exact files and modes into a sibling temporary directory, verify the tree, recheck that the target
+   remains absent, and atomically rename it into place. Remove the task-owned staging directory on every
+   pre-rename failure.
+
+Artifact extraction accepts only relative ASCII path components and regular files with canonical `0644` or `0755`
+modes. It rejects `.`, `..`, `.git`, symlinks, special files, duplicate paths, digest mismatches, and any file not
+declared by the verified manifest. Verification re-reads the staged tree before the rename.
+
+Once the Service has returned a validated Compilation identity, every later status, artifact, or local
+materialization failure must retain that identity in its structured error. An ambiguous start (including a
+validated timeout or server problem response) reports that the outcome is unknown and never sends a second start;
+the current Service has no collection read or idempotency key that can recover a Compilation whose response was
+lost before its identity reached the client. The first packet therefore stops explicitly and does not claim
+automated recovery for that rare path. A future Service packet may add a client-generated idempotency key or an
+equivalent exact lookup; until then, neither an agent nor the CLI may turn an unknown outcome into another Compile.
+
+This mode performs no GitHub Publication, formatter, repair, merge, or Git initialization. It creates no Service
+API or artifact format. Without `--output`, `firstdraft plan compile` retains its current GitHub Publication
+behavior and URL-only success output. CLI tests exercise that zero-flag route, and its exact-head hosted matrix owns
+the regression proof; packet 3 does not create a throwaway Publication merely to repeat that unit of evidence.
+
+The direct mode is noninteractive. Structured failures tell an agent whether the path, Plan, Analysis, Compilation,
+artifact, or materialization failed.
+
+## Packet 2: one Drawing Board Dev Container for both phases
+
+Exact implementation candidate before this document:
+
+- repository: `firstdraft/drawing-board`;
+- base: `0434aa330c51e1771c24b61a22dd8096c614e1d7`;
+- head: `5788de045d2f39842b7b3d692620aa00d2efe32b`; and
+- tree: `9a0c52d2ed8bcbe5c13bc22245ffb85c0aca0f11`.
+
+Drawing Board uses Compose and reuses the generated Foundation runtime instead of maintaining a second Rails
+environment:
+
+- the active Rails Ruby 4.0.5 image and Dockerfile shape;
+- Node 24.18.0;
+- PostgreSQL 18 with the generated parent-volume topology and health gate;
+- Selenium and the generated DB/Capybara environment;
+- ports 3000 and 5432; and
+- the same noninteractive toolchain PATH.
+
+Drawing Board-specific state remains its workspace root, persistent agent homes, and agent installation. The parent
+repository ignores `/application/`.
+
+The artifact intentionally contains no `.git`. A nested app would otherwise let Git-sensitive generated checks
+discover the parent Drawing Board repository. Drawing Board therefore owns `script/initialize-application`, which
+accepts a safe application path (default `application`), requires a directly materialized application, creates a
+nested `main` repository and parentless initial commit, and proves that the committed path/blob/mode inventory equals
+the physical downloaded tree. It runs before application setup or user edits, honors the generated `.gitignore`,
+and force-stages only the two exact current artifact-owned files under `.firstdraft`. Any other ignored, derived, or
+local path is a safe hard stop rather than an invitation to commit `.env`, keys, dependency trees, or an unknown
+future artifact file. It does not lint or normalize the generated bytes. The CLI remains transport-pure.
+
+`script/application-smoke` verifies the real nested repository before dependency, database, or server work, then
+runs generated setup, PostgreSQL readiness, and the complete generated `CI=1 bin/ci`. It does not patch generated
+bytes. Drawing Board's ordinary hosted contract executes a hermetic initializer fixture, including ignored
+`.firstdraft` bytes, executable modes, trailing whitespace, safe-path rejection, and hostile ambient Git state.
+
+## Packet 2.5: release and authoring bridge
+
+Packets 1 and 2 cannot form a fresh user journey merely as source branches. The coherent delivery tuple is:
+
+1. Integrate the direct-output CLI as backward-compatible `0.2.1`, retaining zero-flag Publication.
+2. Update the authoring Skill to `0.2.1`, require exact CLI `0.2.1`, and teach two separate completion modes:
+   direct `firstdraft plan compile --output ./application` in a shared workspace, or zero-flag GitHub Publication.
+   The agent selects and states the mode before the final Plan/GapSet approval, so approval covers the intended local
+   or external effect; it never switches modes to recover from an ambiguous start.
+3. After explicit release authorization, publish the exact reviewed CLI `0.2.1` package under the `next` dist-tag
+   and verify the immutable registry artifact and Git provenance.
+4. Update Drawing Board's exact CLI version and Skills revision together, then run its real Dev Container contract.
+   In that same packet, update Drawing Board's README, `AGENTS.md`, and setup banner to present direct output as the
+   shared-workspace path and zero-flag Publication as the separate-repository path.
+
+The Skill preserves exact Plan and GapSet review, conditional state, credentials, retained-identity recovery, and
+the explicit stop on an ambiguous start with no retained identity; it routes transport and container details to
+their owning tools rather than copying them. Drawing Board continues to install Skills from an exact Git revision,
+so plugin publication or catalog promotion is not required for this packet. CLI `latest`, plugin publication, and
+catalog promotion remain separate release choices.
+
+## Packet 3: one real non-prebuilt Codespace journey
+
+After packets 1 and 2 are integrated into a coherent candidate tuple, exercise a newly created Drawing Board
+Codespace without relying on a prebuild:
+
+1. Confirm the Drawing Board authoring/agent setup still works, the pinned Skill advertises both completion modes,
+   and the active agent can locate the retained design context without being retaught it in the test prompt.
+2. Author or load one reviewed Foundation Plan and configure an approved staging API token.
+3. Run `firstdraft plan compile --output ./application`.
+4. Prove that no GitHub Publication or generated-repository creation occurred by retaining the CLI request sequence,
+   the Project's Publication route before and after, and the GitHub repository inventory before and after.
+5. Run `script/initialize-application application`.
+6. In `application`, run setup, the complete generated CI, boot `bin/dev`, and verify the app through the forwarded
+   web port in a real browser.
+7. Ask the same agent to explain one Plan decision from the retained design context and make one bounded application
+   change that follows it, then run a focused generated-app check.
+
+Retain exact Service, CLI, Drawing Board, Plan, GapSet, artifact, generated tree, nested initial commit, container,
+database, and browser coordinates. Stop the Codespace after proof. Do not treat a local Docker rehearsal as the
+Codespace observation.
+
+## Later packet: compile into an existing root
+
+`firstdraft plan compile --output .` is deliberately not part of the first slice. It should work in an arbitrary
+directory rather than recognize Drawing Board specially. Because `.` already exists, the later noninteractive
+contract needs an explicit relocation option, provisionally:
+
+```sh
+firstdraft plan compile --output . --move-existing-to design
+```
+
+The intended result is the generated Foundation at the repository root, the existing root `.git` retained, and all
+preexisting design materials moved under `./design`. The command must define collisions for artifact names such as
+`.firstdraft`, `.gitignore`, and `AGENTS.md`; preserve root Git history; reject nested or linked paths, an existing
+`design` destination, and an unsafe partial relocation; and never manufacture a parentless repository at the root.
+It must stage and validate the artifact before moving anything, define rollback or a recoverable failure boundary,
+and preserve both the original design bytes and the exact generated bytes. Qualification must prove that root Git
+still sees the moved design paths and the generated Foundation paths rather than accepting an accidentally ignored
+or untracked result. There is no interactive prompt in this agent-first phase.
+
+This later packet replaces neither `--output ./application` nor GitHub Publication. Its detailed filesystem
+transaction should be designed only after the nested flow is exercised.
+
+## Ownership and sequencing
+
+- Service owns Compilation lifecycle and artifact bytes; no Service change is needed for packets 1 or 2.
+- CLI owns the direct mode, output-path validation, polling, artifact verification, and exact materialization.
+- Drawing Board owns its combined Dev Container and nested-repository initialization.
+- The authoring Skill teaches the coherent command sequence only after the CLI contract lands; it does not duplicate
+  detailed transport or container contracts.
+- GitHub authentication and the existing Publication path stay intact.
+- Broad Foundation Plan realization gaps and the documentation/website audit are separate work lanes.
+
+Land packet 1 and packet 2 independently after their repository checks and reviews. Complete packet 2.5 and prove
+its exact released/pinned tuple before packet 3. Use packet 3 to decide whether the root-output packet is still
+valuable and to refine its relocation contract.
+
+## Review questions
+
+1. Does the mode split preserve the no-flag Publication contract while making direct Compilation genuinely
+   publication-free?
+2. Is Drawing Board the correct owner for nested Git initialization, or should another integration layer own it?
+3. Does reusing the generated runtime create any hidden coupling or omit a requirement needed by either authoring
+   or generated development?
+4. Are the absent-directory and later root-relocation boundaries safe, understandable, and proportional for an
+   agent-first pre-alpha workflow?
+5. Is the three-packet landing order sufficient to prevent a false end-to-end claim or incompatible candidate
+   tuple?
