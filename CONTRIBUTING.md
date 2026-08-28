@@ -40,6 +40,11 @@ repository. A later coordinated CLI/Skill/pin packet will activate direct materi
 | `script/initialize-application` | Parentless nested Git initialization for direct-download output |
 | `script/application-smoke` | Setup, PostgreSQL, readiness, and full CI proof for a generated `./application` |
 
+The initializer follows the generated application's own ignore rules. The only artifact-owned paths allowed to
+bypass those rules are `.firstdraft/submitted-foundation-plan.json` and `.firstdraft/gaps.json`. Any other ignored
+path is preserved and stops initialization; a future generated ignored file must update this narrow allowlist and
+its exact-byte fixture in the same coordinated release.
+
 ## Work on the template
 
 Create a branch from current `main`, make the smallest coherent change, and run:

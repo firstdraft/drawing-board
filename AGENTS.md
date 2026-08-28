@@ -17,8 +17,9 @@ name the Skill or translate the request into a command.
 - `application/` is deliberately ignored by the Drawing Board. When present, it is the generated Rails Foundation;
   run `bin/setup`, `bin/dev`, Rails, and application tests from there. The root `bin/` remains Drawing Board tooling.
   Direct-download output has no nested Git repository; run root `script/initialize-application` once before entering
-  it so Git-sensitive application checks cannot resolve to the enclosing Drawing Board repository.
-- The currently pinned CLI 0.2.0 and Skill still Compile by publishing a separate private GitHub repository; they do
+  it so Git-sensitive application checks cannot resolve to the enclosing Drawing Board repository. Run it before
+  setup or edits; it stops without deleting ignored local state rather than risking that state in the first commit.
+- The currently pinned CLI and Skill still Compile by publishing a separate private GitHub repository; they do
   not accept `--output` or populate `application/`. The local path and initializer are preparation for a later
   coordinated CLI/Skill/pin release. Do not improvise the unreleased command from this repository.
 - Use `bin/firstdraft` for every First Draft command. When the installed Skill shows `firstdraft ...`, pass those
