@@ -126,8 +126,9 @@ The released packet-2.5 inputs observed on 2026-08-28 are:
 
 Drawing Board now pins that CLI/Skills pair and teaches direct `./application` output as its ordinary path. The
 candidate plugin `0.2.1` digest is `36e3e80db76d4af6c2af96d87fe42e00b944aab01e16584e6eb5149dc3f196b1`, but this source-pin packet does not publish
-plugin bytes or move a catalog or npm dist-tag. Packet 3 still owns the fresh non-prebuilt journey rather than
-inferring it from these compatible release coordinates.
+plugin bytes or move a catalog or npm dist-tag. Packet 3 owns the observed non-prebuilt journey rather than
+inferring it from these compatible release coordinates; the result below also preserves what that journey did not
+yet prove.
 
 ## Packet 3: one real non-prebuilt Codespace journey
 
@@ -148,6 +149,48 @@ required by that tuple, then exercise a newly created Drawing Board Codespace wi
    and verify the app through the forwarded web port in a real browser.
 7. Ask the same agent to explain one Plan decision from the retained design context and make one bounded application
    change that follows it, then run a focused generated-app check.
+
+### Observed Packet 3 boundary on 2026-08-28
+
+A fresh private repository and Codespace exercised the exact Drawing Board candidate without a prebuild:
+
+- Drawing Board source `f93d54a2a55ca7d06abe072424092b1dd0544117`, tree
+  `ade2a7079299d84cfd746c241aff905b3cd0115b`, was copied into one parentless test-repository commit
+  `fd73196251e341893f8e0496e4d1ba6765c89f49` with the same tree.
+- One `basicLinux32gb` East US Codespace reached `Available` 404.5 seconds after its create request. Its runtime
+  reported CLI `0.2.1`, Skills `160d33a5a7d9f9b2282729ecfd3b2e24a1123143`, Claude Code `2.1.226`, and Codex
+  `0.147.0`; the Dev Container smoke and direct-output capability checks passed.
+- The approved Neighborhood Guide Plan SHA-256 was
+  `1e88f919436d779176abd115f79f84293d4ea4579d21cc07bdc64db3b1a2a962`. Analysis
+  `01a04a08-e38a-7708-accb-d2980cfc0c7f` returned a valid zero-record GapSet with SHA-256
+  `e1d40a25d442b18380882e644ff1e4d5a6191159eb3b0cdaff258f20f7ad3fc7` before the owner approved direct mode.
+- Exactly one direct Compile started. Compilation `01a04a0d-3484-7e29-b743-0c77b96db063` succeeded with artifact
+  SHA-256 `0f26014b38d64816ce4b7934e969ce9a3db715a96f3789df609a45b81bf35188`, 479,770 artifact bytes,
+  168 output files, and manifest SHA-256
+  `08269fa09226d41d89894dbef1f0a26cbd51c7fc47b7ca81d5085f44c8480d1c`. The emitted submitted Plan and
+  GapSet bytes matched the approved inputs, and the new directory had no Git metadata.
+- The Project's Publication route returned exact `404 publication_not_found` before and after Compile. The owner's
+  551-repository GitHub inventory was byte-identical before and after, so the direct path created no Publication or
+  generated repository.
+- `script/initialize-application application` produced parentless commit
+  `3f763a84ceab6d7f3564f382bc77cce267a528f1`, tree `11a52026505434bd3242c9cab94d49ed68638681`, on
+  nested `main`. `script/application-smoke` passed setup, PostgreSQL 18.6, readiness, 56 Rails tests with 209
+  assertions, seven system tests with 34 assertions, and the complete clean generated CI in 69.22 seconds under
+  Ruby 4.0.5 and Node 24.18.0.
+- A real browser rendered `It works. · Neighborhood Guide` and the empty `Places · Neighborhood Guide` index
+  through an authenticated localhost forward to the same Codespace process. The ordinary private Codespaces
+  `*.app.github.dev` URL instead reached Rails' blocked-host page. This is a generated Foundation host-authorization
+  defect, not a successful ordinary forwarded-port observation; it requires a target-owned correction before the
+  colleague Codespaces browser journey is complete.
+- The single task token was revoked after proof and the exact credential then received `401 authentication_required`.
+  The revoked value was removed from the Codespace, and the Codespace stop was requested.
+
+This run proved agent and Skill installation/discovery, but neither installed agent was signed in inside the
+Codespace. The active external agent drove the exact Skill sequence over SSH, loaded a previously reviewed Plan,
+and obtained fresh owner approval of its exact Plan, GapSet, and direct effect. It did not perform the new
+in-Codespace conversational authoring pass, boot the browser process through step 6's `bin/dev` wrapper, or perform
+step 7's retained-context explanation and bounded source change. Those remain explicit acceptance work rather than
+being inferred from installation, `bin/rails server`, or Compilation success.
 
 Retain exact Service, CLI, Drawing Board, Plan, GapSet, artifact, generated tree, nested initial commit, container,
 database, smoke output, and browser coordinates. If the Compilation start has an unknown outcome without a retained
