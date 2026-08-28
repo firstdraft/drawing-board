@@ -160,11 +160,13 @@ silently assume that `.git/info/exclude` exists or manufacture a parentless repo
 Before moving anything, the transaction inventories every existing path's physical location and
 tracked/staged/untracked/ignored state, including the applicable repository `.gitignore` files,
 `.git/info/exclude`, and configured global excludes. It carries forward every exclusion that protects a moved path
-before relocation and never automatically stages a path that was previously untracked. In the Drawing Board
-instance, `.env`, `.firstdraft/state.json`, and other credential or concurrency state must remain ignored and must
-never be staged or committed. The private candidate at `design/.firstdraft/foundation-plan.json` also remains
-deliberately untracked; the generated root `.firstdraft/submitted-foundation-plan.json` is the tracked exact Plan
-record. The generated root `.gitignore` and both generated artifact-owned `.firstdraft` files remain exact.
+before relocation and never automatically stages a path that was previously untracked. It stages and validates the
+complete generated artifact outside the working root before mutating any existing path or Git metadata. In the
+Drawing Board instance, `.env`, `.firstdraft/state.json`, and other credential or concurrency state must remain
+ignored and must never be staged or committed. The private candidate at
+`design/.firstdraft/foundation-plan.json` also remains deliberately untracked; the generated root
+`.firstdraft/submitted-foundation-plan.json` is the tracked exact Plan record. The generated root `.gitignore` and
+both generated artifact-owned `.firstdraft` files remain exact.
 
 Any later root-mode write to `.git/info/exclude` or other existing Git metadata is an explicit, journaled part of
 the relocation transaction. A failure that leaves any relocated bytes on disk retains the protective exclusions;
