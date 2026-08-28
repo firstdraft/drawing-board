@@ -1,0 +1,71 @@
+# Contributing to First Draft Drawing Board
+
+Drawing Board is the template repository for the First Draft tester journey. Its README is deliberately written for
+someone trying the product for the first time. This document owns the maintainer workflow and implementation map.
+
+Agents changing the template should also read [AGENTS.md](AGENTS.md).
+
+## Repository contract
+
+A repository created from this template must provide one ready-to-use workspace for Claude or Codex:
+
+- the Dev Container installs exact reviewed versions of both agents and the First Draft CLI;
+- one exact Skills revision is linked into both agents;
+- `.env` supplies the shared staging origin and token without entering Git;
+- bare `firstdraft` on the Codespace PATH resolves to `bin/firstdraft`, and AGENTS.md routes Skill-issued commands
+  through that wrapper; and
+- a successful Compile creates a separate private repository rather than modifying the Drawing Board.
+
+The template does not contain Rails, PostgreSQL, or generated application source. Those belong to the repository
+created by First Draft.
+
+## Repository map
+
+| Path | Responsibility |
+|---|---|
+| `.devcontainer/devcontainer.json` | Codespace image, Features, lifecycle, volumes, and workspace environment |
+| `.devcontainer/agent-versions.env` | Exact Claude, Codex, CLI, and Skills pins |
+| `.devcontainer/setup-agents` | Idempotent installation and Skill linking |
+| `.env.example` | Non-secret staging configuration copied to ignored `.env` |
+| `bin/firstdraft` | Shared credential-loading and origin-pinning CLI wrapper |
+| `bin/agent-doctor` | Installation and credential diagnostics without token disclosure |
+| `bin/review-plan-with-*` | Optional read-only review by the other installed agent |
+| `script/check` | Fast source, pin, wrapper, and credential contracts |
+| `script/devcontainer-smoke` | Runtime smoke executed inside the built Dev Container |
+
+## Work on the template
+
+Create a branch from current `main`, make the smallest coherent change, and run:
+
+```sh
+script/check
+```
+
+Changes to Dev Container setup, Features, agent installation, pins, or lifecycle also require the smoke inside the
+built container. The simplest manual route is to open a Codespace on the branch and run:
+
+```sh
+script/devcontainer-smoke
+```
+
+GitHub Actions builds the Dev Container and runs both checks there for every pull request. A change to an exact pin
+should name the compatible upstream revision or package and preserve the same version in every checked consumer.
+
+When changing a Dev Container Feature, let the current Dev Container CLI regenerate
+`.devcontainer/devcontainer-lock.json`. Review the resolved version and digest rather than editing the lock by hand.
+
+## Credentials and external systems
+
+Never commit a First Draft API token, GitHub token, agent credential, or generated `.env`. `script/check` scans the
+repository for common credential shapes and verifies that `.env` remains ignored.
+
+The shared ignored `.env` is the credential path for both agents; do not add agent-specific token configuration.
+The template wrapper intentionally selects staging. Production defaults, GitHub Publication, and Service deployment
+are owned by [firstdraft/firstdraft](https://github.com/firstdraft/firstdraft); Skill and plugin delivery are owned by
+[firstdraft/skills](https://github.com/firstdraft/skills).
+
+## Documentation
+
+Keep [README.md](README.md) focused on the beginner journey. Put maintainer commands and implementation details here,
+and keep agent-only guardrails in [AGENTS.md](AGENTS.md). If a workflow change affects what a tester must do, update
+the README and verify the complete template-to-generated-repository journey before landing it.

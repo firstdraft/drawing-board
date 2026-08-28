@@ -1,118 +1,122 @@
-# First Draft Drawing Board
+# Build an app with First Draft
 
-This template is a disposable workspace for describing one application. The intended path is deliberately simple:
+This repository is a workspace for planning an app with Claude or Codex. You describe what you want, your agent asks
+questions, and First Draft creates a new private GitHub repository containing a working Rails application.
 
-**Use this template → create a Codespace → sign in to First Draft → connect its GitHub App → add one API
-token → run `claude` or `codex` → describe the app → receive a new private GitHub repository.**
+You do not need to install programming tools on your computer. The GitHub Codespace created from this template
+contains everything the agent needs.
 
-This repository remains the drawing board. A successful Compile creates the application in a **fresh private
-repository** owned by the GitHub account connected to First Draft. It does not add generated files or open a pull
-request here, and the product flow does not require a GitHub personal access token.
+## Before you start
 
-## Make an app with Claude or Codex
+You will need:
 
-1. Select **Use this template** on GitHub and create your own repository.
-2. In that repository, select **Code → Codespaces → Create codespace on main**.
-3. Wait for the post-create setup to finish. Open <https://staging.firstdraft.com> and select **Sign in with
-   GitHub**. Use the personal GitHub account that should own the generated repository.
-4. On the First Draft Projects page, select **Connect GitHub App** and install it on that personal account. When
-   GitHub asks about repository access, **Only select repositories** is sufficient even though the generated
-   repository does not exist yet: GitHub automatically gives an App access to repositories it creates.
+- a personal GitHub account;
+- access to <https://staging.firstdraft.com>; and
+- a Claude or Codex account.
 
-   First Draft requests **Administration: write** to create the private repository, **Contents: write** to publish
-   the generated source, and **Workflows: write** to include its `.github/workflows` files. GitHub also grants the
-   App **Metadata: read**.
-5. Create a First Draft API token at
-   <https://staging.firstdraft.com/api-tokens>. This is not a GitHub PAT.
-6. Open the generated `.env` file in the Codespace editor. Paste the token into the `FIRSTDRAFT_API_TOKEN` entry,
-   save the file, and leave the staging URL unchanged. `.env` is mode `0600` and ignored by
-   Git; do not paste its contents into agent chat or a shell command. It is a pragmatic development credential file
-   that Claude and Codex can read, not a secret boundary between the token and either agent.
-7. Run either agent from the repository root:
+Use the same personal GitHub account throughout the process. That account will own the generated application
+repository.
 
-   ```sh
-   claude
-   # or: codex
-   ```
+## 1. Create your Drawing Board
 
-   Complete that agent's sign-in and trust prompts if they appear. You do not need to configure First Draft through
-   `/plugin`.
-8. Say what you want in ordinary language, for example:
+1. Open [firstdraft/drawing-board](https://github.com/firstdraft/drawing-board).
+2. Select **Use this template**, then **Create a new repository**.
+3. Give the repository a name for your app idea and select **Create repository**.
 
-   > Make me an app that helps me inventory my home.
-9. Answer the agent's follow-up questions. On success, it reports the URL of the fresh private application
-   repository. Open that repository in a new checkout or Codespace to continue working on the generated app. The
-   exact submitted Plan is at `.firstdraft/submitted-foundation-plan.json`; the complete reviewed GapSet is at
-   `.firstdraft/gaps.json`. Unlike this Drawing Board's ignored `.firstdraft/`, both files are committed in the
-   generated repository.
+This repository is your Drawing Board. The generated application will be created later in a different repository.
 
-If setup appeared incomplete, exit the agent and run `bin/agent-doctor --installation-only`. If a First Draft
-command reports an authentication or origin problem, run `bin/agent-doctor`; it validates `.env` and reports token
-presence without printing the value. If it reports a permissions problem, run `chmod 600 .env` and try again.
+## 2. Open the Codespace
 
-The current First Draft path is experimental and intentionally narrow. Claude may help reshape an idea to the
-currently supported Foundation Plan and generated surfaces. Compile creates the repository; it does not deploy the
-application.
+1. In your new Drawing Board repository, select **Code**.
+2. Select **Codespaces**.
+3. Select **Create codespace on main**.
+4. Wait for the terminal to say `Drawing Board setup complete.`
 
-## The shared First Draft command
+The first setup may take a few minutes. Leave the browser tab open while it finishes.
 
-The Codespace puts this repository's `bin/firstdraft` ahead of global executables, and the agent instructions call
-that wrapper explicitly in every environment. The wrapper reads only `FIRSTDRAFT_API_URL` and
-`FIRSTDRAFT_API_TOKEN` from the ignored `.env`, rejects another origin, checks the pinned CLI version, and then
-launches that CLI. Claude and Codex therefore use the same credential and staging origin. On a local clone, the
-current directory is not automatically on `PATH`; invoke `bin/firstdraft` explicitly instead of relying on a bare
-`firstdraft` command. No shell `source`, Codespaces secret, GitHub PAT, or `/plugin` configuration is required.
+## 3. Connect First Draft to GitHub
 
-Authenticate Codex when you choose it:
+1. Open <https://staging.firstdraft.com> in another browser tab.
+2. Select **Sign in with GitHub**.
+3. On the Projects page, select **Connect GitHub App**.
+4. Follow GitHub's prompts to install the App on your personal account.
+
+If GitHub asks which repositories the App may access, **Only select repositories** is sufficient. GitHub
+automatically gives the App access to repositories it creates.
+
+The requested repository permissions let First Draft create the private repository, write the application source,
+and include its GitHub Actions workflow. They do not give the App access to unselected existing repositories.
+
+## 4. Add your First Draft token
+
+1. In First Draft, open <https://staging.firstdraft.com/api-tokens>.
+2. Create a token and copy it.
+3. Return to the Codespace.
+4. In the file list, open `.env`.
+5. Paste the token after the equals sign on the `FIRSTDRAFT_API_TOKEN` line and save the file. Leave the URL on the
+   first line unchanged.
+
+The token is not a GitHub password or personal access token. Keep it out of chat, screenshots, and commits.
+
+## 5. Describe your app
+
+Open the Codespace terminal and start either agent:
 
 ```sh
-codex login --device-auth
+claude
+# or
+codex
 ```
 
-Start Codex from the repository root with `codex`. In a Codespace, bare `firstdraft` terminal commands resolve to
-the same repository wrapper the agents use; on a local clone, use `bin/firstdraft`. Codex keeps local command
-network access off by default and may ask you to approve an expected staging First Draft request; approve only the
-exact `bin/firstdraft` command you intend to run.
+If you choose Codex, run `codex login --device-auth` first and follow the code prompt. Complete any other agent
+sign-in prompts that appear. Then describe the app in ordinary language. For example:
 
-## Production and staging
+> Make me an app that helps me keep track of the plants in my home.
 
-The published standalone CLI defaults to production, but this Drawing Board's wrapper requires
-`https://staging.firstdraft.com` from `.env`. Use a token created by staging. The CLI pins the origin after the first
-successful push; an existing Drawing Board cannot later be switched to another service.
+Answer the agent's follow-up questions. It will turn your answers into a Foundation Plan, ask you to review the
+important choices, and show you anything the generated application will leave for later work.
 
-Claude's sensitive plugin configuration does not reach a Skill's ordinary Bash command, so it is not the
-credential path for this release. A future narrow MCP bridge can restore secure plugin-owned delivery without
-exporting the token to general Bash; that improvement is tracked in
-[firstdraft/skills#27](https://github.com/firstdraft/skills/issues/27).
+When the Plan looks right, approve the Compile. First Draft will create a new private GitHub repository and the
+agent will give you its URL.
 
-## Optional: Ask one agent to review the other
+Codex may ask permission for an exact `bin/firstdraft ...` command to contact `staging.firstdraft.com`. Approve that
+command; do not grant unrelated network access.
 
-Only one agent should edit the Plan at a time. The other can inspect the current ignored Plan and the installed
-Skill in a read-only review:
+## 6. Open your application
+
+Open the new repository from the URL the agent provides. This is the Rails application you will continue working
+on; the Drawing Board remains a separate planning workspace.
+
+The generated repository includes:
+
+- runnable application source and tests;
+- the exact submitted Foundation Plan at `.firstdraft/submitted-foundation-plan.json`; and
+- the reviewed list of remaining work at `.firstdraft/gaps.json`.
+
+Create a Codespace in the generated repository and follow its README to run the application and continue building
+it with your agent.
+
+## Troubleshooting
+
+If the initial Codespace setup did not finish, run:
 
 ```sh
-bin/review-plan-with-claude
-bin/review-plan-with-codex
+bin/agent-doctor --installation-only
 ```
 
-The Foundation Plan and its private concurrency state live under `.firstdraft/`, which the CLI deliberately keeps
-out of Git. The review commands read the current Plan directly rather than relying on a Git diff. Evaluate the
-review before asking the authoring agent to revise the Plan.
+If the doctor reports that an agent, CLI, or Skill is unavailable or mismatched, run
+`.devcontainer/setup-agents` again; it is safe to repeat. If that still fails, use **Codespaces: Rebuild Container**.
 
-## What the Codespace contains
+If a First Draft command reports a token, origin, or `.env` problem, run:
 
-The devcontainer starts from Microsoft's prebuilt Node development image and adds the locked GitHub CLI and SSH
-server Features. The SSH server lets `gh codespace ssh` reach this non-default image; its own port 2222 is not
-forwarded by this template. The devcontainer checks out one exact Skills revision and links the same
-`create-full-stack-app` Skill into Claude's and Codex's documented personal Skill directories. It also installs exact
-versions of Claude Code, Codex, and the standalone First Draft CLI. Ruby, Rails, PostgreSQL, and Foundation Rails
-Core dependencies belong to the generated repository and are installed there after Compile.
+```sh
+bin/agent-doctor
+```
 
-Agent authentication is retained in named volumes across container rebuilds and is deleted with the Codespace.
-Setup creates `.env` from the non-secret `.env.example` only when it is absent and never overwrites it. The user adds
-the token locally; Git ignores that file, but processes and agents in the Codespace can read it.
+The doctor reports whether the token is present without showing it. If it reports an `.env` permissions problem,
+run `chmod 600 .env` and try again.
 
-Run `script/check` for repository contract checks. When changing a Feature, let the current Dev Container CLI build
-regenerate `.devcontainer/devcontainer-lock.json` and review its exact version and digest. The hosted CI workflow
-also builds the real devcontainer and verifies the installed versions, shared `.env` wrapper, and both pinned Skill
-links.
+First Draft is currently an internal preview. Use it for test projects. Compile creates a private GitHub repository;
+it does not deploy the application.
+
+Maintaining this template? Read [CONTRIBUTING.md](CONTRIBUTING.md).
