@@ -116,6 +116,19 @@ their owning tools rather than copying them. Drawing Board continues to install 
 so plugin publication or catalog promotion is not required for this packet. CLI `latest`, plugin publication, and
 catalog promotion remain separate release choices.
 
+The released packet-2.5 inputs observed on 2026-08-28 are:
+
+- CLI `0.2.1`, source/tag commit `d38ef3e54a6476b3a91f22a17fe7bd47aa6d6d68`, tree
+  `e62ee3ff1fb6d188c5d2c5a6e5e0efd50b40245f`, published under npm's `next` tag while `latest` remains `0.1.0`;
+- Skills `0.2.1` at `160d33a5a7d9f9b2282729ecfd3b2e24a1123143`, tree
+  `6f3db12c017e884d8b14c66f7d82e64229ec2073`, installed by Drawing Board from source; and
+- staging advertising First Draft API contract `0.3.0`.
+
+Drawing Board now pins that CLI/Skills pair and teaches direct `./application` output as its ordinary path. The
+candidate plugin `0.2.1` digest is `36e3e80db76d4af6c2af96d87fe42e00b944aab01e16584e6eb5149dc3f196b1`, but this source-pin packet does not publish
+plugin bytes or move a catalog or npm dist-tag. Packet 3 still owns the fresh non-prebuilt journey rather than
+inferring it from these compatible release coordinates.
+
 ## Packet 3: one real non-prebuilt Codespace journey
 
 After packets 1 and 2 are integrated into a coherent candidate tuple, confirm that staging serves the API contract
