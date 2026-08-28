@@ -13,7 +13,10 @@ const configuration = JSON.parse(fs.readFileSync(".devcontainer/devcontainer.jso
 const lockfile = JSON.parse(fs.readFileSync(".devcontainer/devcontainer-lock.json", "utf8"));
 const expectedFeatures = [
   "ghcr.io/devcontainers/features/github-cli:1",
+  "ghcr.io/rails/devcontainer/features/activestorage:1",
+  "ghcr.io/devcontainers/features/node:1",
   "ghcr.io/devcontainers/features/sshd:1",
+  "ghcr.io/rails/devcontainer/features/postgres-client:1",
 ].sort();
 const configuredFeatures = Object.keys(configuration.features ?? {}).sort();
 const lockedFeatures = Object.keys(lockfile.features ?? {}).sort();
@@ -38,7 +41,7 @@ NODE
 # shellcheck disable=SC1091
 source .devcontainer/agent-versions.env
 
-for script in .devcontainer/setup-agents bin/agent-doctor bin/review-plan-with-claude bin/review-plan-with-codex script/check script/devcontainer-smoke; do
+for script in .devcontainer/setup-agents bin/agent-doctor bin/review-plan-with-claude bin/review-plan-with-codex script/application-smoke script/check script/devcontainer-smoke script/initialize-application; do
   bash -n "$script"
   if [[ ! -x "$script" ]]; then
     echo "$script must be executable." >&2
@@ -73,14 +76,52 @@ workspace_path="$(node -e '
   const configuration = JSON.parse(require("node:fs").readFileSync(".devcontainer/devcontainer.json"));
   process.stdout.write(configuration.remoteEnv?.PATH ?? "");
 ')"
-if [[ "$workspace_path" != '${containerWorkspaceFolder}/bin:/home/node/.local/bin:${containerEnv:PATH}' ]]; then
+if [[ "$workspace_path" != '${containerWorkspaceFolder}/bin:/home/vscode/.local/bin:${containerEnv:PATH}' ]]; then
   echo "The devcontainer PATH must prefer the Drawing Board wrapper." >&2
+  exit 1
+fi
+
+node <<'NODE'
+const fs = require("node:fs");
+const configuration = JSON.parse(fs.readFileSync(".devcontainer/devcontainer.json", "utf8"));
+const compose = fs.readFileSync(".devcontainer/compose.yaml", "utf8");
+const dockerfile = fs.readFileSync(".devcontainer/Dockerfile", "utf8");
+const required = (condition, message) => {
+  if (!condition) {
+    console.error(message);
+    process.exit(1);
+  }
+};
+
+required(configuration.dockerComposeFile === "compose.yaml", "The Drawing Board must use its reviewed Compose stack.");
+required(configuration.service === "rails-app", "The Dev Container must attach to rails-app.");
+required(configuration.workspaceFolder === "/workspaces/drawing-board", "The workspace path must stay stable.");
+required(configuration.remoteUser === "vscode", "The Rails runtime uses the non-root vscode user.");
+required(configuration.containerEnv?.DB_HOST === "postgres", "Generated Foundations must reach PostgreSQL by service name.");
+required(configuration.containerEnv?.SELENIUM_HOST === "selenium", "Generated system tests must reach Selenium by service name.");
+required(JSON.stringify(configuration.forwardPorts) === JSON.stringify([3000, 5432]), "Rails and PostgreSQL ports must be forwarded.");
+required(compose.includes("- ..:/workspaces/drawing-board:cached"), "Compose must mount the complete Drawing Board.");
+required(compose.includes("- postgres-data:/var/lib/postgresql"), "PostgreSQL 18 data must use its parent volume target.");
+required(compose.includes("condition: service_healthy"), "The workspace must wait for PostgreSQL readiness.");
+required(dockerfile.includes("ARG RUBY_VERSION=4.0.5"), "The Drawing Board Ruby image must match generated Foundations.");
+required(dockerfile.includes("ghcr.io/rails/devcontainer/images/ruby:$RUBY_VERSION"), "Use the Rails Dev Container runtime image.");
+NODE
+
+if ! git check-ignore --quiet application/example; then
+  echo "Generated application output must remain outside the Drawing Board Git repository." >&2
   exit 1
 fi
 
 if [[ "$FIRSTDRAFT_CLI_DEFAULT_API_URL" != "https://firstdraft.com" || \
   "$FIRSTDRAFT_STAGING_API_URL" != "https://staging.firstdraft.com" ]]; then
   echo "The pinned releases no longer match the documented staging-wrapper contract." >&2
+  exit 1
+fi
+
+if ! grep -Fqx "ARG RUBY_VERSION=$FOUNDATION_RUBY_VERSION" .devcontainer/Dockerfile || \
+  ! grep -Fq "\"ghcr.io/devcontainers/features/node:1\": { \"version\": \"$FOUNDATION_NODE_VERSION\" }" .devcontainer/devcontainer.json || \
+  ! grep -Fqx "    image: postgres:$FOUNDATION_POSTGRES_VERSION" .devcontainer/compose.yaml; then
+  echo "The Drawing Board runtime pins must match the current generated Foundation." >&2
   exit 1
 fi
 

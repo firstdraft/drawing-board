@@ -26,6 +26,8 @@ assert_version() {
 assert_version "$CLAUDE_CODE_VERSION" claude --version
 assert_version "$CODEX_VERSION" codex --version
 assert_version "$FIRSTDRAFT_CLI_VERSION" firstdraft --version
+assert_version "$FOUNDATION_RUBY_VERSION" ruby --version
+assert_version "v$FOUNDATION_NODE_VERSION" node --version
 
 test -x /usr/sbin/sshd
 sudo /usr/sbin/sshd -t
@@ -47,6 +49,7 @@ claude --effort high --permission-mode plan --allowed-tools "Read,Glob,Grep,Skil
 codex --sandbox read-only --ask-for-approval never exec --help >/dev/null
 
 test "$(command -v firstdraft)" = "$PWD/bin/firstdraft"
+test "$(command -v ruby)" = "$HOME/.local/share/mise/shims/ruby"
 test ! -L .env
 test -f .env
 test -O .env
@@ -92,5 +95,18 @@ CODEX_SKILL_NAME="$FIRSTDRAFT_CODEX_SKILL_NAME" \
   );
   process.exit(discovered ? 0 : 1);
 ' <<<"$prompt_input"
+
+test "$DB_HOST" = "postgres"
+test "$SELENIUM_HOST" = "selenium"
+test "$CAPYBARA_SERVER_HOST" = "rails-app"
+PGPASSWORD=postgres pg_isready --host "$DB_HOST" --username postgres >/dev/null
+postgres_version="$(PGPASSWORD=postgres psql --host "$DB_HOST" --username postgres --dbname postgres --tuples-only --no-align --command 'SHOW server_version')"
+[[ "$postgres_version" == "$FOUNDATION_POSTGRES_VERSION."* ]]
+
+if [[ -d application ]]; then
+  script/application-smoke
+else
+  echo "Generated application smoke skipped: ./application is not present."
+fi
 
 echo "Devcontainer installation smoke passed."

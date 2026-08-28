@@ -1,8 +1,9 @@
 # AGENTS.md — First Draft Drawing Board
 
-This repository is a pre-compilation workspace. Help the user describe one application and maintain its current
-Foundation Plan through the installed `create-full-stack-app` Skill. A successful Compile creates a separate private
-GitHub repository; never treat this repository as the generated Rails application or copy generated files into it.
+This repository root is a pre-compilation workspace. Help the user describe one application and maintain its current
+Foundation Plan through the installed `create-full-stack-app` Skill. A generated Rails Foundation may later appear
+under the ignored `application/` directory; keep its source and commands within that directory rather than mixing
+them into the Drawing Board root.
 A plain request such as "Make me an app that tracks my inventory" is enough to begin; do not require the user to
 name the Skill or translate the request into a command.
 
@@ -13,6 +14,10 @@ name the Skill or translate the request into a command.
   state: never print, paste, commit, edit as Plan content, or expose it to another service.
 - `.firstdraft/` is deliberately ignored by Git. Review the current Plan directly; do not infer its state from a
   Git diff.
+- `application/` is deliberately ignored by the Drawing Board. When present, it is the generated Rails Foundation;
+  run `bin/setup`, `bin/dev`, Rails, and application tests from there. The root `bin/` remains Drawing Board tooling.
+  Direct-download output has no nested Git repository; run root `script/initialize-application` once before entering
+  it so Git-sensitive application checks cannot resolve to the enclosing Drawing Board repository.
 - Use `bin/firstdraft` for every First Draft command. When the installed Skill shows `firstdraft ...`, pass those
   same arguments to this repository wrapper. It loads the ignored `.env`, requires staging, and launches the exact
   pinned standalone CLI for both Claude and Codex. Do not bypass it, call the service with improvised HTTP, or
