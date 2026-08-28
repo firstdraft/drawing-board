@@ -81,7 +81,8 @@ When the Plan looks right, approve the in-workspace Compile. First Draft will pu
 `application`, and the agent will initialize and verify it before continuing there.
 
 If you want a separate private GitHub repository instead, say so before approving the Compile. The agent will use
-the distinct Publication mode and give you that repository's URL. Neither mode deploys the application.
+the distinct Publication mode and give you that repository's URL. This mode requires the **Connect GitHub App** step
+from §3. Neither mode deploys the application.
 
 Codex may ask permission for an exact `bin/firstdraft ...` command to contact `staging.firstdraft.com`. Approve that
 command; do not grant unrelated network access.
@@ -97,12 +98,14 @@ script/application-smoke
 
 The first command gives the generated source its own initial Git history before setup or edits. The second verifies
 the generated application without changing its source. Continue working from the `application` folder; the Drawing
-Board root remains the planning workspace.
+Board root remains the planning workspace. The generated application's README owns its normal `bin/dev` command,
+but the browser-only Codespaces preview route is not qualified yet, as described under Troubleshooting.
 
 That nested repository starts with no remote. The parent Drawing Board ignores `application`, so pushing the Drawing
 Board does not back up the generated source, and deleting the Codespace can remove its only copy. Before deleting the
 Codespace, ask your agent to help create an approved remote and push the nested `main`. If you want First Draft to
-create the separate private repository for you, choose Publication before Compile instead.
+create the separate private repository for you, complete **Connect GitHub App** in §3 and choose Publication before
+Compile instead.
 
 The generated application includes:
 
