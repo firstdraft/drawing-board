@@ -1,11 +1,30 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+root="$(cd -P "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 application_root="${root}/application"
 
 if [[ ! -x "${application_root}/bin/setup" || ! -x "${application_root}/bin/ci" ]]; then
   echo "Expected a generated Rails Foundation under ${application_root}." >&2
+  exit 1
+fi
+
+application_root="$(cd -P "${application_root}" && pwd -P)"
+case "${application_root}" in
+  "${root}"/*) ;;
+  *)
+    echo "The generated application must resolve inside the Drawing Board." >&2
+    exit 1
+    ;;
+esac
+application_git_root="$(git -C "${application_root}" rev-parse --show-toplevel 2>/dev/null || true)"
+if [[ -z "${application_git_root}" ]]; then
+  echo "Initialize the generated application with script/initialize-application before running its CI." >&2
+  exit 1
+fi
+application_git_root="$(cd -P "${application_git_root}" && pwd -P)"
+if [[ "${application_git_root}" != "${application_root}" ]]; then
+  echo "The generated application Git repository must resolve at its physical application root." >&2
   exit 1
 fi
 
@@ -72,12 +91,6 @@ done
 
 cleanup_server
 trap - EXIT
-
-application_git_root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
-if [[ "${application_git_root}" != "${application_root}" ]]; then
-  echo "Initialize the generated application with script/initialize-application before running its CI." >&2
-  exit 1
-fi
 
 CI=1 bin/ci
 

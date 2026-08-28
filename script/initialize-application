@@ -1,8 +1,35 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-application_root="${root}/application"
+root="$(cd -P "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+if (( $# > 1 )); then
+  echo "Usage: script/initialize-application [APPLICATION_PATH]" >&2
+  exit 1
+fi
+
+application_argument="${1:-application}"
+if [[ -z "${application_argument}" ]]; then
+  echo "The application path must not be empty." >&2
+  exit 1
+fi
+if [[ "${application_argument}" = /* ]]; then
+  application_candidate="${application_argument}"
+else
+  application_candidate="${root}/${application_argument}"
+fi
+if [[ ! -d "${application_candidate}" ]]; then
+  echo "Expected a generated application directory at ${application_argument}." >&2
+  exit 1
+fi
+
+application_root="$(cd -P "${application_candidate}" && pwd -P)"
+case "${application_root}" in
+  "${root}"/*) ;;
+  *)
+    echo "The generated application must resolve inside the Drawing Board." >&2
+    exit 1
+    ;;
+esac
 
 for required_path in \
   bin/setup \
@@ -15,7 +42,7 @@ for required_path in \
   fi
 done
 
-if [[ -e "${application_root}/.git" ]]; then
+if [[ -e "${application_root}/.git" || -L "${application_root}/.git" ]]; then
   echo "The generated application already has its own Git repository." >&2
   exit 1
 fi
@@ -36,6 +63,8 @@ cleanup() {
 trap cleanup EXIT
 
 temporary_checkout="${temporary_root}/repository"
+inventory_path="${temporary_root}/source-inventory.json"
+node "${root}/script/application-repository-inventory.mjs" capture "${application_root}" "${inventory_path}"
 git init --quiet --initial-branch=main "${temporary_checkout}"
 temporary_git_dir="${temporary_checkout}/.git"
 git --git-dir="${temporary_git_dir}" config core.autocrlf false
@@ -46,8 +75,7 @@ git_with_application() {
     git -c core.autocrlf=false -c core.fileMode=true "$@"
 }
 
-git_with_application -c core.excludesFile=/dev/null add --all
-git_with_application diff --cached --check
+git_with_application -c core.excludesFile=/dev/null add --all --force -- .
 GIT_AUTHOR_NAME="${author_name}" \
   GIT_AUTHOR_EMAIL="${author_email}" \
   GIT_COMMITTER_NAME="${GIT_COMMITTER_NAME:-${author_name}}" \
@@ -66,10 +94,19 @@ if [[ -n "$(git_with_application status --porcelain)" ]]; then
   echo "The generated application repository did not initialize cleanly." >&2
   exit 1
 fi
+node "${root}/script/application-repository-inventory.mjs" verify \
+  "${application_root}" "${inventory_path}" "${temporary_git_dir}"
 
 mv "${temporary_git_dir}" "${application_root}/.git"
-rmdir "${temporary_checkout}"
-rmdir "${temporary_root}"
+committed_root="$(git -C "${application_root}" rev-parse --show-toplevel)"
+committed_root="$(cd -P "${committed_root}" && pwd -P)"
+if [[ "${committed_root}" != "${application_root}" || \
+  "$(git -C "${application_root}" branch --show-current)" != "main" ]]; then
+  echo "The generated application repository did not resolve at its physical root on main." >&2
+  exit 1
+fi
+rm -f -- "${inventory_path}"
+rmdir "${temporary_checkout}" "${temporary_root}"
 trap - EXIT
 
 echo "Initialized application at ${initial_commit} on main."
