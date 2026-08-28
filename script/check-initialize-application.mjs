@@ -19,6 +19,8 @@ const harnessRoot = path.join(temporaryRoot, "drawing-board");
 const applicationRoot = path.join(harnessRoot, "application");
 const initializer = path.join(harnessRoot, "script", "initialize-application");
 
+class PrerequisiteError extends Error {}
+
 function writeAt(root, relativePath, contents, mode = 0o644) {
   const destination = path.join(root, relativePath);
   fs.mkdirSync(path.dirname(destination), {recursive: true});
@@ -94,7 +96,17 @@ try {
   assert.notEqual(linkedEntrypoint.status, 0, "the inventory entry point must not skip execution through a symlink");
   assert.match(linkedEntrypoint.stderr, /Usage: application-repository-inventory\.mjs/);
 
-  const rubyVersion = execFileSync("ruby", ["-e", "print RUBY_VERSION"], {encoding: "utf8"});
+  let rubyVersion;
+  try {
+    rubyVersion = execFileSync("ruby", ["-e", "print RUBY_VERSION"], {encoding: "utf8"});
+  } catch (error) {
+    if (error?.code === "ENOENT") {
+      throw new PrerequisiteError(
+        "script/check requires the pinned Ruby on PATH; run it through the pinned toolchain or in the Dev Container.",
+      );
+    }
+    throw error;
+  }
   const nodeVersion = process.versions.node;
   write(
     ".devcontainer/agent-versions.env",
@@ -140,6 +152,8 @@ try {
   fs.symlinkSync("../tool.js", path.join(setupApplication, "node_modules/.bin/tool"));
   const linkedApplication = copyApplication("linked-application");
   fs.symlinkSync("ordinary.txt", path.join(linkedApplication, "ordinary-link"));
+  const modeApplication = copyApplication("mode-application");
+  fs.chmodSync(path.join(modeApplication, "ordinary.txt"), 0o664);
 
   const hostileGitRoot = path.join(temporaryRoot, "ambient-repository");
   fs.mkdirSync(hostileGitRoot);
@@ -223,6 +237,13 @@ try {
   assert.equal(fs.lstatSync(path.join(linkedApplication, "ordinary-link")).isSymbolicLink(), true);
   assert.equal(fs.existsSync(path.join(linkedApplication, ".git")), false);
 
+  const modeRejected = runInitializer("mode-application");
+  assert.notEqual(modeRejected.status, 0, "initializer must reject a noncanonical generated mode");
+  assert.match(modeRejected.stderr, /Unsupported generated application mode at ordinary\.txt: 664/);
+  assert.match(modeRejected.stderr, /Compile again into a fresh absent directory/);
+  assert.equal(fs.statSync(path.join(modeApplication, "ordinary.txt")).mode & 0o777, 0o664);
+  assert.equal(fs.existsSync(path.join(modeApplication, ".git")), false);
+
   const initialized = runInitializer("application", {
     GIT_DIR: hostileGitDirectory,
     GIT_WORK_TREE: hostileGitRoot,
@@ -292,6 +313,10 @@ try {
   );
 
   console.log("Generated application initialization contract passed.");
+} catch (error) {
+  if (!(error instanceof PrerequisiteError)) throw error;
+  console.error(error.message);
+  process.exitCode = 1;
 } finally {
   fs.rmSync(temporaryRoot, {recursive: true, force: true});
 }
