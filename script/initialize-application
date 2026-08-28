@@ -38,12 +38,15 @@ trap cleanup EXIT
 temporary_checkout="${temporary_root}/repository"
 git init --quiet --initial-branch=main "${temporary_checkout}"
 temporary_git_dir="${temporary_checkout}/.git"
+git --git-dir="${temporary_git_dir}" config core.autocrlf false
+git --git-dir="${temporary_git_dir}" config core.fileMode true
 
 git_with_application() {
-  GIT_DIR="${temporary_git_dir}" GIT_WORK_TREE="${application_root}" git "$@"
+  GIT_DIR="${temporary_git_dir}" GIT_WORK_TREE="${application_root}" \
+    git -c core.autocrlf=false -c core.fileMode=true "$@"
 }
 
-git_with_application add --all
+git_with_application -c core.excludesFile=/dev/null add --all
 git_with_application diff --cached --check
 GIT_AUTHOR_NAME="${author_name}" \
   GIT_AUTHOR_EMAIL="${author_email}" \
@@ -51,7 +54,8 @@ GIT_AUTHOR_NAME="${author_name}" \
   GIT_COMMITTER_EMAIL="${GIT_COMMITTER_EMAIL:-${author_email}}" \
   GIT_DIR="${temporary_git_dir}" \
   GIT_WORK_TREE="${application_root}" \
-  git -c commit.gpgsign=false commit --quiet --message "Start generated application"
+  git -c commit.gpgsign=false -c core.hooksPath=/dev/null commit --quiet --no-verify \
+    --message "Start generated application"
 
 initial_commit="$(git_with_application rev-parse HEAD)"
 if [[ "$(git_with_application rev-list --parents --max-count=1 HEAD | wc -w | tr -d ' ')" != "1" ]]; then
