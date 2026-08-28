@@ -18,6 +18,7 @@ const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), "drawing-board-appli
 const harnessRoot = path.join(temporaryRoot, "drawing-board");
 const applicationRoot = path.join(harnessRoot, "application");
 const initializer = path.join(harnessRoot, "script", "initialize-application");
+const originalUmask = process.umask(0o077);
 
 class PrerequisiteError extends Error {}
 
@@ -25,6 +26,7 @@ function writeAt(root, relativePath, contents, mode = 0o644) {
   const destination = path.join(root, relativePath);
   fs.mkdirSync(path.dirname(destination), {recursive: true});
   fs.writeFileSync(destination, contents, {mode});
+  fs.chmodSync(destination, mode);
 }
 
 function write(relativePath, contents, mode = 0o644) {
@@ -126,6 +128,7 @@ try {
   write("application/bin/setup", "#!/usr/bin/env bash\ntouch setup-ran\n", 0o755);
   write("application/bin/ci", "#!/usr/bin/env bash\nexit 0\n", 0o755);
   write("application/ordinary.txt", "trailing whitespace stays exact  \n");
+  process.umask(0o022);
 
   const expectedPaths = [
     ".firstdraft/gaps.json",
@@ -318,5 +321,6 @@ try {
   console.error(error.message);
   process.exitCode = 1;
 } finally {
+  process.umask(originalUmask);
   fs.rmSync(temporaryRoot, {recursive: true, force: true});
 }
