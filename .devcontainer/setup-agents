@@ -14,7 +14,24 @@ if [[ "$(id -u)" == "0" ]]; then
 fi
 
 export NPM_CONFIG_CACHE="${NPM_CONFIG_CACHE:-$HOME/.cache/npm}"
-export PATH="$repository_root/bin:$HOME/.local/bin:$PATH"
+shared_path_prefix="$repository_root/bin:$HOME/.local/bin:"
+container_path="$PATH"
+while [[ "$container_path" == "$shared_path_prefix"* ]]; do
+  container_path="${container_path#"$shared_path_prefix"}"
+done
+export PATH="$shared_path_prefix$container_path"
+
+environment_snapshot="$(mktemp)"
+SHARED_PATH="$PATH" node -e '
+  const fs = require("node:fs");
+  const source = fs.readFileSync("/etc/environment", "utf8");
+  const pathLine = `PATH=${JSON.stringify(process.env.SHARED_PATH)}`;
+  const lines = source.split("\n").filter((line) => !line.startsWith("PATH="));
+  lines.splice(lines.at(-1) === "" ? -1 : lines.length, 0, pathLine);
+  process.stdout.write(lines.join("\n"));
+' >"$environment_snapshot"
+sudo install -o root -g root -m 0644 "$environment_snapshot" /etc/environment
+rm "$environment_snapshot"
 
 skills_cache_root="$HOME/.cache/firstdraft/skills"
 claude_skills_root="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/skills"

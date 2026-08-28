@@ -14,7 +14,7 @@ const lockfile = JSON.parse(fs.readFileSync(".devcontainer/devcontainer-lock.jso
 const expectedFeatures = [
   "ghcr.io/devcontainers/features/github-cli:1",
   "ghcr.io/devcontainers/features/sshd:1",
-];
+].sort();
 const configuredFeatures = Object.keys(configuration.features ?? {}).sort();
 const lockedFeatures = Object.keys(lockfile.features ?? {}).sort();
 if (JSON.stringify(configuredFeatures) !== JSON.stringify(expectedFeatures) ||
@@ -24,9 +24,11 @@ if (JSON.stringify(configuredFeatures) !== JSON.stringify(expectedFeatures) ||
 }
 for (const feature of expectedFeatures) {
   const entry = lockfile.features[feature];
+  const resolvedPrefix = `${feature.replace(/:\d+$/, "")}@sha256:`;
   if (!/^\d+\.\d+\.\d+$/.test(entry?.version ?? "") ||
-      !/^ghcr\.io\/devcontainers\/features\/[a-z0-9-]+@sha256:[0-9a-f]{64}$/.test(entry?.resolved ?? "") ||
-      !/^sha256:[0-9a-f]{64}$/.test(entry?.integrity ?? "")) {
+      !entry?.resolved?.startsWith(resolvedPrefix) ||
+      !/^[0-9a-f]{64}$/.test(entry.resolved.slice(resolvedPrefix.length)) ||
+      entry.integrity !== entry.resolved.split("@")[1]) {
     console.error(`The lockfile entry for ${feature} is incomplete.`);
     process.exit(1);
   }
