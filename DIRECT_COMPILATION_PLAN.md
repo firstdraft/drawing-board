@@ -126,9 +126,9 @@ The released packet-2.5 inputs observed on 2026-08-28 are:
 
 Drawing Board now pins that CLI/Skills pair and teaches direct `./application` output as its ordinary path. The
 candidate plugin `0.2.1` digest is `36e3e80db76d4af6c2af96d87fe42e00b944aab01e16584e6eb5149dc3f196b1`, but this source-pin packet does not publish
-plugin bytes or move a catalog or npm dist-tag. Packet 3 owns the observed non-prebuilt journey rather than
-inferring it from these compatible release coordinates; the result below also preserves what that journey did not
-yet prove.
+plugin bytes, move a catalog, or move npm's `latest` dist-tag. The `next` tag moved to CLI `0.2.1` in step 3. Packet
+3 owns the observed non-prebuilt journey rather than inferring it from these compatible release coordinates; the
+result below also preserves what that journey did not yet prove.
 
 ## Packet 3: one real non-prebuilt Codespace journey
 
@@ -179,9 +179,10 @@ A fresh private repository and Codespace exercised the exact Drawing Board candi
   Ruby 4.0.5 and Node 24.18.0.
 - A real browser rendered `It works. · Neighborhood Guide` and the empty `Places · Neighborhood Guide` index
   through an authenticated localhost forward to the same Codespace process. The ordinary private Codespaces
-  `*.app.github.dev` URL instead reached Rails' blocked-host page. This is a generated Foundation host-authorization
-  defect, not a successful ordinary forwarded-port observation; it requires a target-owned correction before the
-  colleague Codespaces browser journey is complete.
+  `*.app.github.dev` URL instead reached Rails' blocked-host page. The generated Rails development configuration did
+  not admit that exact Codespaces host; broadening the Drawing Board container environment would not preserve Rails'
+  exact host boundary. This is a generated Foundation target defect, not a successful ordinary forwarded-port
+  observation, and requires a target-owned correction before the colleague Codespaces browser journey is complete.
 - The single task token was revoked after proof and the exact credential then received `401 authentication_required`.
   The revoked value was removed from the Codespace, and the Codespace stop was requested.
 

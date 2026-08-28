@@ -99,6 +99,11 @@ The first command gives the generated source its own initial Git history before 
 the generated application without changing its source. Continue working from the `application` folder; the Drawing
 Board root remains the planning workspace.
 
+That nested repository starts with no remote. The parent Drawing Board ignores `application`, so pushing the Drawing
+Board does not back up the generated source, and deleting the Codespace can remove its only copy. Before deleting the
+Codespace, ask your agent to help create an approved remote and push the nested `main`. If you want First Draft to
+create the separate private repository for you, choose Publication before Compile instead.
+
 The generated application includes:
 
 - runnable application source and tests;
@@ -127,6 +132,10 @@ bin/agent-doctor
 
 The doctor reports whether the token is present without showing it. If it reports an `.env` permissions problem,
 run `chmod 600 .env` and try again.
+
+The current generated Foundation can show Rails' **Blocked hosts** page at an ordinary Codespaces forwarded-port
+URL. Stop and tell your agent if that happens; do not disable Rails' host checks. The target needs a generated-app
+correction before that browser route is qualified.
 
 First Draft is currently an internal preview. Use it for test projects. The ordinary Compile creates only the local
 `application` directory; explicit Publication creates a private GitHub repository. Neither deploys the application.
