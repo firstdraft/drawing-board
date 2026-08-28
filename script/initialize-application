@@ -2,6 +2,17 @@
 set -Eeuo pipefail
 
 root="$(cd -P "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+
+# Git plumbing variables belong to the repository that exported them. They may
+# not redirect this initializer's temporary repository, index, or object store.
+unset GIT_DIR \
+  GIT_WORK_TREE \
+  GIT_INDEX_FILE \
+  GIT_OBJECT_DIRECTORY \
+  GIT_ALTERNATE_OBJECT_DIRECTORIES \
+  GIT_COMMON_DIR \
+  GIT_NAMESPACE
+
 if (( $# > 1 )); then
   echo "Usage: script/initialize-application [APPLICATION_PATH]" >&2
   exit 1
@@ -36,11 +47,15 @@ for required_path in \
   bin/ci \
   .firstdraft/submitted-foundation-plan.json \
   .firstdraft/gaps.json; do
-  if [[ ! -e "${application_root}/${required_path}" ]]; then
+  if [[ ! -f "${application_root}/${required_path}" || -L "${application_root}/${required_path}" ]]; then
     echo "Expected generated application file: application/${required_path}" >&2
     exit 1
   fi
 done
+if [[ ! -x "${application_root}/bin/setup" || ! -x "${application_root}/bin/ci" ]]; then
+  echo "Expected executable generated application setup and CI commands." >&2
+  exit 1
+fi
 
 if [[ -e "${application_root}/.git" || -L "${application_root}/.git" ]]; then
   echo "The generated application already has its own Git repository." >&2
@@ -64,7 +79,9 @@ trap cleanup EXIT
 
 temporary_checkout="${temporary_root}/repository"
 inventory_path="${temporary_root}/source-inventory.json"
-node "${root}/script/application-repository-inventory.mjs" capture "${application_root}" "${inventory_path}"
+inventory_paths_path="${temporary_root}/source-paths"
+expected_firstdraft_paths_path="${temporary_root}/expected-firstdraft-paths"
+actual_firstdraft_paths_path="${temporary_root}/actual-firstdraft-paths"
 git init --quiet --initial-branch=main "${temporary_checkout}"
 temporary_git_dir="${temporary_checkout}/.git"
 git --git-dir="${temporary_git_dir}" config core.autocrlf false
@@ -75,14 +92,51 @@ git_with_application() {
     git -c core.autocrlf=false -c core.fileMode=true "$@"
 }
 
-git_with_application -c core.excludesFile=/dev/null add --all --force -- .
+git_with_application -c core.excludesFile=/dev/null add --all -- :/
+git_with_application --literal-pathspecs add --force -- \
+  .firstdraft/gaps.json \
+  .firstdraft/submitted-foundation-plan.json
+
+printf '%s\0' \
+  .firstdraft/gaps.json \
+  .firstdraft/submitted-foundation-plan.json >"${expected_firstdraft_paths_path}"
+git_with_application --literal-pathspecs ls-files -z --cached -- .firstdraft \
+  >"${actual_firstdraft_paths_path}"
+if ! cmp -s "${expected_firstdraft_paths_path}" "${actual_firstdraft_paths_path}"; then
+  echo "The generated application .firstdraft directory must contain only the submitted Plan and GapSet." >&2
+  exit 1
+fi
+
+ignored_path="$(
+  git_with_application -c core.excludesFile=/dev/null \
+    ls-files --others --ignored --exclude-standard --directory --no-empty-directory -- :/ |
+    LC_ALL=C sort |
+    sed -n '1p'
+)"
+if [[ -n "${ignored_path}" ]]; then
+  echo "Ignored local state exists at application/${ignored_path}." >&2
+  echo "Move it outside the generated application or compile into a fresh absent directory; nothing was removed." >&2
+  exit 1
+fi
+
+git_with_application ls-files -z --cached -- :/ >"${inventory_paths_path}"
+inventory_capture="$(
+  node "${root}/script/application-repository-inventory.mjs" capture \
+    "${application_root}" "${inventory_path}" "${inventory_paths_path}"
+)"
+if [[ "${inventory_capture}" != "Application inventory captured." ]]; then
+  echo "The generated application source inventory was not captured." >&2
+  exit 1
+fi
+
 GIT_AUTHOR_NAME="${author_name}" \
   GIT_AUTHOR_EMAIL="${author_email}" \
   GIT_COMMITTER_NAME="${GIT_COMMITTER_NAME:-${author_name}}" \
   GIT_COMMITTER_EMAIL="${GIT_COMMITTER_EMAIL:-${author_email}}" \
   GIT_DIR="${temporary_git_dir}" \
   GIT_WORK_TREE="${application_root}" \
-  git -c commit.gpgsign=false -c core.hooksPath=/dev/null commit --quiet --no-verify \
+  git -c commit.gpgsign=false -c core.hooksPath=/dev/null \
+    -c core.autocrlf=false -c core.fileMode=true commit --quiet --no-verify \
     --message "Start generated application"
 
 initial_commit="$(git_with_application rev-parse HEAD)"
@@ -94,18 +148,29 @@ if [[ -n "$(git_with_application status --porcelain)" ]]; then
   echo "The generated application repository did not initialize cleanly." >&2
   exit 1
 fi
-node "${root}/script/application-repository-inventory.mjs" verify \
-  "${application_root}" "${inventory_path}" "${temporary_git_dir}"
+inventory_verification="$(
+  node "${root}/script/application-repository-inventory.mjs" verify \
+    "${application_root}" "${inventory_path}" "${temporary_git_dir}"
+)"
+if [[ "${inventory_verification}" != "Application inventory verified." ]]; then
+  echo "The generated application inventory was not verified." >&2
+  exit 1
+fi
 
 mv "${temporary_git_dir}" "${application_root}/.git"
 committed_root="$(git -C "${application_root}" rev-parse --show-toplevel)"
 committed_root="$(cd -P "${committed_root}" && pwd -P)"
 if [[ "${committed_root}" != "${application_root}" || \
-  "$(git -C "${application_root}" branch --show-current)" != "main" ]]; then
+  "$(git -C "${application_root}" branch --show-current)" != "main" || \
+  "$(git -C "${application_root}" rev-parse HEAD)" != "${initial_commit}" ]]; then
   echo "The generated application repository did not resolve at its physical root on main." >&2
   exit 1
 fi
-rm -f -- "${inventory_path}"
+rm -f -- \
+  "${inventory_path}" \
+  "${inventory_paths_path}" \
+  "${expected_firstdraft_paths_path}" \
+  "${actual_firstdraft_paths_path}"
 rmdir "${temporary_checkout}" "${temporary_root}"
 trap - EXIT
 

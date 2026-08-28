@@ -49,7 +49,12 @@ for script in .devcontainer/setup-agents bin/agent-doctor bin/review-plan-with-c
   fi
 done
 
-for javascript in bin/firstdraft script/application-repository-inventory.mjs script/check-firstdraft-wrapper.mjs script/check-initialize-application.mjs; do
+for javascript in \
+  bin/firstdraft \
+  script/application-repository-inventory-lib.mjs \
+  script/application-repository-inventory.mjs \
+  script/check-firstdraft-wrapper.mjs \
+  script/check-initialize-application.mjs; do
   node --check "$javascript"
 done
 if [[ ! -x bin/firstdraft ]]; then
