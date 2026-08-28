@@ -101,15 +101,18 @@ review before asking the authoring agent to revise the Plan.
 
 ## What the Codespace contains
 
-The devcontainer starts from Microsoft's prebuilt Node development image and adds GitHub CLI. It checks out one
-exact Skills revision and links the same `create-full-stack-app` Skill into Claude's and Codex's documented personal
-Skill directories. It also installs exact versions of Claude Code, Codex, and the standalone First Draft CLI. Ruby,
-Rails, PostgreSQL, and Foundation Rails Core dependencies belong to the generated repository and are installed there
-after Compile.
+The devcontainer starts from Microsoft's prebuilt Node development image and adds the locked GitHub CLI and SSH
+server Features. The SSH server lets `gh codespace ssh` reach this non-default image; its own port 2222 is not
+forwarded by this template. The devcontainer checks out one exact Skills revision and links the same
+`create-full-stack-app` Skill into Claude's and Codex's documented personal Skill directories. It also installs exact
+versions of Claude Code, Codex, and the standalone First Draft CLI. Ruby, Rails, PostgreSQL, and Foundation Rails
+Core dependencies belong to the generated repository and are installed there after Compile.
 
 Agent authentication is retained in named volumes across container rebuilds and is deleted with the Codespace.
 Setup creates `.env` from the non-secret `.env.example` only when it is absent and never overwrites it. The user adds
 the token locally; Git ignores that file, but processes and agents in the Codespace can read it.
 
-Run `script/check` for repository contract checks. The hosted CI workflow also builds the real devcontainer and
-verifies the installed versions, shared `.env` wrapper, and both pinned Skill links.
+Run `script/check` for repository contract checks. When changing a Feature, let the current Dev Container CLI build
+regenerate `.devcontainer/devcontainer-lock.json` and review its exact version and digest. The hosted CI workflow
+also builds the real devcontainer and verifies the installed versions, shared `.env` wrapper, and both pinned Skill
+links.

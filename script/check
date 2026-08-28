@@ -7,6 +7,34 @@ cd "$(dirname "$0")/.."
 # of the JSONC accepted by the devcontainer reader.
 node -e 'JSON.parse(require("node:fs").readFileSync(".devcontainer/devcontainer.json", "utf8"))'
 
+node <<'NODE'
+const fs = require("node:fs");
+const configuration = JSON.parse(fs.readFileSync(".devcontainer/devcontainer.json", "utf8"));
+const lockfile = JSON.parse(fs.readFileSync(".devcontainer/devcontainer-lock.json", "utf8"));
+const expectedFeatures = [
+  "ghcr.io/devcontainers/features/github-cli:1",
+  "ghcr.io/devcontainers/features/sshd:1",
+].sort();
+const configuredFeatures = Object.keys(configuration.features ?? {}).sort();
+const lockedFeatures = Object.keys(lockfile.features ?? {}).sort();
+if (JSON.stringify(configuredFeatures) !== JSON.stringify(expectedFeatures) ||
+    JSON.stringify(lockedFeatures) !== JSON.stringify(expectedFeatures)) {
+  console.error("The devcontainer features and lockfile must contain the exact reviewed feature set.");
+  process.exit(1);
+}
+for (const feature of expectedFeatures) {
+  const entry = lockfile.features[feature];
+  const resolvedPrefix = `${feature.replace(/:\d+$/, "")}@sha256:`;
+  if (!/^\d+\.\d+\.\d+$/.test(entry?.version ?? "") ||
+      !entry?.resolved?.startsWith(resolvedPrefix) ||
+      !/^[0-9a-f]{64}$/.test(entry.resolved.slice(resolvedPrefix.length)) ||
+      entry.integrity !== entry.resolved.split("@")[1]) {
+    console.error(`The lockfile entry for ${feature} is incomplete.`);
+    process.exit(1);
+  }
+}
+NODE
+
 # shellcheck disable=SC1091
 source .devcontainer/agent-versions.env
 
