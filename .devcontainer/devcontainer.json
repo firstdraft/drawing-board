@@ -1,25 +1,41 @@
 {
   "name": "First Draft Drawing Board",
-  "image": "mcr.microsoft.com/devcontainers/javascript-node:24-bookworm",
-  "remoteUser": "node",
+  "dockerComposeFile": "compose.yaml",
+  "service": "rails-app",
+  "workspaceFolder": "/workspaces/drawing-board",
+  "shutdownAction": "stopCompose",
   "features": {
     "ghcr.io/devcontainers/features/github-cli:1": {},
-    "ghcr.io/devcontainers/features/sshd:1": {}
+    "ghcr.io/rails/devcontainer/features/activestorage:1": {},
+    "ghcr.io/devcontainers/features/node:1": { "version": "24.18.0" },
+    "ghcr.io/devcontainers/features/sshd:1": {},
+    "ghcr.io/rails/devcontainer/features/postgres-client:1": {}
   },
   "containerEnv": {
-    "CLAUDE_CONFIG_DIR": "/home/node/.claude",
-    "CODEX_HOME": "/home/node/.codex",
-    "NPM_CONFIG_CACHE": "/home/node/.cache/npm",
-    "DISABLE_AUTOUPDATER": "1"
+    "CAPYBARA_SERVER_HOST": "rails-app",
+    "CAPYBARA_SERVER_PORT": "45678",
+    "CLAUDE_CONFIG_DIR": "/home/vscode/.claude",
+    "CODEX_HOME": "/home/vscode/.codex",
+    "DB_HOST": "postgres",
+    "DISABLE_AUTOUPDATER": "1",
+    "NPM_CONFIG_CACHE": "/home/vscode/.cache/npm",
+    "SELENIUM_HOST": "selenium"
   },
   "remoteEnv": {
-    "PATH": "${containerWorkspaceFolder}/bin:/home/node/.local/bin:${containerEnv:PATH}"
+    "PATH": "${containerWorkspaceFolder}/bin:/home/vscode/.local/bin:${containerEnv:PATH}"
   },
   "mounts": [
-    "source=firstdraft-drawing-board-claude-${devcontainerId},target=/home/node/.claude,type=volume",
-    "source=firstdraft-drawing-board-codex-${devcontainerId},target=/home/node/.codex,type=volume",
-    "source=firstdraft-drawing-board-cache-${devcontainerId},target=/home/node/.cache,type=volume"
+    "source=firstdraft-drawing-board-claude-${devcontainerId},target=/home/vscode/.claude,type=volume",
+    "source=firstdraft-drawing-board-codex-${devcontainerId},target=/home/vscode/.codex,type=volume",
+    "source=firstdraft-drawing-board-cache-${devcontainerId},target=/home/vscode/.cache,type=volume"
   ],
-  "onCreateCommand": "sudo chown -R node:node /home/node/.claude /home/node/.codex /home/node/.cache",
+  "forwardPorts": [3000, 5432],
+  "customizations": {
+    "vscode": {
+      "extensions": ["Shopify.ruby-lsp", "bradlc.vscode-tailwindcss"]
+    }
+  },
+  "remoteUser": "vscode",
+  "onCreateCommand": "sudo chown -R vscode:vscode /home/vscode/.claude /home/vscode/.codex /home/vscode/.cache",
   "postCreateCommand": ".devcontainer/setup-agents"
 }

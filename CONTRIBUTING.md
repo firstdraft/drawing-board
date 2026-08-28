@@ -14,16 +14,19 @@ A repository created from this template must provide one ready-to-use workspace 
 - `.env` supplies the shared staging origin and token without entering Git;
 - bare `firstdraft` on the Codespace PATH resolves to `bin/firstdraft`, and AGENTS.md routes Skill-issued commands
   through that wrapper; and
-- a successful Compile creates a separate private repository rather than modifying the Drawing Board.
+- the same container carries the current generated Foundation's Ruby and Node toolchain plus healthy PostgreSQL and
+  Selenium services, so an ignored application under `./application` can be developed without a second Codespace.
 
-The template does not contain Rails, PostgreSQL, or generated application source. Those belong to the repository
-created by First Draft.
+The template does not commit generated application source. `application/` is ignored local output; its Rails source
+remains distinct from the Drawing Board even though both use one container.
 
 ## Repository map
 
 | Path | Responsibility |
 |---|---|
-| `.devcontainer/devcontainer.json` | Codespace image, Features, lifecycle, volumes, and workspace environment |
+| `.devcontainer/Dockerfile` | Ruby runtime shared with the current generated Foundation |
+| `.devcontainer/compose.yaml` | Drawing Board, PostgreSQL, and Selenium service lifecycle |
+| `.devcontainer/devcontainer.json` | Codespace Features, lifecycle, volumes, ports, and workspace environment |
 | `.devcontainer/agent-versions.env` | Exact Claude, Codex, CLI, and Skills pins |
 | `.devcontainer/setup-agents` | Idempotent installation and Skill linking |
 | `.env.example` | Non-secret staging configuration copied to ignored `.env` |
@@ -32,6 +35,8 @@ created by First Draft.
 | `bin/review-plan-with-*` | Optional read-only review by the other installed agent |
 | `script/check` | Fast source, pin, wrapper, and credential contracts |
 | `script/devcontainer-smoke` | Runtime smoke executed inside the built Dev Container |
+| `script/initialize-application` | Parentless nested Git initialization for direct-download output |
+| `script/application-smoke` | Setup, PostgreSQL, readiness, and full CI proof for a generated `./application` |
 
 ## Work on the template
 

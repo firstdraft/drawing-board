@@ -1,5 +1,6 @@
 .env
 .claude/settings.local.json
 .firstdraft/
+/application/
 /tmp/
 .DS_Store

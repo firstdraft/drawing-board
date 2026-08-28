@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+application_root="${root}/application"
+
+if [[ ! -x "${application_root}/bin/setup" || ! -x "${application_root}/bin/ci" ]]; then
+  echo "Expected a generated Rails Foundation under ${application_root}." >&2
+  exit 1
+fi
+
+# shellcheck disable=SC1091
+source "${root}/.devcontainer/agent-versions.env"
+
+cd "${application_root}"
+
+expected_ruby="$(tr -d '\r\n' < .ruby-version)"
+expected_ruby="${expected_ruby#ruby-}"
+expected_node="$(tr -d '\r\n' < .node-version)"
+actual_ruby="$(ruby -e 'print RUBY_VERSION')"
+actual_node="$(node --version)"
+actual_node="${actual_node#v}"
+
+[[ "${expected_ruby}" == "${FOUNDATION_RUBY_VERSION}" ]] || {
+  echo "Generated Foundation expects Ruby ${expected_ruby}; the Drawing Board provides ${FOUNDATION_RUBY_VERSION}." >&2
+  exit 1
+}
+[[ "${expected_node}" == "${FOUNDATION_NODE_VERSION}" ]] || {
+  echo "Generated Foundation expects Node ${expected_node}; the Drawing Board provides ${FOUNDATION_NODE_VERSION}." >&2
+  exit 1
+}
+[[ "${actual_ruby}" == "${expected_ruby}" ]] || {
+  echo "Expected Ruby ${expected_ruby}, got ${actual_ruby}." >&2
+  exit 1
+}
+[[ "${actual_node}" == "${expected_node}" ]] || {
+  echo "Expected Node ${expected_node}, got ${actual_node}." >&2
+  exit 1
+}
+
+bin/setup --skip-server
+
+postgres_version="$(bin/rails runner 'print ActiveRecord::Base.connection.select_value("SHOW server_version")')"
+[[ "${postgres_version}" == "${FOUNDATION_POSTGRES_VERSION}."* ]] || {
+  echo "Expected PostgreSQL ${FOUNDATION_POSTGRES_VERSION}, got ${postgres_version}." >&2
+  exit 1
+}
+
+bin/rails server --binding 127.0.0.1 --port 3100 >tmp/drawing-board-application-server.log 2>&1 &
+server_pid=$!
+cleanup_server() {
+  kill "${server_pid}" >/dev/null 2>&1 || true
+  wait "${server_pid}" >/dev/null 2>&1 || true
+}
+trap cleanup_server EXIT
+
+ready_status=""
+for _ in {1..60}; do
+  ready_status="$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:3100/ready || true)"
+  [[ "${ready_status}" == "200" ]] && break
+  kill -0 "${server_pid}" >/dev/null 2>&1 || {
+    cat tmp/drawing-board-application-server.log >&2
+    exit 1
+  }
+  sleep 1
+done
+[[ "${ready_status}" == "200" ]] || {
+  cat tmp/drawing-board-application-server.log >&2
+  echo "Generated Foundation did not become ready." >&2
+  exit 1
+}
+
+cleanup_server
+trap - EXIT
+
+application_git_root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+if [[ "${application_git_root}" != "${application_root}" ]]; then
+  echo "Initialize the generated application with script/initialize-application before running its CI." >&2
+  exit 1
+fi
+
+CI=1 bin/ci
+
+echo "Generated application setup, PostgreSQL, readiness, and CI passed."
