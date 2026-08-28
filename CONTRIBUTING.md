@@ -47,8 +47,9 @@ bypass those rules are `.firstdraft/submitted-foundation-plan.json` and `.firstd
 path is preserved and stops initialization; a future generated ignored file must update this narrow allowlist and
 its exact-byte fixture in the same coordinated release. Canonical `0644` and `0755` modes are part of the generated
 artifact contract; a mismatch requires a fresh compile into an absent directory rather than local mode repair.
-Preserve the mismatched directory at a user-approved location outside this repository before recompiling; never
-delete or overwrite it to manufacture an absent destination.
+Preserve the mismatched directory by pushing its nested `main` to an approved remote or moving it to a sibling under
+the Codespace's persistent `/workspaces` directory before recompiling; never use `/tmp` or the container home, and
+never delete or overwrite it to manufacture an absent destination.
 
 ## Work on the template
 
