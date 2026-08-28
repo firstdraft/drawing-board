@@ -49,12 +49,15 @@ for script in .devcontainer/setup-agents bin/agent-doctor bin/review-plan-with-c
   fi
 done
 
-node --check bin/firstdraft
+for javascript in bin/firstdraft script/application-repository-inventory.mjs script/check-firstdraft-wrapper.mjs script/check-initialize-application.mjs; do
+  node --check "$javascript"
+done
 if [[ ! -x bin/firstdraft ]]; then
   echo "bin/firstdraft must be executable." >&2
   exit 1
 fi
 node script/check-firstdraft-wrapper.mjs
+node script/check-initialize-application.mjs
 
 expected_bin_entries=$'bin/agent-doctor\nbin/firstdraft\nbin/review-plan-with-claude\nbin/review-plan-with-codex'
 actual_bin_entries="$(find bin -mindepth 1 -maxdepth 1 -print | sort)"

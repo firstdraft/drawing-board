@@ -19,6 +19,8 @@ A repository created from this template must provide one ready-to-use workspace 
 
 The template does not commit generated application source. `application/` is ignored local output; its Rails source
 remains distinct from the Drawing Board even though both use one container.
+This is preparatory container plumbing: the currently pinned CLI and Skill still publish a separate private
+repository. A later coordinated CLI/Skill/pin packet will activate direct materialization into `application/`.
 
 ## Repository map
 
