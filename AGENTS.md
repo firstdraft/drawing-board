@@ -36,4 +36,4 @@ name the Skill or translate the request into a command.
   `.firstdraft/submitted-foundation-plan.json` and `.firstdraft/gaps.json`. Continue only in a separate checkout when
   the user asks.
 
-Run `script/check` after changing the Drawing Board template itself.
+When changing the Drawing Board template itself, read `CONTRIBUTING.md` and run `script/check`.
