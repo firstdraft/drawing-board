@@ -18,10 +18,10 @@ A repository created from this template must provide one ready-to-use workspace 
   Selenium services, so an ignored application under `./application` can be developed without a second Codespace.
 
 The template does not commit generated application source. `application/` is ignored local output; its Rails source
-remains distinct from the Drawing Board even though both use one container. The pinned CLI and Skill select direct
-materialization into the absent `application/` directory as this template's default completion mode. Zero-flag
-GitHub Publication remains a separate explicit mode. The accepted cross-repository sequence and its safety
-boundaries live in
+remains distinct from the Drawing Board even though both use one container. The pinned CLI and Skill make direct
+materialization available, and Drawing Board's `AGENTS.md` selects the absent `application/` directory as this
+template's default completion mode. Zero-flag GitHub Publication remains a separate explicit mode. The accepted
+cross-repository sequence and its safety boundaries live in
 [DIRECT_COMPILATION_PLAN.md](DIRECT_COMPILATION_PLAN.md).
 
 ## Repository map
@@ -47,6 +47,8 @@ bypass those rules are `.firstdraft/submitted-foundation-plan.json` and `.firstd
 path is preserved and stops initialization; a future generated ignored file must update this narrow allowlist and
 its exact-byte fixture in the same coordinated release. Canonical `0644` and `0755` modes are part of the generated
 artifact contract; a mismatch requires a fresh compile into an absent directory rather than local mode repair.
+Preserve the mismatched directory at a user-approved location outside this repository before recompiling; never
+delete or overwrite it to manufacture an absent destination.
 
 ## Work on the template
 
@@ -86,4 +88,7 @@ are owned by [firstdraft/firstdraft](https://github.com/firstdraft/firstdraft); 
 
 Keep [README.md](README.md) focused on the beginner journey. Put maintainer commands and implementation details here,
 and keep agent-only guardrails in [AGENTS.md](AGENTS.md). If a workflow change affects what a tester must do, update
-the README and verify the complete template-to-generated-repository journey before landing it.
+the README and verify the affected journey before landing it: template-to-`application/` for direct mode, or the
+separate-repository journey for Publication. [DIRECT_COMPILATION_PLAN.md](DIRECT_COMPILATION_PLAN.md) owns the
+current direct-journey acceptance steps and every explicitly unfinished step; do not call that journey complete
+until those steps are observed.
