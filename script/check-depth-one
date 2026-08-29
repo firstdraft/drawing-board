@@ -34,5 +34,5 @@ if git -C "${scratch}/repo" cat-file -e "${source_commit}^{commit}" 2>/dev/null;
 fi
 
 cd "${scratch}/repo"
-node script/check-image-receipt.mjs
+FIRSTDRAFT_REQUIRE_IMAGE_SOURCE_COMMIT=0 node script/check-image-receipt.mjs
 echo "Depth-one development-image receipt contract passed."

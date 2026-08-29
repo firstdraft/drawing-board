@@ -6,6 +6,7 @@ import fs from "node:fs";
 
 const receiptPath = ".devcontainer/image/receipt.json";
 const receipt = JSON.parse(fs.readFileSync(receiptPath, "utf8"));
+const requireSourceCommit = process.env.FIRSTDRAFT_REQUIRE_IMAGE_SOURCE_COMMIT;
 const sha256Pattern = /^sha256:[0-9a-f]{64}$/;
 const gitObjectPattern = /^[0-9a-f]{40}$/;
 const required = (condition, message) => {
@@ -16,6 +17,7 @@ const required = (condition, message) => {
 };
 
 required(receipt.format === "firstdraft.drawing-board-development-image/1", "The development-image receipt format changed.");
+required([undefined, "0", "1"].includes(requireSourceCommit), "FIRSTDRAFT_REQUIRE_IMAGE_SOURCE_COMMIT must be 0, 1, or unset.");
 required(receipt.source?.repository === "firstdraft/drawing-board", "The development-image receipt must name its source repository.");
 required(gitObjectPattern.test(receipt.source?.commit ?? ""), "The development-image receipt must name one exact source commit.");
 required(gitObjectPattern.test(receipt.source?.tree ?? ""), "The development-image receipt must name one exact source tree.");
@@ -83,6 +85,8 @@ if (sourceObject.status === 0) {
     const sourceSha256 = crypto.createHash("sha256").update(sourceBytes).digest("hex");
     required(sourceSha256 === receipt.inputs[path], `The development-image receipt does not match ${path} at its source commit.`);
   }
+} else {
+  required(requireSourceCommit !== "1", "The development-image source commit is required but absent from this checkout.");
 }
 
 console.log("Development image receipt contract passed.");

@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          fetch-tags: true
+          fetch-depth: 0
       - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           registry: ghcr.io
@@ -24,4 +24,4 @@ jobs:
       - uses: devcontainers/ci@513af61f4de4f75d37e4438f184ba4358f0fc1ca # v0.3.1900000450
         with:
           push: never
-          runCmd: script/check && script/check-depth-one && script/devcontainer-smoke && script/devcontainer-smoke
+          runCmd: FIRSTDRAFT_REQUIRE_IMAGE_SOURCE_COMMIT=1 script/check && script/check-depth-one && script/devcontainer-smoke && script/devcontainer-smoke
