@@ -35,7 +35,7 @@ while IFS= read -r layer; do
   layers+=("${layer}")
 done < <(jq -r '.[].Layers[]' "${root}/archive/manifest.json" | sort -u)
 for layer in "${layers[@]}"; do
-  if tar -tf "${root}/archive/${layer}" | grep -Eq '(^|/)etc/ssh/ssh_host_[^/]+_key(\.pub)?$'; then
+  if tar -tf "${root}/archive/${layer}" | grep -Eq '(^|/)ssh_host_[^/]+_key(\.pub)?$'; then
     echo "An SSH host key is recoverable from image layer ${layer}." >&2
     exit 1
   fi

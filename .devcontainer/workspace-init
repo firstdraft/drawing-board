@@ -2,6 +2,7 @@
 set -Eeuo pipefail
 
 sudo install -d -m 0755 /run/sshd
+sudo rm -f /etc/ssh/ssh_host_*
 sudo ssh-keygen -A
 sudo /usr/sbin/sshd -t
 if ! pgrep -x sshd >/dev/null; then
