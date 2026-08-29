@@ -3,7 +3,7 @@ name: Dev Container image
 on:
   workflow_dispatch:
   push:
-    tags: [devcontainer-image-candidate-*]
+    tags: [devcontainer-image-candidate-safe-*]
 
 permissions:
   contents: read

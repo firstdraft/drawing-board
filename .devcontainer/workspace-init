@@ -8,4 +8,7 @@ if ! pgrep -x sshd >/dev/null; then
   sudo /usr/sbin/sshd
 fi
 
+if (($# == 0)); then
+  set -- sleep infinity
+fi
 exec "$@"

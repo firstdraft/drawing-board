@@ -8,7 +8,7 @@ container_id="${HOSTNAME:-$(hostname)}"
 project="$(docker inspect --format '{{ index .Config.Labels "com.docker.compose.project" }}' "${container_id}" 2>/dev/null || true)"
 if [[ -z "${project}" || ! "${project}" =~ ^[a-zA-Z0-9][a-zA-Z0-9_.-]*$ ]]; then
   echo "Run script/selenium inside the Drawing Board Dev Container." >&2
-  exit 1
+  exit 2
 fi
 
 case "${1:-start}" in
@@ -31,11 +31,18 @@ case "${1:-start}" in
   status)
     docker compose --project-name "${project}" --file "${compose_file}" ps selenium
     ;;
+  running)
+    if ! running_services="$(docker compose --project-name "${project}" --file "${compose_file}" ps --status running --services selenium)"; then
+      echo "Could not determine the Selenium service state." >&2
+      exit 2
+    fi
+    [[ "${running_services}" == "selenium" ]]
+    ;;
   stop)
     docker compose --project-name "${project}" --file "${compose_file}" stop selenium
     ;;
   *)
-    echo "Usage: script/selenium [start|status|stop]" >&2
+    echo "Usage: script/selenium [start|status|running|stop]" >&2
     exit 1
     ;;
 esac

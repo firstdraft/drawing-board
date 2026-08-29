@@ -21,7 +21,7 @@ while [[ "$container_path" == "$shared_path_prefix"* ]]; do
 done
 export PATH="$shared_path_prefix$container_path"
 
-if [[ -f /usr/local/share/ssh-init.sh && -x /usr/sbin/sshd && -f /etc/environment ]]; then
+if [[ -x /usr/sbin/sshd && -f /etc/environment ]]; then
   environment_snapshot="$(mktemp)"
   SHARED_PATH="$PATH" node -e '
     const fs = require("node:fs");

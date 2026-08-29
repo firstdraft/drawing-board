@@ -39,7 +39,42 @@ fi
 # shellcheck disable=SC1091
 source "${root}/.devcontainer/agent-versions.env"
 
-"${root}/script/selenium" start
+selenium_started=false
+server_pid=""
+cleanup() {
+  local exit_status=$?
+  trap - EXIT
+  if [[ -n "${server_pid}" ]]; then
+    kill "${server_pid}" >/dev/null 2>&1 || true
+    wait "${server_pid}" >/dev/null 2>&1 || true
+  fi
+  if [[ "${selenium_started}" == true ]]; then
+    if ! "${root}/script/selenium" stop; then
+      echo "Could not stop the Selenium service started by the application smoke." >&2
+      if [[ "${exit_status}" -eq 0 ]]; then
+        exit_status=1
+      fi
+    fi
+  fi
+  exit "${exit_status}"
+}
+trap cleanup EXIT
+
+if "${root}/script/selenium" running; then
+  :
+else
+  selenium_status=$?
+  case "${selenium_status}" in
+    1)
+      selenium_started=true
+      "${root}/script/selenium" start
+      ;;
+    *)
+      echo "Could not determine whether Selenium was already running." >&2
+      exit "${selenium_status}"
+      ;;
+  esac
+fi
 
 cd "${application_root}"
 
@@ -77,11 +112,6 @@ postgres_version="$(bin/rails runner 'print ActiveRecord::Base.connection.select
 
 bin/rails server --binding 127.0.0.1 --port 3100 >tmp/drawing-board-application-server.log 2>&1 &
 server_pid=$!
-cleanup_server() {
-  kill "${server_pid}" >/dev/null 2>&1 || true
-  wait "${server_pid}" >/dev/null 2>&1 || true
-}
-trap cleanup_server EXIT
 
 ready_status=""
 for _ in {1..60}; do
@@ -99,8 +129,9 @@ done
   exit 1
 }
 
-cleanup_server
-trap - EXIT
+kill "${server_pid}" >/dev/null 2>&1 || true
+wait "${server_pid}" >/dev/null 2>&1 || true
+server_pid=""
 
 CI=1 bin/ci
 

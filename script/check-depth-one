@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+root="$(cd -P "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+head="$(git -C "${root}" rev-parse HEAD)"
+source_commit="$(node -e 'process.stdout.write(JSON.parse(require("node:fs").readFileSync(process.argv[1])).source.commit)' "${root}/.devcontainer/image/receipt.json")"
+scratch="$(mktemp -d /tmp/firstdraft-drawing-board-depth-one.XXXXXX)"
+cleanup() {
+  case "${scratch}" in
+    /tmp/firstdraft-drawing-board-depth-one.*) rm -rf -- "${scratch}" ;;
+  esac
+}
+trap cleanup EXIT
+
+git init --quiet "${scratch}/repo"
+git -C "${scratch}/repo" remote add origin "file://${root}"
+git -C "${scratch}/repo" fetch --quiet --no-tags --depth=1 origin "${head}"
+git -C "${scratch}/repo" checkout --quiet --detach FETCH_HEAD
+
+[[ "$(git -C "${scratch}/repo" rev-list --count HEAD)" == "1" ]]
+if git -C "${scratch}/repo" cat-file -e "${source_commit}^{commit}" 2>/dev/null; then
+  echo "The depth-one receipt regression unexpectedly fetched the image-source commit." >&2
+  exit 1
+fi
+
+cd "${scratch}/repo"
+node script/check-image-receipt.mjs
+echo "Depth-one development-image receipt contract passed."

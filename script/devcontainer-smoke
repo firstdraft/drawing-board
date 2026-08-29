@@ -28,8 +28,8 @@ assert_version "$CODEX_VERSION" codex --version
 assert_version "$FIRSTDRAFT_CLI_VERSION" firstdraft --version
 assert_version "$FOUNDATION_RUBY_VERSION" ruby --version
 assert_version "v$FOUNDATION_NODE_VERSION" node --version
-assert_version "$FOUNDATION_POSTGRES_VERSION" psql --version
-assert_version "$FOUNDATION_POSTGRES_VERSION" pg_dump --version
+psql --version | grep -Eq "^psql \(PostgreSQL\) ${FOUNDATION_POSTGRES_VERSION}\."
+pg_dump --version | grep -Eq "^pg_dump \(PostgreSQL\) ${FOUNDATION_POSTGRES_VERSION}\."
 docker version >/dev/null
 docker compose version >/dev/null
 
@@ -111,10 +111,15 @@ PGPASSWORD=postgres pg_isready --host "$DB_HOST" --username postgres >/dev/null
 postgres_version="$(PGPASSWORD=postgres psql --host "$DB_HOST" --username postgres --dbname postgres --tuples-only --no-align --command 'SHOW server_version')"
 [[ "$postgres_version" == "$FOUNDATION_POSTGRES_VERSION."* ]]
 
-selenium_status="$(script/selenium status)"
-if grep -Fq selenium <<<"$selenium_status"; then
+if script/selenium running; then
   echo "Selenium must stay stopped until generated browser tests request it." >&2
   exit 1
+else
+  selenium_status=$?
+  if [[ "${selenium_status}" -ne 1 ]]; then
+    echo "Could not verify that Selenium is stopped." >&2
+    exit "${selenium_status}"
+  fi
 fi
 
 if [[ -d application ]]; then

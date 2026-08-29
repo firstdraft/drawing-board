@@ -40,6 +40,9 @@ cross-repository sequence and its safety boundaries live in
 | `bin/agent-doctor` | Installation and credential diagnostics without token disclosure |
 | `bin/review-plan-with-*` | Optional read-only review by the other installed agent |
 | `script/check` | Fast source, pin, wrapper, and credential contracts |
+| `script/check-depth-one` | Receipt validation in a real one-commit checkout without image-source history |
+| `script/check-image-receipt.mjs` | Exact source, private publication, platform, and rejected-package receipt contract |
+| `script/devcontainer-image-smoke` | Non-vacuous image-layer, Feature-ID, no-command, host-key, and PostgreSQL checks |
 | `script/devcontainer-smoke` | Runtime smoke executed inside the built Dev Container |
 | `script/initialize-application` | Parentless nested Git initialization for direct-download output |
 | `script/selenium` | On-demand Selenium start, status, and stop inside the Dev Container |
@@ -72,25 +75,34 @@ the built container. The simplest manual route is to open a Codespace on the bra
 script/devcontainer-smoke
 ```
 
-GitHub Actions builds the Dev Container and runs both checks there for every pull request. A change to an exact pin
-should name the compatible upstream revision or package and preserve the same version in every checked consumer.
+GitHub Actions authenticates to GHCR, starts the pinned Dev Container, runs the source and depth-one contracts, and
+runs the template-root runtime smoke twice for every pull request. The generated-application branch of that smoke is
+a separate qualification input because `./application` is absent from the template checkout. A change to an exact
+pin should name the compatible upstream revision or package and preserve the same version in every checked consumer.
 
-The ordinary Codespace consumes the public development image by immutable manifest digest. It does not rebuild the
-Dockerfile or reinstall Features. To update that image:
+The current candidate consumes a private development image by immutable manifest digest. CI authenticates with its
+job token so the private candidate can be reviewed, but ordinary template-derived Codespaces are not qualified to
+pull it yet. The public/anonymous boundary is a later explicit and irreversible package-visibility action. To update
+the image:
 
 1. change `.devcontainer/Dockerfile` or `.devcontainer/image/devcontainer.json`;
 2. let the current Dev Container CLI regenerate `.devcontainer/image/devcontainer-lock.json`, then review every
    resolved Feature version and digest rather than editing the lock by hand;
-3. push one `devcontainer-image-candidate-<short-sha>` tag to run the candidate-only image workflow;
-4. verify both published platforms and an anonymous pull, then update `.devcontainer/image/receipt.json` and the
-   digest in `.devcontainer/compose.yaml`; and
-5. run the contracts, the built-container smoke, and one fresh non-prebuilt Codespace comparison before review.
+3. push one `devcontainer-image-candidate-safe-<short-sha>` tag to run the candidate-only image workflow;
+4. verify both private image platforms, then record that private receipt and immutable digest for review;
+5. after separate visibility approval, make only the corrected package public, prove a credential-free pull by
+   immutable digest, and update the receipt's observation; and
+6. run the contracts, the built-container smoke twice, and one fresh non-prebuilt Codespace comparison before the
+   public image enters the ordinary template.
 
 The candidate workflow does not move a stable or `latest` tag. The image receipt binds the source revision, source
-tree, workflow run, platforms, and manifest digest consumed by the template. The runtime's Docker access is limited
-to the isolated Codespace VM, where it starts the exact Compose-owned Selenium service only when
-`script/application-smoke` or `script/selenium start` requests browser proof. Do not mount that socket into an
-untrusted shared host.
+tree, workflow run, platforms, and manifest digest consumed by the template, while naming anonymous pull and the
+comparison Codespace as unobserved until they actually run. The Docker-outside-of-Docker Feature reaches the host
+daemon: that host is a disposable VM in Codespaces, but it is the developer's own machine on the supported local
+path. Do not run an untrusted workspace or agent with that socket mounted. The workspace starts only its exact
+Compose-owned Selenium service when `script/application-smoke` or `script/selenium start` requests browser proof.
+The comparison Codespace must also prove that `script/selenium` can resolve the Compose project from that runtime's
+container identity; the current private-image receipt does not claim that observation or a speculative fallback.
 
 ## Credentials and external systems
 
