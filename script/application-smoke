@@ -39,6 +39,8 @@ fi
 # shellcheck disable=SC1091
 source "${root}/.devcontainer/agent-versions.env"
 
+"${root}/script/selenium" start
+
 cd "${application_root}"
 
 expected_ruby="$(tr -d '\r\n' < .ruby-version)"

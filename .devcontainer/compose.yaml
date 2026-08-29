@@ -1,20 +1,15 @@
 services:
   rails-app:
-    build:
-      context: ..
-      dockerfile: .devcontainer/Dockerfile
+    image: ghcr.io/firstdraft/drawing-board-workspace@sha256:242df5fa4800f451f12752127aa9361d63177484ae42ea62fe3c323b6055cdcf
     volumes:
       - ..:/workspaces/drawing-board:cached
     command: sleep infinity
     depends_on:
-      selenium:
-        condition: service_started
       postgres:
         condition: service_healthy
 
   selenium:
-    image: selenium/standalone-chromium
-    restart: unless-stopped
+    image: selenium/standalone-chromium:4.47.0-20260808@sha256:1d3d834a2ce93f26cc0d0ae3c61abd189755b32649f5c356c6c5cf9502aa397e
     environment:
       SE_NODE_MAX_SESSIONS: "2"
       SE_NODE_OVERRIDE_MAX_SESSIONS: "true"

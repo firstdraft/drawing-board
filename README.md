@@ -33,6 +33,8 @@ folder, separate from the Drawing Board source.
 4. Wait for the terminal to say `Drawing Board setup complete.`
 
 The first setup may take a few minutes. Leave the browser tab open while it finishes.
+The workspace starts its database automatically. Browser tests start their browser service only when they need it,
+so the first browser-test run may take a little longer while that service downloads.
 
 ## 3. Sign in to First Draft
 
@@ -98,8 +100,7 @@ script/application-smoke
 
 The first command gives the generated source its own initial Git history before setup or edits. The second verifies
 the generated application without changing its source. Continue working from the `application` folder; the Drawing
-Board root remains the planning workspace. The generated application's README owns its normal `bin/dev` command,
-but the browser-only Codespaces preview route is not qualified yet, as described under Troubleshooting.
+Board root remains the planning workspace. The generated application's README owns its normal `bin/dev` command.
 
 That nested repository starts with no remote. The parent Drawing Board ignores `application`, so pushing the Drawing
 Board does not back up the generated source, and deleting the Codespace can remove its only copy. Before deleting the
@@ -135,10 +136,6 @@ bin/agent-doctor
 
 The doctor reports whether the token is present without showing it. If it reports an `.env` permissions problem,
 run `chmod 600 .env` and try again.
-
-The current generated Foundation can show Rails' **Blocked hosts** page at an ordinary Codespaces forwarded-port
-URL. Stop and tell your agent if that happens; do not disable Rails' host checks. The target needs a generated-app
-correction before that browser route is qualified.
 
 First Draft is currently an internal preview. Use it for test projects. The ordinary Compile creates only the local
 `application` directory; explicit Publication creates a private GitHub repository. Neither deploys the application.
