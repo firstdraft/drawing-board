@@ -1,6 +1,9 @@
 # Make sure RUBY_VERSION matches the Ruby version in .ruby-version
 ARG RUBY_VERSION=4.0.5
-FROM ghcr.io/rails/devcontainer/images/ruby:$RUBY_VERSION
+FROM ghcr.io/rails/devcontainer/images/ruby:$RUBY_VERSION@sha256:e1bd336b0f49207a2a235299f7163bf00687b24582b911be21a58f0e5c1198cd
+
+LABEL org.opencontainers.image.source="https://github.com/firstdraft/drawing-board"
+LABEL org.opencontainers.image.description="First Draft Drawing Board development environment"
 
 # GitHub Codespaces supplies an ephemeral public key for `gh codespace ssh`.
 # Keep the feature's listener key-only and bound to the non-root remote user.
