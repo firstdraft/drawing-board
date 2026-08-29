@@ -98,7 +98,7 @@ for (const id of lockedIds) {
 NODE
 
 if [[ "${layers_only}" == true ]]; then
-  echo "Development image layers, Feature IDs, and bound lockfile pins passed."
+  echo "Development image layers and locked Feature-ID metadata passed."
   exit 0
 fi
 
@@ -109,6 +109,7 @@ fi
 
 fingerprints=()
 key_identities=()
+postgresql_clients=()
 fingerprint_digest() {
   awk '{print $2}' <<<"$1"
 }
@@ -155,8 +156,16 @@ for ordinal in 1 2; do
     exit 1
   }
   key_identities+=("${identity}")
-  docker exec "${container}" psql --version | grep -Eq '^psql \(PostgreSQL\) 18\.'
-  docker exec "${container}" pg_dump --version | grep -Eq '^pg_dump \(PostgreSQL\) 18\.'
+  psql_version="$(docker exec "${container}" psql --version)"
+  pg_dump_version="$(docker exec "${container}" pg_dump --version)"
+  printf '%s\n%s\n' "${psql_version}" "${pg_dump_version}"
+  psql_release="$(sed -nE 's/^psql \(PostgreSQL\) (18\.[0-9]+).*$/\1/p' <<<"${psql_version}")"
+  pg_dump_release="$(sed -nE 's/^pg_dump \(PostgreSQL\) (18\.[0-9]+).*$/\1/p' <<<"${pg_dump_version}")"
+  [[ -n "${psql_release}" && "${psql_release}" == "${pg_dump_release}" ]] || {
+    echo "Container ${ordinal} did not expose matching PostgreSQL 18 client releases." >&2
+    exit 1
+  }
+  postgresql_clients+=("${psql_release}")
 done
 
 docker cp "${containers[0]}:/etc/ssh/ssh_host_ed25519_key.pub" "${root}/duplicate-key.pub" >/dev/null
@@ -174,5 +183,9 @@ if [[ "${fingerprints[0]}" == "${fingerprints[1]}" || "${key_identities[0]}" == 
   echo "Separate containers reused the same SSH host key." >&2
   exit 1
 fi
+[[ "${postgresql_clients[0]}" == "${postgresql_clients[1]}" ]] || {
+  echo "Separate containers exposed different PostgreSQL client releases." >&2
+  exit 1
+}
 
-echo "Development image layers, PostgreSQL 18 clients, and per-container SSH host keys passed."
+echo "Development image layers, PostgreSQL ${postgresql_clients[0]} clients, and per-container SSH host keys passed."

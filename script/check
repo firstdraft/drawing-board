@@ -145,6 +145,7 @@ required(compose.includes(`${imageReceipt.publication.package}@${imageReceipt.pu
 required(imageReceipt.publication.visibility === "private", "The workspace image must remain private before explicit visibility approval.");
 required(imageReceipt.publication.anonymous_pull === "not_yet_observed", "Anonymous pull must remain unclaimed before visibility approval.");
 required(imageReceipt.publication.comparison_codespace === "not_yet_observed", "The comparison Codespace must remain unclaimed before it runs.");
+required(imageReceipt.verification?.platforms?.["linux/arm64"]?.runtime === "not_observed", "The private candidate must not claim arm64 runtime proof without a retained observation.");
 required(compose.includes("- postgres-data:/var/lib/postgresql"), "PostgreSQL 18 data must use its parent volume target.");
 required(compose.includes("condition: service_healthy"), "The workspace must wait for PostgreSQL readiness.");
 required(!/^\s{6}selenium:\s*$/m.test(compose.split("  selenium:")[0]), "Selenium must not block ordinary workspace startup.");
