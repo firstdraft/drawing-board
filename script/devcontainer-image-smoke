@@ -41,14 +41,14 @@ for layer in "${layers[@]}"; do
   fi
 done
 
-if docker run --rm --entrypoint bash "${image}" -lc 'compgen -G "/etc/ssh/ssh_host_*" >/dev/null'; then
-  echo "The development image contains an SSH host key before container start." >&2
-  exit 1
-fi
-
 if [[ "${layers_only}" == true ]]; then
   echo "Development image layers contain no SSH host keys."
   exit 0
+fi
+
+if docker run --rm --entrypoint bash "${image}" -lc 'compgen -G "/etc/ssh/ssh_host_*" >/dev/null'; then
+  echo "The development image contains an SSH host key before container start." >&2
+  exit 1
 fi
 
 fingerprints=()
