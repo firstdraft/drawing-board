@@ -5,20 +5,32 @@ cd "$(dirname "$0")/.."
 
 # Keep these shared configurations in strict JSON, a machine-checkable subset
 # of the JSONC accepted by the devcontainer reader.
-node -e 'JSON.parse(require("node:fs").readFileSync(".devcontainer/devcontainer.json", "utf8"))'
+node -e '
+  const fs = require("node:fs");
+  for (const path of [
+    ".devcontainer/devcontainer.json",
+    ".devcontainer/image/devcontainer.json",
+    ".devcontainer/image/devcontainer-lock.json",
+    ".devcontainer/image/receipt.json",
+  ]) JSON.parse(fs.readFileSync(path, "utf8"));
+'
 
 node <<'NODE'
 const fs = require("node:fs");
-const configuration = JSON.parse(fs.readFileSync(".devcontainer/devcontainer.json", "utf8"));
-const lockfile = JSON.parse(fs.readFileSync(".devcontainer/devcontainer-lock.json", "utf8"));
+const crypto = require("node:crypto");
+const childProcess = require("node:child_process");
+const runtimeConfiguration = JSON.parse(fs.readFileSync(".devcontainer/devcontainer.json", "utf8"));
+const imageConfiguration = JSON.parse(fs.readFileSync(".devcontainer/image/devcontainer.json", "utf8"));
+const lockfile = JSON.parse(fs.readFileSync(".devcontainer/image/devcontainer-lock.json", "utf8"));
+const receipt = JSON.parse(fs.readFileSync(".devcontainer/image/receipt.json", "utf8"));
 const expectedFeatures = [
+  "ghcr.io/devcontainers/features/docker-outside-of-docker:1",
   "ghcr.io/devcontainers/features/github-cli:1",
   "ghcr.io/rails/devcontainer/features/activestorage:1",
   "ghcr.io/devcontainers/features/node:1",
-  "ghcr.io/devcontainers/features/sshd:1",
   "ghcr.io/rails/devcontainer/features/postgres-client:1",
 ].sort();
-const configuredFeatures = Object.keys(configuration.features ?? {}).sort();
+const configuredFeatures = Object.keys(imageConfiguration.features ?? {}).sort();
 const lockedFeatures = Object.keys(lockfile.features ?? {}).sort();
 if (JSON.stringify(configuredFeatures) !== JSON.stringify(expectedFeatures) ||
     JSON.stringify(lockedFeatures) !== JSON.stringify(expectedFeatures)) {
@@ -36,12 +48,36 @@ for (const feature of expectedFeatures) {
     process.exit(1);
   }
 }
+if ("features" in runtimeConfiguration || fs.existsSync(".devcontainer/devcontainer-lock.json")) {
+  console.error("Runtime Features must come only from the pinned development image.");
+  process.exit(1);
+}
+if (imageConfiguration.features["ghcr.io/devcontainers/features/docker-outside-of-docker:1"]?.moby !== false) {
+  console.error("The trixie-based development image must use Docker CE, not Moby.");
+  process.exit(1);
+}
+if (imageConfiguration.features["ghcr.io/rails/devcontainer/features/postgres-client:1"]?.version !== "18") {
+  console.error("The development image must install the PostgreSQL 18 client tools.");
+  process.exit(1);
+}
+for (const [path, expected] of Object.entries(receipt.inputs)) {
+  const actual = crypto.createHash("sha256").update(fs.readFileSync(path)).digest("hex");
+  if (actual !== expected) {
+    console.error(`The development image receipt does not match ${path}.`);
+    process.exit(1);
+  }
+}
+const receiptTree = childProcess.execFileSync("git", ["show", "-s", "--format=%T", receipt.source.commit], { encoding: "utf8" }).trim();
+if (receiptTree !== receipt.source.tree) {
+  console.error("The development image receipt source tree does not match its commit.");
+  process.exit(1);
+}
 NODE
 
 # shellcheck disable=SC1091
 source .devcontainer/agent-versions.env
 
-for script in .devcontainer/setup-agents bin/agent-doctor bin/review-plan-with-claude bin/review-plan-with-codex script/application-smoke script/check script/devcontainer-smoke script/initialize-application; do
+for script in .devcontainer/setup-agents .devcontainer/workspace-init bin/agent-doctor bin/review-plan-with-claude bin/review-plan-with-codex script/application-smoke script/check script/devcontainer-image-smoke script/devcontainer-smoke script/initialize-application script/selenium; do
   bash -n "$script"
   if [[ ! -x "$script" ]]; then
     echo "$script must be executable." >&2
@@ -94,6 +130,8 @@ const fs = require("node:fs");
 const configuration = JSON.parse(fs.readFileSync(".devcontainer/devcontainer.json", "utf8"));
 const compose = fs.readFileSync(".devcontainer/compose.yaml", "utf8");
 const dockerfile = fs.readFileSync(".devcontainer/Dockerfile", "utf8");
+const imageWorkflow = fs.readFileSync(".github/workflows/devcontainer-image.yml", "utf8");
+const imageReceipt = JSON.parse(fs.readFileSync(".devcontainer/image/receipt.json", "utf8"));
 const required = (condition, message) => {
   if (!condition) {
     console.error(message);
@@ -103,16 +141,32 @@ const required = (condition, message) => {
 
 required(configuration.dockerComposeFile === "compose.yaml", "The Drawing Board must use its reviewed Compose stack.");
 required(configuration.service === "rails-app", "The Dev Container must attach to rails-app.");
+required(JSON.stringify(configuration.runServices) === JSON.stringify(["rails-app", "postgres"]), "Only the workspace and PostgreSQL may start by default.");
 required(configuration.workspaceFolder === "/workspaces/drawing-board", "The workspace path must stay stable.");
 required(configuration.remoteUser === "vscode", "The Rails runtime uses the non-root vscode user.");
 required(configuration.containerEnv?.DB_HOST === "postgres", "Generated Foundations must reach PostgreSQL by service name.");
 required(configuration.containerEnv?.SELENIUM_HOST === "selenium", "Generated system tests must reach Selenium by service name.");
 required(JSON.stringify(configuration.forwardPorts) === JSON.stringify([3000, 5432]), "Rails and PostgreSQL ports must be forwarded.");
 required(compose.includes("- ..:/workspaces/drawing-board:cached"), "Compose must mount the complete Drawing Board.");
+required(compose.includes("ghcr.io/firstdraft/drawing-board-workspace@sha256:242df5fa4800f451f12752127aa9361d63177484ae42ea62fe3c323b6055cdcf"), "The workspace must use the reviewed public development image digest.");
+required(compose.includes(`${imageReceipt.publication.package}@${imageReceipt.publication.manifest}`), "The workspace image must match its immutable receipt.");
 required(compose.includes("- postgres-data:/var/lib/postgresql"), "PostgreSQL 18 data must use its parent volume target.");
 required(compose.includes("condition: service_healthy"), "The workspace must wait for PostgreSQL readiness.");
+required(!/^\s{6}selenium:\s*$/m.test(compose.split("  selenium:")[0]), "Selenium must not block ordinary workspace startup.");
+required(compose.includes("selenium/standalone-chromium:4.47.0-20260808@sha256:1d3d834a2ce93f26cc0d0ae3c61abd189755b32649f5c356c6c5cf9502aa397e"), "Selenium must use the reviewed release and image digest.");
+required(!compose.split("  selenium:")[1].split("  postgres:")[0].includes("restart:"), "Selenium must remain stopped after a workspace restart until requested again.");
 required(dockerfile.includes("ARG RUBY_VERSION=4.0.5"), "The Drawing Board Ruby image must match generated Foundations.");
-required(dockerfile.includes("ghcr.io/rails/devcontainer/images/ruby:$RUBY_VERSION"), "Use the Rails Dev Container runtime image.");
+required(dockerfile.includes("ghcr.io/rails/devcontainer/images/ruby:$RUBY_VERSION@sha256:e1bd336b0f49207a2a235299f7163bf00687b24582b911be21a58f0e5c1198cd"), "Use the reviewed Rails Dev Container image digest.");
+required(dockerfile.includes("apt-get install --yes --no-install-recommends lsof openssh-client openssh-server"), "OpenSSH must be installed in the reviewed image layer.");
+required(dockerfile.includes("rm -f /etc/ssh/ssh_host_*"), "Build-time SSH host keys must be removed in the installation layer.");
+required(dockerfile.includes('ENTRYPOINT ["/usr/local/share/firstdraft-workspace-init.sh"]'), "The image must generate SSH host keys through its runtime entrypoint.");
+required(imageWorkflow.includes("tags: [devcontainer-image-candidate-*]"), "Image publication must remain candidate-only.");
+required(imageWorkflow.includes("docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # v4.2.0"), "The QEMU setup action must remain exact.");
+required(imageWorkflow.includes("docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0"), "The Buildx setup action must remain exact.");
+required(imageWorkflow.includes("docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0"), "The registry login action must remain exact.");
+required(imageWorkflow.includes("devcontainers/ci@513af61f4de4f75d37e4438f184ba4358f0fc1ca # v0.3.1900000450"), "The image builder must remain exact.");
+required(imageWorkflow.includes("imageName: ghcr.io/firstdraft/drawing-board-workspace"), "Unsafe image history must remain isolated from the corrected package.");
+required(imageWorkflow.includes("platform: linux/amd64,linux/arm64"), "The development image must cover Codespaces and local Apple Silicon.");
 NODE
 
 if ! git check-ignore --quiet application/example; then
@@ -127,7 +181,7 @@ if [[ "$FIRSTDRAFT_CLI_DEFAULT_API_URL" != "https://firstdraft.com" || \
 fi
 
 if ! grep -Fqx "ARG RUBY_VERSION=$FOUNDATION_RUBY_VERSION" .devcontainer/Dockerfile || \
-  ! grep -Fq "\"ghcr.io/devcontainers/features/node:1\": { \"version\": \"$FOUNDATION_NODE_VERSION\" }" .devcontainer/devcontainer.json || \
+  ! grep -Fq "\"ghcr.io/devcontainers/features/node:1\": { \"version\": \"$FOUNDATION_NODE_VERSION\" }" .devcontainer/image/devcontainer.json || \
   ! grep -Fqx "    image: postgres:$FOUNDATION_POSTGRES_VERSION" .devcontainer/compose.yaml; then
   echo "The Drawing Board runtime pins must match the current generated Foundation." >&2
   exit 1

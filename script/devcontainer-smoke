@@ -28,6 +28,10 @@ assert_version "$CODEX_VERSION" codex --version
 assert_version "$FIRSTDRAFT_CLI_VERSION" firstdraft --version
 assert_version "$FOUNDATION_RUBY_VERSION" ruby --version
 assert_version "v$FOUNDATION_NODE_VERSION" node --version
+assert_version "$FOUNDATION_POSTGRES_VERSION" psql --version
+assert_version "$FOUNDATION_POSTGRES_VERSION" pg_dump --version
+docker version >/dev/null
+docker compose version >/dev/null
 
 test -x /usr/sbin/sshd
 sudo /usr/sbin/sshd -t
@@ -106,6 +110,12 @@ test "$CAPYBARA_SERVER_HOST" = "rails-app"
 PGPASSWORD=postgres pg_isready --host "$DB_HOST" --username postgres >/dev/null
 postgres_version="$(PGPASSWORD=postgres psql --host "$DB_HOST" --username postgres --dbname postgres --tuples-only --no-align --command 'SHOW server_version')"
 [[ "$postgres_version" == "$FOUNDATION_POSTGRES_VERSION."* ]]
+
+selenium_status="$(script/selenium status)"
+if grep -Fq selenium <<<"$selenium_status"; then
+  echo "Selenium must stay stopped until generated browser tests request it." >&2
+  exit 1
+fi
 
 if [[ -d application ]]; then
   script/application-smoke

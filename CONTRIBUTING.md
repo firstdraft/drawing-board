@@ -14,8 +14,9 @@ A repository created from this template must provide one ready-to-use workspace 
 - `.env` supplies the shared staging origin and token without entering Git;
 - bare `firstdraft` on the Codespace PATH resolves to `bin/firstdraft`, and AGENTS.md routes Skill-issued commands
   through that wrapper; and
-- the same container carries the current generated Foundation's Ruby and Node toolchain plus healthy PostgreSQL and
-  Selenium services, so an ignored application under `./application` can be developed without a second Codespace.
+- the same container carries the current generated Foundation's Ruby and Node toolchain plus healthy PostgreSQL;
+  generated browser tests start the pinned Selenium service on demand, so an ignored application under
+  `./application` can be developed without a second Codespace.
 
 The template does not commit generated application source. `application/` is ignored local output; its Rails source
 remains distinct from the Drawing Board even though both use one container. The pinned CLI and Skill make direct
@@ -28,9 +29,10 @@ cross-repository sequence and its safety boundaries live in
 
 | Path | Responsibility |
 |---|---|
-| `.devcontainer/Dockerfile` | Ruby runtime shared with the current generated Foundation |
-| `.devcontainer/compose.yaml` | Drawing Board, PostgreSQL, and Selenium service lifecycle |
-| `.devcontainer/devcontainer.json` | Codespace Features, lifecycle, volumes, ports, and workspace environment |
+| `.devcontainer/Dockerfile` | Source for the published development image shared with generated Foundations |
+| `.devcontainer/image/` | Image-only Features, lockfile, and exact published-image receipt |
+| `.devcontainer/compose.yaml` | Drawing Board, default PostgreSQL, and on-demand Selenium lifecycle |
+| `.devcontainer/devcontainer.json` | Codespace services, lifecycle, volumes, ports, and workspace environment |
 | `.devcontainer/agent-versions.env` | Exact Claude, Codex, CLI, and Skills pins |
 | `.devcontainer/setup-agents` | Idempotent installation and Skill linking |
 | `.env.example` | Non-secret staging configuration copied to ignored `.env` |
@@ -40,6 +42,7 @@ cross-repository sequence and its safety boundaries live in
 | `script/check` | Fast source, pin, wrapper, and credential contracts |
 | `script/devcontainer-smoke` | Runtime smoke executed inside the built Dev Container |
 | `script/initialize-application` | Parentless nested Git initialization for direct-download output |
+| `script/selenium` | On-demand Selenium start, status, and stop inside the Dev Container |
 | `script/application-smoke` | Setup, PostgreSQL, readiness, and full CI proof for a generated `./application` |
 
 The initializer follows the generated application's own ignore rules. The only artifact-owned paths allowed to
@@ -62,8 +65,8 @@ script/check
 Run the check through the pinned toolchain or inside the Dev Container; it requires the pinned Ruby and Node on
 `PATH`.
 
-Changes to Dev Container setup, Features, agent installation, pins, or lifecycle also require the smoke inside the
-built container. The simplest manual route is to open a Codespace on the branch and run:
+Changes to Dev Container setup, image source, agent installation, pins, or lifecycle also require the smoke inside
+the built container. The simplest manual route is to open a Codespace on the branch and run:
 
 ```sh
 script/devcontainer-smoke
@@ -72,8 +75,22 @@ script/devcontainer-smoke
 GitHub Actions builds the Dev Container and runs both checks there for every pull request. A change to an exact pin
 should name the compatible upstream revision or package and preserve the same version in every checked consumer.
 
-When changing a Dev Container Feature, let the current Dev Container CLI regenerate
-`.devcontainer/devcontainer-lock.json`. Review the resolved version and digest rather than editing the lock by hand.
+The ordinary Codespace consumes the public development image by immutable manifest digest. It does not rebuild the
+Dockerfile or reinstall Features. To update that image:
+
+1. change `.devcontainer/Dockerfile` or `.devcontainer/image/devcontainer.json`;
+2. let the current Dev Container CLI regenerate `.devcontainer/image/devcontainer-lock.json`, then review every
+   resolved Feature version and digest rather than editing the lock by hand;
+3. push one `devcontainer-image-candidate-<short-sha>` tag to run the candidate-only image workflow;
+4. verify both published platforms and an anonymous pull, then update `.devcontainer/image/receipt.json` and the
+   digest in `.devcontainer/compose.yaml`; and
+5. run the contracts, the built-container smoke, and one fresh non-prebuilt Codespace comparison before review.
+
+The candidate workflow does not move a stable or `latest` tag. The image receipt binds the source revision, source
+tree, workflow run, platforms, and manifest digest consumed by the template. The runtime's Docker access is limited
+to the isolated Codespace VM, where it starts the exact Compose-owned Selenium service only when
+`script/application-smoke` or `script/selenium start` requests browser proof. Do not mount that socket into an
+untrusted shared host.
 
 ## Credentials and external systems
 
