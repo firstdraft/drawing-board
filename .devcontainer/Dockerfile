@@ -28,6 +28,7 @@ RUN chmod 0755 /usr/local/share/firstdraft-workspace-init.sh
 USER vscode
 
 ENTRYPOINT ["/usr/local/share/firstdraft-workspace-init.sh"]
+CMD ["sleep", "infinity"]
 
 # The Rails image installs Ruby through mise, whose activation normally happens
 # only in interactive shells. Lifecycle commands are noninteractive, so expose

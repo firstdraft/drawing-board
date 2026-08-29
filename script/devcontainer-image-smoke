@@ -16,6 +16,7 @@ case "${image}" in
     ;;
 esac
 
+repo_root="$(cd -P "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 root="$(mktemp -d)"
 containers=()
 cleanup() {
@@ -30,19 +31,74 @@ docker image save --output "${root}/image.tar" "${image}"
 mkdir "${root}/archive"
 tar -xf "${root}/image.tar" -C "${root}/archive"
 
+layers_file="${root}/layers"
+jq -er '
+  if type == "array" and length == 1 and
+      (.[0].Layers | type == "array" and length > 0)
+  then .[0].Layers[]
+  else error("expected one saved image with a nonempty Layers array")
+  end
+' "${root}/archive/manifest.json" > "${layers_file}"
+[[ -s "${layers_file}" ]] || {
+  echo "The saved development image exposed no layers to inspect." >&2
+  exit 1
+}
+
 layers=()
 while IFS= read -r layer; do
   layers+=("${layer}")
-done < <(jq -r '.[].Layers[]' "${root}/archive/manifest.json" | sort -u)
+done < <(sort -u "${layers_file}")
+((${#layers[@]} > 0)) || {
+  echo "The saved development image exposed no unique layers to inspect." >&2
+  exit 1
+}
 for layer in "${layers[@]}"; do
-  if tar -tf "${root}/archive/${layer}" | grep -Eq '(^|/)etc/ssh/ssh_host_[^/]+_key(\.pub)?$'; then
+  entries="${root}/$(printf '%s' "${layer}" | tr '/:' '__').entries"
+  tar -tf "${root}/archive/${layer}" > "${entries}"
+  if grep -Eq '(^|/)etc/ssh/ssh_host_[^/]+_key(\.pub)?$' "${entries}"; then
     echo "An SSH host key is recoverable from image layer ${layer}." >&2
     exit 1
   fi
 done
 
+docker image inspect "${image}" > "${root}/image-inspect.json"
+node - "${root}/image-inspect.json" "${repo_root}/.devcontainer/image/devcontainer-lock.json" <<'NODE'
+const fs = require("node:fs");
+const [inspectPath, lockPath] = process.argv.slice(2);
+const inspect = JSON.parse(fs.readFileSync(inspectPath, "utf8"));
+const lockfile = JSON.parse(fs.readFileSync(lockPath, "utf8"));
+if (inspect.length !== 1) throw new Error("Expected one inspected development image.");
+const rawMetadata = inspect[0]?.Config?.Labels?.["devcontainer.metadata"];
+if (!rawMetadata) throw new Error("The development image has no devcontainer.metadata label.");
+const metadata = JSON.parse(rawMetadata);
+const entries = Array.isArray(metadata) ? metadata : [metadata];
+const installedIds = entries.filter((entry) => entry?.id).map((entry) => entry.id);
+const lockedFeatures = Object.entries(lockfile.features ?? {});
+const lockedIds = lockedFeatures.map(([id]) => id);
+if (lockedIds.length === 0) throw new Error("The development-image lockfile has no Features.");
+for (const [id, feature] of lockedFeatures) {
+  const integrity = feature?.integrity;
+  const resolved = feature?.resolved;
+  if (!/^sha256:[0-9a-f]{64}$/.test(integrity ?? "")) {
+    throw new Error(`The lockfile must bind an exact integrity digest for ${id}.`);
+  }
+  if (resolved !== `${id.replace(/:\d+$/, "")}@${integrity}`) {
+    throw new Error(`The lockfile resolved reference does not match its integrity digest for ${id}.`);
+  }
+}
+for (const id of lockedIds) {
+  if (installedIds.filter((installed) => installed === id).length !== 1) {
+    throw new Error(`Published Feature metadata must contain ${id} exactly once.`);
+  }
+  const feature = id.replace(/:\d+$/, "");
+  if (installedIds.some((installed) => installed !== id && installed.replace(/:\d+$/, "") === feature)) {
+    throw new Error(`Published Feature metadata contains a different major for ${id}.`);
+  }
+}
+NODE
+
 if [[ "${layers_only}" == true ]]; then
-  echo "Development image layers contain no SSH host keys."
+  echo "Development image layers, Feature IDs, and bound lockfile pins passed."
   exit 0
 fi
 
@@ -52,27 +108,69 @@ if docker run --rm --entrypoint bash "${image}" -lc 'compgen -G "/etc/ssh/ssh_ho
 fi
 
 fingerprints=()
+key_identities=()
+fingerprint_digest() {
+  awk '{print $2}' <<<"$1"
+}
+key_identity() {
+  awk 'NF >= 2 {print $1, $2; exit}' <<<"$1"
+}
 for ordinal in 1 2; do
   container="drawing-board-image-smoke-${ordinal}-$$"
   containers+=("${container}")
-  docker run --detach --name "${container}" "${image}" sleep infinity >/dev/null
+  if [[ "${ordinal}" == "1" ]]; then
+    docker run --detach --name "${container}" "${image}" >/dev/null
+  else
+    docker run --detach --name "${container}" "${image}" sleep infinity >/dev/null
+  fi
+  [[ "$(docker inspect --format '{{.State.Running}}' "${container}")" == "true" ]] || {
+    echo "Container ${ordinal} did not remain running." >&2
+    exit 1
+  }
   for _attempt in {1..20}; do
     if docker exec "${container}" test -f /etc/ssh/ssh_host_ed25519_key.pub; then
       break
     fi
+    [[ "$(docker inspect --format '{{.State.Running}}' "${container}")" == "true" ]] || {
+      echo "Container ${ordinal} exited while generating its SSH host key." >&2
+      exit 1
+    }
     sleep 0.25
   done
-  fingerprint="$(docker exec "${container}" ssh-keygen -l -E sha256 -f /etc/ssh/ssh_host_ed25519_key.pub)"
-  [[ "${fingerprint}" == 256\ SHA256:* ]] || {
+  docker exec "${container}" test -f /etc/ssh/ssh_host_ed25519_key.pub || {
+    echo "Container ${ordinal} did not generate its SSH host key." >&2
+    exit 1
+  }
+  fingerprint_line="$(docker exec "${container}" ssh-keygen -l -E sha256 -f /etc/ssh/ssh_host_ed25519_key.pub)"
+  fingerprint="$(fingerprint_digest "${fingerprint_line}")"
+  [[ "${fingerprint}" == SHA256:* ]] || {
     echo "Container ${ordinal} did not generate an Ed25519 SSH host key." >&2
     exit 1
   }
   fingerprints+=("${fingerprint}")
+  public_key="$(docker exec "${container}" cat /etc/ssh/ssh_host_ed25519_key.pub)"
+  identity="$(key_identity "${public_key}")"
+  [[ "${identity}" == ssh-ed25519\ * ]] || {
+    echo "Container ${ordinal} exposed an invalid Ed25519 public key." >&2
+    exit 1
+  }
+  key_identities+=("${identity}")
   docker exec "${container}" psql --version | grep -Eq '^psql \(PostgreSQL\) 18\.'
   docker exec "${container}" pg_dump --version | grep -Eq '^pg_dump \(PostgreSQL\) 18\.'
 done
 
-if [[ "${fingerprints[0]}" == "${fingerprints[1]}" ]]; then
+docker cp "${containers[0]}:/etc/ssh/ssh_host_ed25519_key.pub" "${root}/duplicate-key.pub" >/dev/null
+awk '{print $1, $2, "deliberately-different-comment"}' "${root}/duplicate-key.pub" > "${root}/duplicate-key-with-new-comment.pub"
+duplicate_comment_line="$(ssh-keygen -l -E sha256 -f "${root}/duplicate-key-with-new-comment.pub")"
+[[ "$(fingerprint_digest "${duplicate_comment_line}")" == "${fingerprints[0]}" ]] || {
+  echo "The host-key comparison is sensitive to public-key comments." >&2
+  exit 1
+}
+[[ "$(key_identity "$(<"${root}/duplicate-key-with-new-comment.pub")")" == "${key_identities[0]}" ]] || {
+  echo "The exact duplicate-key negative did not preserve key material." >&2
+  exit 1
+}
+if [[ "${fingerprints[0]}" == "${fingerprints[1]}" || "${key_identities[0]}" == "${key_identities[1]}" ]]; then
   echo "Separate containers reused the same SSH host key." >&2
   exit 1
 fi

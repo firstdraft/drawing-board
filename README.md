@@ -137,6 +137,9 @@ bin/agent-doctor
 The doctor reports whether the token is present without showing it. If it reports an `.env` permissions problem,
 run `chmod 600 .env` and try again.
 
+If a Codespaces forwarded-port URL reaches Rails' **Blocked hosts** page, stop and tell your agent. Do not disable
+Rails host checks; the generated target must own that correction.
+
 First Draft is currently an internal preview. Use it for test projects. The ordinary Compile creates only the local
 `application` directory; explicit Publication creates a private GitHub repository. Neither deploys the application.
 
