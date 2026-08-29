@@ -165,9 +165,11 @@ required(imageWorkflow.includes("devcontainers/ci@513af61f4de4f75d37e4438f184ba4
 required(imageWorkflow.includes("imageName: ghcr.io/firstdraft/drawing-board-workspace"), "Unsafe image history must remain isolated from the corrected package.");
 required(imageWorkflow.includes("platform: linux/amd64,linux/arm64"), "The development image must cover Codespaces and local Apple Silicon.");
 required(/^\s{2}packages: read$/m.test(ciWorkflow), "Private-image CI must request read-only package access.");
-required(ciWorkflow.includes("actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7\n        with:\n          fetch-tags: true"), "CI must fetch the candidate tag so it can verify source-commit blobs.");
+required(ciWorkflow.includes("actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7"), "Private-image CI must use the reviewed checkout action.");
+required(/^\s{10}fetch-depth: 0$/m.test(ciWorkflow), "CI must fetch source history so it can verify source-commit blobs.");
 required(ciWorkflow.includes("docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0"), "Private-image CI must use the reviewed registry login action.");
 required(ciWorkflow.includes("password: ${{ secrets.GITHUB_TOKEN }}"), "Private-image CI must authenticate with its job token.");
+required(ciWorkflow.includes("FIRSTDRAFT_REQUIRE_IMAGE_SOURCE_COMMIT=1 script/check"), "CI must fail when the image-source commit is absent.");
 required(ciWorkflow.includes("script/check-depth-one"), "CI must exercise the real depth-one receipt contract.");
 required(ciWorkflow.includes("script/devcontainer-smoke && script/devcontainer-smoke"), "CI must prove the Dev Container smoke is repeatable.");
 NODE
