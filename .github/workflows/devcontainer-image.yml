@@ -24,7 +24,33 @@ jobs:
       - uses: devcontainers/ci@513af61f4de4f75d37e4438f184ba4358f0fc1ca # v0.3.1900000450
         with:
           configFile: .devcontainer/image/devcontainer.json
-          imageName: ghcr.io/firstdraft/drawing-board-devcontainer
+          imageName: ghcr.io/firstdraft/drawing-board-workspace
           imageTag: sha-${{ github.sha }}
           platform: linux/amd64,linux/arm64
           push: always
+
+  verify:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Verify published image
+        env:
+          IMAGE: ghcr.io/firstdraft/drawing-board-workspace:sha-${{ github.sha }}
+        run: |
+          set -Eeuo pipefail
+          index="$(docker buildx imagetools inspect --raw "$IMAGE")"
+          printf '%s\n' "$index" > /tmp/index.json
+          amd64="$(jq -er '.manifests[] | select(.platform.os == "linux" and .platform.architecture == "amd64") | .digest' /tmp/index.json)"
+          arm64="$(jq -er '.manifests[] | select(.platform.os == "linux" and .platform.architecture == "arm64") | .digest' /tmp/index.json)"
+          [[ "$(jq '[.manifests[] | select(.platform.os == "linux" and (.platform.architecture == "amd64" or .platform.architecture == "arm64"))] | length' /tmp/index.json)" == 2 ]]
+          docker pull --platform linux/amd64 "${IMAGE%:*}@$amd64"
+          script/devcontainer-image-smoke "${IMAGE%:*}@$amd64"
+          docker pull --platform linux/arm64 "${IMAGE%:*}@$arm64"
+          script/devcontainer-image-smoke --layers-only "${IMAGE%:*}@$arm64"
