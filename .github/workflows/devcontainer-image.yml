@@ -1,0 +1,23 @@
+name: Dev Container image
+
+on:
+  workflow_dispatch:
+  push:
+    tags: [devcontainer-image-candidate-*]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825a76410c181273ba90b1 # v7
+      - uses: devcontainers/ci@513af61f4de4f75d37e4438f184ba4358f0fc1ca # v0.3.1900000450
+        with:
+          configFile: .devcontainer/image/devcontainer.json
+          imageName: ghcr.io/firstdraft/drawing-board-devcontainer
+          imageTag: sha-${{ github.sha }}
+          platform: linux/amd64,linux/arm64
+          push: always
