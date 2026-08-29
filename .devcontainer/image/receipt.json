@@ -2,39 +2,51 @@
   "format": "firstdraft.drawing-board-development-image/1",
   "source": {
     "repository": "firstdraft/drawing-board",
-    "commit": "6f09b8b9a07bac3e96ebf2aaa6cf41864345adea",
-    "tree": "75332e9ce03d5a0a61616577bf4862775e3b69d3",
-    "tag": "devcontainer-image-candidate-safe-6f09b8b"
+    "commit": "ac9e56438896424e49c4d4d3dd16eda0523fa301",
+    "tree": "617af7255cb697ef22a85e580316cc7b39fd8248",
+    "tag": "devcontainer-image-candidate-safe-ac9e564"
   },
   "inputs": {
-    ".devcontainer/Dockerfile": "2103bd2aa96e2c7f19c6f7a71c81b578b79cab72a7c1bd6a28f3f971cfcc5867",
+    ".devcontainer/Dockerfile": "254f6d24cc242edff62b7cb927182600daf287844af252ad31b61e86016a7574",
     ".devcontainer/image/devcontainer.json": "45d55afb832a2ff8803da94541ef9c6a9e72b49d028fab807bb7c5f4771b0f8c",
-    ".devcontainer/image/devcontainer-lock.json": "94b14b6059d6151b8dcf2d5625f16f1e605dba1adfe08ddf4ee885dd2c2b7022",
-    ".devcontainer/workspace-init": "eedc332e6fa4b8a22bb29e238929b9be352327023e1baa0404fb93751e0564e7",
-    ".github/workflows/devcontainer-image.yml": "c600ab67ef57e3b57166d8db7702a566ee18f70007d1057901b551c19b142f26",
-    "script/devcontainer-image-smoke": "2d053706f13775cb6c91417552476f5cb47fd48420bd3fcac1cec24be57cbe2e"
+    ".devcontainer/image/devcontainer-lock.json": "acf4120fe5260b1579df0285db7c86c7377aed59df8a75f3ea8c3c0e46b45aa1",
+    ".devcontainer/workspace-init": "2a76af1205092a381c755a78b161e9971538dc07d3c0bd260b785a56c8f2dc6c",
+    ".github/workflows/devcontainer-image.yml": "f59269fb6bbdf50eb86681ba7a09da5697ed510f2636436e54c639fa0ba9adf6",
+    "script/devcontainer-image-smoke": "45dfee61bb59c1106ca230741e86d77690f1abe6bf6b653d55e528e16982eda8"
   },
   "publication": {
-    "workflow_run": 33249644072,
-    "build_job": 99093003082,
-    "verify_job": 99094422316,
+    "workflow_run": 33267389991,
+    "build_job": 99139776455,
+    "verify_job": 99141426403,
     "package": "ghcr.io/firstdraft/drawing-board-workspace",
-    "manifest": "sha256:242df5fa4800f451f12752127aa9361d63177484ae42ea62fe3c323b6055cdcf",
+    "manifest": "sha256:7e19db9fba85a96a157dc7fc3fb7b22138d52a52d29b7c29a8bccf76e67be94f",
     "platforms": {
-      "linux/amd64": "sha256:8b954f4617cf4e1f125b82ef0e55289f40dbc38694acbe549d6ed80f32c93a68",
-      "linux/arm64": "sha256:eb28d4833201609d7059b8b524f252b44402745735d9561bf143822b2f64f508"
+      "linux/amd64": "sha256:9325cc36d84884a2d79234c50805bddb4ab05ae33816c3920e6077b7ab20f470",
+      "linux/arm64": "sha256:58fa619ec460a34b411d0eab1eb790881e833875dc4c88b6324eb3bcfbac505a"
     },
     "visibility": "private",
-    "anonymous_pull": "not_yet_observed"
+    "anonymous_pull": "not_yet_observed",
+    "comparison_codespace": "not_yet_observed"
   },
   "verification": {
-    "postgresql_client": "18.6",
-    "psql_major": 18,
-    "pg_dump_major": 18,
-    "all_platform_layers_contain_no_ssh_host_keys": true,
-    "image_rest_contains_no_ssh_host_keys": true,
-    "two_started_containers_have_distinct_ed25519_host_keys": true,
-    "workflow_log_sha256": "740fc4860a22479df6c570140993f8132cc4823a12de9d4c0a4541f764045813"
+    "platforms": {
+      "linux/amd64": {
+        "layers_contain_no_ssh_host_keys": true,
+        "locked_feature_ids_present_once_in_metadata": true,
+        "image_rest_contains_no_ssh_host_keys": true,
+        "no_command_stays_running": true,
+        "two_started_containers_have_distinct_ed25519_host_keys": true,
+        "postgresql_client": "18.6",
+        "psql_major": 18,
+        "pg_dump_major": 18
+      },
+      "linux/arm64": {
+        "layers_contain_no_ssh_host_keys": true,
+        "locked_feature_ids_present_once_in_metadata": true,
+        "runtime": "not_observed"
+      }
+    },
+    "workflow_log_sha256": "2774dcd347a32b8313c65969ce28f35eef87a42edd2f248f1ae548c3db2cf447"
   },
   "rejected_predecessor": {
     "package": "ghcr.io/firstdraft/drawing-board-devcontainer",
