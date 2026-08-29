@@ -61,13 +61,12 @@ cleanup() {
 trap cleanup EXIT
 
 if "${root}/script/selenium" running; then
-  :
+  selenium_started=false
 else
   selenium_status=$?
   case "${selenium_status}" in
     1)
       selenium_started=true
-      "${root}/script/selenium" start
       ;;
     *)
       echo "Could not determine whether Selenium was already running." >&2
@@ -75,6 +74,7 @@ else
       ;;
   esac
 fi
+"${root}/script/selenium" start
 
 cd "${application_root}"
 

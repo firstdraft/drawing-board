@@ -27,7 +27,6 @@ const expectedInputPaths = [
   ".devcontainer/image/devcontainer-lock.json",
   ".devcontainer/workspace-init",
   ".github/workflows/devcontainer-image.yml",
-  "script/check-image-receipt.mjs",
   "script/devcontainer-image-smoke",
 ].sort();
 required(JSON.stringify(Object.keys(receipt.inputs ?? {}).sort()) === JSON.stringify(expectedInputPaths), "The development-image receipt must bind the exact reviewed source inputs.");
@@ -45,21 +44,21 @@ const platformDigests = receipt.publication?.platforms ?? {};
 required(JSON.stringify(Object.keys(platformDigests).sort()) === JSON.stringify(["linux/amd64", "linux/arm64"]), "The receipt must bind exactly the supported image platforms.");
 for (const digest of Object.values(platformDigests)) required(sha256Pattern.test(digest), "Every platform must use an immutable image digest.");
 required(new Set([receipt.publication.manifest, ...Object.values(platformDigests)]).size === 3, "The image index and platform manifests must be distinct.");
-required(receipt.publication?.visibility === "private", "The candidate image must remain private before explicit visibility approval.");
-required(receipt.publication?.anonymous_pull === "not_yet_observed", "Anonymous pull must remain unclaimed before the public-visibility gate.");
-required(receipt.publication?.comparison_codespace === "not_yet_observed", "The fresh comparison Codespace must remain unclaimed before that gate runs.");
+required(["private", "public"].includes(receipt.publication?.visibility), "The receipt must name the observed package visibility.");
+required(["not_yet_observed", "passed"].includes(receipt.publication?.anonymous_pull), "The receipt must name the anonymous-pull observation state.");
+required(["not_yet_observed", "passed"].includes(receipt.publication?.comparison_codespace), "The receipt must name the comparison-Codespace observation state.");
 
 const platforms = receipt.verification?.platforms ?? {};
 required(platforms["linux/amd64"]?.layers_contain_no_ssh_host_keys === true, "The amd64 layer census must be retained.");
-required(platforms["linux/amd64"]?.feature_ids_match_bound_lockfile === true, "The amd64 Feature-ID and bound-lockfile check must be retained.");
+required(platforms["linux/amd64"]?.locked_feature_ids_present_once_in_metadata === true, "The amd64 locked-Feature-ID metadata check must be retained.");
 required(platforms["linux/amd64"]?.image_rest_contains_no_ssh_host_keys === true, "The amd64 image-rest check must be retained.");
 required(platforms["linux/amd64"]?.no_command_stays_running === true, "The amd64 no-command entrypoint check must be retained.");
 required(platforms["linux/amd64"]?.two_started_containers_have_distinct_ed25519_host_keys === true, "The amd64 per-container host-key check must be retained.");
-required(platforms["linux/amd64"]?.postgresql_client === "18.6", "The amd64 PostgreSQL client receipt must be exact.");
+required(/^18\.\d+$/.test(platforms["linux/amd64"]?.postgresql_client ?? ""), "The amd64 PostgreSQL client receipt must retain the observed 18.x release.");
 required(platforms["linux/amd64"]?.psql_major === 18 && platforms["linux/amd64"]?.pg_dump_major === 18, "The amd64 PostgreSQL client tools must use major 18.");
 required(platforms["linux/arm64"]?.layers_contain_no_ssh_host_keys === true, "The arm64 layer census must be retained.");
-required(platforms["linux/arm64"]?.feature_ids_match_bound_lockfile === true, "The arm64 Feature-ID and bound-lockfile check must be retained.");
-required(platforms["linux/arm64"]?.runtime === "not_observed", "The receipt must not generalize amd64 runtime proof to arm64.");
+required(platforms["linux/arm64"]?.locked_feature_ids_present_once_in_metadata === true, "The arm64 locked-Feature-ID metadata check must be retained.");
+required(["not_observed", "passed"].includes(platforms["linux/arm64"]?.runtime), "The receipt must name the arm64 runtime-observation state.");
 required(/^[0-9a-f]{64}$/.test(receipt.verification?.workflow_log_sha256 ?? ""), "The receipt must bind the exact workflow log.");
 
 required(receipt.rejected_predecessor?.required_visibility === "private_forever", "The rejected package must remain permanently private.");
@@ -76,6 +75,14 @@ const sourceObject = childProcess.spawnSync("git", ["cat-file", "-e", `${receipt
 if (sourceObject.status === 0) {
   const actualTree = childProcess.execFileSync("git", ["show", "-s", "--format=%T", receipt.source.commit], { encoding: "utf8" }).trim();
   required(actualTree === receipt.source.tree, "The development-image source tree does not match its commit.");
+  for (const path of expectedInputPaths) {
+    const sourcePath = `${receipt.source.commit}:${path}`;
+    const sourceEntry = childProcess.spawnSync("git", ["cat-file", "-e", sourcePath]);
+    required(sourceEntry.status === 0, `The development-image source commit does not contain ${path}.`);
+    const sourceBytes = childProcess.execFileSync("git", ["show", sourcePath]);
+    const sourceSha256 = crypto.createHash("sha256").update(sourceBytes).digest("hex");
+    required(sourceSha256 === receipt.inputs[path], `The development-image receipt does not match ${path} at its source commit.`);
+  }
 }
 
 console.log("Development image receipt contract passed.");

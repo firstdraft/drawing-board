@@ -41,8 +41,8 @@ cross-repository sequence and its safety boundaries live in
 | `bin/review-plan-with-*` | Optional read-only review by the other installed agent |
 | `script/check` | Fast source, pin, wrapper, and credential contracts |
 | `script/check-depth-one` | Receipt validation in a real one-commit checkout without image-source history |
-| `script/check-image-receipt.mjs` | Exact source, private publication, platform, and rejected-package receipt contract |
-| `script/devcontainer-image-smoke` | Non-vacuous image-layer, Feature-ID, no-command, host-key, and PostgreSQL checks |
+| `script/check-image-receipt.mjs` | Exact source, publication, platform, and rejected-package receipt contract |
+| `script/devcontainer-image-smoke` | Non-vacuous image-layer, locked Feature-ID, no-command, host-key, and PostgreSQL checks |
 | `script/devcontainer-smoke` | Runtime smoke executed inside the built Dev Container |
 | `script/initialize-application` | Parentless nested Git initialization for direct-download output |
 | `script/selenium` | On-demand Selenium start, status, and stop inside the Dev Container |
