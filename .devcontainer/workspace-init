@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+sudo install -d -m 0755 /run/sshd
+sudo ssh-keygen -A
+sudo /usr/sbin/sshd -t
+if ! pgrep -x sshd >/dev/null; then
+  sudo /usr/sbin/sshd
+fi
+
+exec "$@"

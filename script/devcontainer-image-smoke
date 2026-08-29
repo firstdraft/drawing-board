@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+layers_only=false
+if [[ "${1:-}" == "--layers-only" ]]; then
+  layers_only=true
+  shift
+fi
+
+image="${1:?Usage: script/devcontainer-image-smoke [--layers-only] IMAGE@sha256:DIGEST}"
+case "${image}" in
+  *@sha256:[0-9a-f][0-9a-f]*|sha256:[0-9a-f][0-9a-f]*) ;;
+  *)
+    echo "The development-image smoke requires an immutable image reference." >&2
+    exit 1
+    ;;
+esac
+
+root="$(mktemp -d)"
+containers=()
+cleanup() {
+  if ((${#containers[@]})); then
+    docker rm --force "${containers[@]}" >/dev/null 2>&1 || true
+  fi
+  rm -rf "${root}"
+}
+trap cleanup EXIT
+
+docker image save --output "${root}/image.tar" "${image}"
+mkdir "${root}/archive"
+tar -xf "${root}/image.tar" -C "${root}/archive"
+
+layers=()
+while IFS= read -r layer; do
+  layers+=("${layer}")
+done < <(jq -r '.[].Layers[]' "${root}/archive/manifest.json" | sort -u)
+for layer in "${layers[@]}"; do
+  if tar -tf "${root}/archive/${layer}" | grep -Eq '(^|/)etc/ssh/ssh_host_[^/]+_key(\.pub)?$'; then
+    echo "An SSH host key is recoverable from image layer ${layer}." >&2
+    exit 1
+  fi
+done
+
+if docker run --rm --entrypoint bash "${image}" -lc 'compgen -G "/etc/ssh/ssh_host_*" >/dev/null'; then
+  echo "The development image contains an SSH host key before container start." >&2
+  exit 1
+fi
+
+if [[ "${layers_only}" == true ]]; then
+  echo "Development image layers contain no SSH host keys."
+  exit 0
+fi
+
+fingerprints=()
+for ordinal in 1 2; do
+  container="drawing-board-image-smoke-${ordinal}-$$"
+  containers+=("${container}")
+  docker run --detach --name "${container}" "${image}" sleep infinity >/dev/null
+  for _attempt in {1..20}; do
+    if docker exec "${container}" test -f /etc/ssh/ssh_host_ed25519_key.pub; then
+      break
+    fi
+    sleep 0.25
+  done
+  fingerprint="$(docker exec "${container}" ssh-keygen -l -E sha256 -f /etc/ssh/ssh_host_ed25519_key.pub)"
+  [[ "${fingerprint}" == 256\ SHA256:* ]] || {
+    echo "Container ${ordinal} did not generate an Ed25519 SSH host key." >&2
+    exit 1
+  }
+  fingerprints+=("${fingerprint}")
+  docker exec "${container}" psql --version | grep -Eq '^psql \(PostgreSQL\) 18\.'
+  docker exec "${container}" pg_dump --version | grep -Eq '^pg_dump \(PostgreSQL\) 18\.'
+done
+
+if [[ "${fingerprints[0]}" == "${fingerprints[1]}" ]]; then
+  echo "Separate containers reused the same SSH host key." >&2
+  exit 1
+fi
+
+echo "Development image layers, PostgreSQL 18 clients, and per-container SSH host keys passed."

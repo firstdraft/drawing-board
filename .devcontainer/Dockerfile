@@ -5,18 +5,29 @@ FROM ghcr.io/rails/devcontainer/images/ruby:$RUBY_VERSION@sha256:e1bd336b0f49207
 LABEL org.opencontainers.image.source="https://github.com/firstdraft/drawing-board"
 LABEL org.opencontainers.image.description="First Draft Drawing Board development environment"
 
-# GitHub Codespaces supplies an ephemeral public key for `gh codespace ssh`.
-# Keep the feature's listener key-only and bound to the non-root remote user.
 USER root
-RUN install -d -m 0755 /etc/ssh/sshd_config.d && \
+RUN apt-get update && \
+    export DEBIAN_FRONTEND=noninteractive && \
+    apt-get install --yes --no-install-recommends lsof openssh-client openssh-server && \
+    rm -f /etc/ssh/ssh_host_* && \
+    rm -rf /var/lib/apt/lists/* && \
+    install -d -m 0755 /etc/ssh/sshd_config.d /run/sshd && \
     printf '%s\n' \
+      'Port 2222' \
       'AuthenticationMethods publickey' \
       'PermitRootLogin no' \
       'PasswordAuthentication no' \
       'KbdInteractiveAuthentication no' \
       'PubkeyAuthentication yes' \
+      'UsePAM yes' \
       > /etc/ssh/sshd_config.d/99-foundation.conf
+
+COPY .devcontainer/workspace-init /usr/local/share/firstdraft-workspace-init.sh
+RUN chmod 0755 /usr/local/share/firstdraft-workspace-init.sh
+
 USER vscode
+
+ENTRYPOINT ["/usr/local/share/firstdraft-workspace-init.sh"]
 
 # The Rails image installs Ruby through mise, whose activation normally happens
 # only in interactive shells. Lifecycle commands are noninteractive, so expose
