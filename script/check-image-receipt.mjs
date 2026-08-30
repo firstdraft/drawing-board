@@ -52,6 +52,7 @@ required(["not_yet_observed", "passed"].includes(receipt.publication?.comparison
 const platforms = receipt.verification?.platforms ?? {};
 required(platforms["linux/amd64"]?.locked_feature_ids_present_once_in_metadata === true, "The amd64 locked-Feature-ID metadata check must be retained.");
 required(platforms["linux/amd64"]?.official_sshd_feature_starts_key_only_listener === true, "The amd64 maintained-SSH lifecycle check must be retained.");
+required(platforms["linux/amd64"]?.no_command_stays_running === true, "The amd64 default-command runtime check must be retained.");
 required(/^18\.\d+$/.test(platforms["linux/amd64"]?.postgresql_client ?? ""), "The amd64 PostgreSQL client receipt must retain the observed 18.x release.");
 required(platforms["linux/amd64"]?.psql_major === 18 && platforms["linux/amd64"]?.pg_dump_major === 18, "The amd64 PostgreSQL client tools must use major 18.");
 required(platforms["linux/arm64"]?.locked_feature_ids_present_once_in_metadata === true, "The arm64 locked-Feature-ID metadata check must be retained.");

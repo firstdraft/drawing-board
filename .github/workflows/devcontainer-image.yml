@@ -53,4 +53,4 @@ jobs:
           docker pull --platform linux/amd64 "${IMAGE%:*}@$amd64"
           script/devcontainer-image-smoke "${IMAGE%:*}@$amd64"
           docker pull --platform linux/arm64 "${IMAGE%:*}@$arm64"
-          script/devcontainer-image-smoke --layers-only "${IMAGE%:*}@$arm64"
+          script/devcontainer-image-smoke --metadata-only "${IMAGE%:*}@$arm64"
