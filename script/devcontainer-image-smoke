@@ -149,7 +149,7 @@ socket.on("data", (chunk) => {
   if (complete) return;
   complete = true;
   console.log(banner);
-  socket.end();
+  socket.destroy();
 });
 NODE
 
@@ -163,5 +163,9 @@ pg_dump_release="$(sed -nE 's/^pg_dump \(PostgreSQL\) (18\.[0-9]+).*$/\1/p' <<<"
   exit 1
 }
 postgresql_clients+=("${psql_release}")
+[[ "$(docker inspect --format '{{.State.Running}}' "${default_container}")" == "true" ]] || {
+  echo "The development image did not stay running with its default command." >&2
+  exit 1
+}
 
-echo "Development image maintained-SSH lifecycle and PostgreSQL ${postgresql_clients[0]} clients passed."
+echo "Development image default command, maintained-SSH lifecycle, and PostgreSQL ${postgresql_clients[0]} clients passed."
