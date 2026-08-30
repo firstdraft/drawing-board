@@ -2,27 +2,26 @@
   "format": "firstdraft.drawing-board-development-image/1",
   "source": {
     "repository": "firstdraft/drawing-board",
-    "commit": "ac9e56438896424e49c4d4d3dd16eda0523fa301",
-    "tree": "617af7255cb697ef22a85e580316cc7b39fd8248",
-    "tag": "devcontainer-image-candidate-safe-ac9e564"
+    "commit": "1488d6337847a0dfd7da9b7c11de895e81160421",
+    "tree": "4af88c915789dda2fa6d5e366e35f672981a5030",
+    "tag": "devcontainer-image-candidate-safe-1488d63"
   },
   "inputs": {
-    ".devcontainer/Dockerfile": "254f6d24cc242edff62b7cb927182600daf287844af252ad31b61e86016a7574",
-    ".devcontainer/image/devcontainer.json": "45d55afb832a2ff8803da94541ef9c6a9e72b49d028fab807bb7c5f4771b0f8c",
-    ".devcontainer/image/devcontainer-lock.json": "acf4120fe5260b1579df0285db7c86c7377aed59df8a75f3ea8c3c0e46b45aa1",
-    ".devcontainer/workspace-init": "2a76af1205092a381c755a78b161e9971538dc07d3c0bd260b785a56c8f2dc6c",
-    ".github/workflows/devcontainer-image.yml": "f59269fb6bbdf50eb86681ba7a09da5697ed510f2636436e54c639fa0ba9adf6",
-    "script/devcontainer-image-smoke": "45dfee61bb59c1106ca230741e86d77690f1abe6bf6b653d55e528e16982eda8"
+    ".devcontainer/Dockerfile": "ff81e7bf2b56191d20d592429d29c1be30e0fabaffd9ae9f3c4f0f52e73cd480",
+    ".devcontainer/image/devcontainer.json": "5143f0ed66fd97b986b86f8be171516d194796ca3137f0a14d7580e0bb9bbe75",
+    ".devcontainer/image/devcontainer-lock.json": "9efc5a704e887e1c66679f574cfcb6d5eb9d0ff6b80e3fe3dffd9cbdc7db894b",
+    ".github/workflows/devcontainer-image.yml": "d442d1a1383fb470e5d3e6fa14f2a29b7b09b5dd33a44cfa93575c7467f806a7",
+    "script/devcontainer-image-smoke": "272260b7bbdbe61613e43ee3e73df2eaf3941442aaa6dc7a27a848d2da1e2134"
   },
   "publication": {
-    "workflow_run": 33267389991,
-    "build_job": 99139776455,
-    "verify_job": 99141426403,
+    "workflow_run": 33320822128,
+    "build_job": 99282366552,
+    "verify_job": 99284135796,
     "package": "ghcr.io/firstdraft/drawing-board-workspace",
-    "manifest": "sha256:7e19db9fba85a96a157dc7fc3fb7b22138d52a52d29b7c29a8bccf76e67be94f",
+    "manifest": "sha256:06602be5cc829d5142c12b06c505dbf8353a3ade6751ca4bf01a785ea2c3e6e3",
     "platforms": {
-      "linux/amd64": "sha256:9325cc36d84884a2d79234c50805bddb4ab05ae33816c3920e6077b7ab20f470",
-      "linux/arm64": "sha256:58fa619ec460a34b411d0eab1eb790881e833875dc4c88b6324eb3bcfbac505a"
+      "linux/amd64": "sha256:1c8a08347080623ce27daf13651327142eee2ac163907430614869435db2fdae",
+      "linux/arm64": "sha256:0d09a17e7618d69bc2fa1c57754cbb0453363a19f061686f517efceee59bde10"
     },
     "visibility": "public",
     "anonymous_pull": "passed",
@@ -31,27 +30,32 @@
   "verification": {
     "platforms": {
       "linux/amd64": {
-        "layers_contain_no_ssh_host_keys": true,
         "locked_feature_ids_present_once_in_metadata": true,
-        "image_rest_contains_no_ssh_host_keys": true,
         "no_command_stays_running": true,
-        "two_started_containers_have_distinct_ed25519_host_keys": true,
+        "official_sshd_feature_starts_key_only_listener": true,
         "postgresql_client": "18.6",
         "psql_major": 18,
         "pg_dump_major": 18
       },
       "linux/arm64": {
-        "layers_contain_no_ssh_host_keys": true,
         "locked_feature_ids_present_once_in_metadata": true,
         "runtime": "not_observed"
       }
     },
-    "workflow_log_sha256": "2774dcd347a32b8313c65969ce28f35eef87a42edd2f248f1ae548c3db2cf447"
+    "workflow_log_sha256": "8c538bf40f5fa2fc6ead4b4f96afcfb779a0ec429e22c49b74d0df3fb0eb224d"
+  },
+  "policy": {
+    "ssh": {
+      "lifecycle": "official_devcontainers_sshd_feature",
+      "image_layer_host_keys": "accepted_for_disposable_github_tunneled_development",
+      "client_authentication": "public_key_only",
+      "root_login": "denied"
+    }
   },
   "rejected_predecessor": {
     "package": "ghcr.io/firstdraft/drawing-board-devcontainer",
     "manifest": "sha256:27f652c012ff5684a034612300bee43d0c12b72f0e63ee6527ad28e9a403ccf5",
     "required_visibility": "private_forever",
-    "reason": "Build-time SSH host private keys are recoverable from OCI layers."
+    "reason": "Quarantined under the superseded per-container-host-key policy; it remains unapproved for consumption."
   }
 }
