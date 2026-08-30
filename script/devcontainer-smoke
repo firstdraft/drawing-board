@@ -35,7 +35,17 @@ docker compose version >/dev/null
 
 test -x /usr/sbin/sshd
 sudo /usr/sbin/sshd -t
-sudo /usr/sbin/sshd -T | grep -Fx "usepam yes" >/dev/null
+sshd_configuration="$(sudo /usr/sbin/sshd -T)"
+for expected in \
+  "authenticationmethods publickey" \
+  "kbdinteractiveauthentication no" \
+  "passwordauthentication no" \
+  "permitrootlogin no" \
+  "port 2222" \
+  "pubkeyauthentication yes" \
+  "usepam yes"; do
+  grep -Fx "${expected}" <<<"${sshd_configuration}" >/dev/null
+done
 pgrep -x sshd >/dev/null
 
 shared_path="$(node -e '
