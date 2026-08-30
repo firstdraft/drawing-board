@@ -42,7 +42,7 @@ cross-repository sequence and its safety boundaries live in
 | `script/check` | Fast source, pin, wrapper, and credential contracts |
 | `script/check-depth-one` | Receipt validation in a real one-commit checkout without image-source history |
 | `script/check-image-receipt.mjs` | Exact source, publication, platform, and rejected-package receipt contract |
-| `script/devcontainer-image-smoke` | Non-vacuous image-layer, locked Feature-ID, no-command, host-key, and PostgreSQL checks |
+| `script/devcontainer-image-smoke` | Locked Feature-ID, maintained SSH lifecycle, and PostgreSQL checks |
 | `script/devcontainer-smoke` | Runtime smoke executed inside the built Dev Container |
 | `script/initialize-application` | Parentless nested Git initialization for direct-download output |
 | `script/selenium` | On-demand Selenium start, status, and stop inside the Dev Container |
@@ -93,6 +93,11 @@ requirement. To update the image:
 5. prove a credential-free manifest read by immutable digest and update the receipt's observation; and
 6. run the contracts, the built-container smoke twice, and one fresh non-prebuilt Codespace comparison before
    calling the successor digest qualified for the ordinary template.
+
+The image uses the maintained `ghcr.io/devcontainers/features/sshd:1` Feature for the SSH server lifecycle expected
+by Codespaces and keeps only the key-only, non-root policy in the Dockerfile. Do not replace the Feature entrypoint
+with a custom OpenSSH startup script; the ordinary local image smoke is not proof that a different entrypoint will
+be started by Codespaces.
 
 The candidate workflow does not move a stable or `latest` tag. The image receipt binds the source revision, source
 tree, workflow run, platforms, and manifest digest consumed by the template. The current receipt records anonymous

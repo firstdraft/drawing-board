@@ -25,6 +25,7 @@ const expectedFeatures = [
   "ghcr.io/devcontainers/features/github-cli:1",
   "ghcr.io/rails/devcontainer/features/activestorage:1",
   "ghcr.io/devcontainers/features/node:1",
+  "ghcr.io/devcontainers/features/sshd:1",
   "ghcr.io/rails/devcontainer/features/postgres-client:1",
 ].sort();
 const configuredFeatures = Object.keys(imageConfiguration.features ?? {}).sort();
@@ -68,7 +69,7 @@ node script/check-image-receipt.mjs
 # shellcheck disable=SC1091
 source .devcontainer/agent-versions.env
 
-for script in .devcontainer/setup-agents .devcontainer/workspace-init bin/agent-doctor bin/review-plan-with-claude bin/review-plan-with-codex script/application-smoke script/check script/check-depth-one script/devcontainer-image-smoke script/devcontainer-smoke script/initialize-application script/selenium; do
+for script in .devcontainer/setup-agents bin/agent-doctor bin/review-plan-with-claude bin/review-plan-with-codex script/application-smoke script/check script/check-depth-one script/devcontainer-image-smoke script/devcontainer-smoke script/initialize-application script/selenium; do
   bash -n "$script"
   if [[ ! -x "$script" ]]; then
     echo "$script must be executable." >&2
@@ -153,9 +154,12 @@ required(compose.includes("selenium/standalone-chromium:4.47.0-20260808@sha256:1
 required(!compose.split("  selenium:")[1].split("  postgres:")[0].includes("restart:"), "Selenium must remain stopped after a workspace restart until requested again.");
 required(dockerfile.includes("ARG RUBY_VERSION=4.0.5"), "The Drawing Board Ruby image must match generated Foundations.");
 required(dockerfile.includes("ghcr.io/rails/devcontainer/images/ruby:$RUBY_VERSION@sha256:e1bd336b0f49207a2a235299f7163bf00687b24582b911be21a58f0e5c1198cd"), "Use the reviewed Rails Dev Container image digest.");
-required(dockerfile.includes("apt-get install --yes --no-install-recommends lsof openssh-client openssh-server"), "OpenSSH must be installed in the reviewed image layer.");
-required(dockerfile.includes("rm -f /etc/ssh/ssh_host_*"), "Build-time SSH host keys must be removed in the installation layer.");
-required(dockerfile.includes('ENTRYPOINT ["/usr/local/share/firstdraft-workspace-init.sh"]'), "The image must generate SSH host keys through its runtime entrypoint.");
+required(!dockerfile.includes("apt-get install") && !dockerfile.includes("openssh-server"), "OpenSSH lifecycle must remain owned by the maintained sshd Feature.");
+required(!dockerfile.includes("ENTRYPOINT"), "The Dockerfile must not replace the maintained Feature entrypoint chain.");
+required(dockerfile.includes("'AuthenticationMethods publickey'") &&
+  dockerfile.includes("'PermitRootLogin no'") &&
+  dockerfile.includes("'PasswordAuthentication no'") &&
+  dockerfile.includes("'KbdInteractiveAuthentication no'"), "The official SSH listener must remain key-only and non-root.");
 required(dockerfile.includes('CMD ["sleep", "infinity"]'), "The published image must remain running when no command is supplied.");
 required(imageWorkflow.includes("tags: [devcontainer-image-candidate-safe-*]"), "Image publication must remain limited to corrected-package candidates.");
 required(imageWorkflow.includes("docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # v4.2.0"), "The QEMU setup action must remain exact.");

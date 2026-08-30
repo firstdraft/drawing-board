@@ -27,7 +27,6 @@ const expectedInputPaths = [
   ".devcontainer/Dockerfile",
   ".devcontainer/image/devcontainer.json",
   ".devcontainer/image/devcontainer-lock.json",
-  ".devcontainer/workspace-init",
   ".github/workflows/devcontainer-image.yml",
   "script/devcontainer-image-smoke",
 ].sort();
@@ -51,14 +50,10 @@ required(["not_yet_observed", "passed"].includes(receipt.publication?.anonymous_
 required(["not_yet_observed", "passed"].includes(receipt.publication?.comparison_codespace), "The receipt must name the comparison-Codespace observation state.");
 
 const platforms = receipt.verification?.platforms ?? {};
-required(platforms["linux/amd64"]?.layers_contain_no_ssh_host_keys === true, "The amd64 layer census must be retained.");
 required(platforms["linux/amd64"]?.locked_feature_ids_present_once_in_metadata === true, "The amd64 locked-Feature-ID metadata check must be retained.");
-required(platforms["linux/amd64"]?.image_rest_contains_no_ssh_host_keys === true, "The amd64 image-rest check must be retained.");
-required(platforms["linux/amd64"]?.no_command_stays_running === true, "The amd64 no-command entrypoint check must be retained.");
-required(platforms["linux/amd64"]?.two_started_containers_have_distinct_ed25519_host_keys === true, "The amd64 per-container host-key check must be retained.");
+required(platforms["linux/amd64"]?.official_sshd_feature_starts_key_only_listener === true, "The amd64 maintained-SSH lifecycle check must be retained.");
 required(/^18\.\d+$/.test(platforms["linux/amd64"]?.postgresql_client ?? ""), "The amd64 PostgreSQL client receipt must retain the observed 18.x release.");
 required(platforms["linux/amd64"]?.psql_major === 18 && platforms["linux/amd64"]?.pg_dump_major === 18, "The amd64 PostgreSQL client tools must use major 18.");
-required(platforms["linux/arm64"]?.layers_contain_no_ssh_host_keys === true, "The arm64 layer census must be retained.");
 required(platforms["linux/arm64"]?.locked_feature_ids_present_once_in_metadata === true, "The arm64 locked-Feature-ID metadata check must be retained.");
 required(["not_observed", "passed"].includes(platforms["linux/arm64"]?.runtime), "The receipt must name the arm64 runtime-observation state.");
 required(/^[0-9a-f]{64}$/.test(receipt.verification?.workflow_log_sha256 ?? ""), "The receipt must bind the exact workflow log.");
