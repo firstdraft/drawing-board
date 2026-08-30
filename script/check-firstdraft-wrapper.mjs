@@ -27,7 +27,7 @@ const fs = require("node:fs");
 const arguments_ = process.argv.slice(2);
 if (arguments_.length === 1 && arguments_[0] === "--version") {
   process.stdout.write("firstdraft " +
-    (process.env.FIRSTDRAFT_TEST_CLI_VERSION ?? "0.2.1") + "\\n");
+    (process.env.FIRSTDRAFT_TEST_CLI_VERSION ?? "0.2.2") + "\\n");
   if (process.env.FIRSTDRAFT_TEST_CLI_NOTICE) {
     process.stderr.write("A benign version notice.\\n");
   }
@@ -164,7 +164,7 @@ fs.writeFileSync(process.env.FIRSTDRAFT_TEST_OUTPUT, JSON.stringify({
       root: testRepository,
       stdio: "ignore",
     }),
-    /standalone First Draft CLI must be exactly 0\.2\.1/,
+    /standalone First Draft CLI must be exactly 0\.2\.2/,
   );
 } finally {
   fs.rmSync(temporaryRoot, {force: true, recursive: true});

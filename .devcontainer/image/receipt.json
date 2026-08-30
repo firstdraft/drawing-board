@@ -24,8 +24,8 @@
       "linux/amd64": "sha256:9325cc36d84884a2d79234c50805bddb4ab05ae33816c3920e6077b7ab20f470",
       "linux/arm64": "sha256:58fa619ec460a34b411d0eab1eb790881e833875dc4c88b6324eb3bcfbac505a"
     },
-    "visibility": "private",
-    "anonymous_pull": "not_yet_observed",
+    "visibility": "public",
+    "anonymous_pull": "passed",
     "comparison_codespace": "not_yet_observed"
   },
   "verification": {
