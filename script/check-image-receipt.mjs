@@ -50,19 +50,43 @@ required(["not_yet_observed", "passed"].includes(receipt.publication?.anonymous_
 required(["not_yet_observed", "passed"].includes(receipt.publication?.comparison_codespace), "The receipt must name the comparison-Codespace observation state.");
 
 const platforms = receipt.verification?.platforms ?? {};
+required(JSON.stringify(Object.keys(platforms["linux/amd64"] ?? {}).sort()) === JSON.stringify([
+  "locked_feature_ids_present_once_in_metadata",
+  "no_command_stays_running",
+  "official_sshd_feature_starts_key_only_listener",
+  "pg_dump_major",
+  "postgresql_client",
+  "psql_major",
+].sort()), "The amd64 verification receipt must contain the exact maintained-image observations.");
 required(platforms["linux/amd64"]?.locked_feature_ids_present_once_in_metadata === true, "The amd64 locked-Feature-ID metadata check must be retained.");
 required(platforms["linux/amd64"]?.official_sshd_feature_starts_key_only_listener === true, "The amd64 maintained-SSH lifecycle check must be retained.");
 required(platforms["linux/amd64"]?.no_command_stays_running === true, "The amd64 default-command runtime check must be retained.");
 required(/^18\.\d+$/.test(platforms["linux/amd64"]?.postgresql_client ?? ""), "The amd64 PostgreSQL client receipt must retain the observed 18.x release.");
 required(platforms["linux/amd64"]?.psql_major === 18 && platforms["linux/amd64"]?.pg_dump_major === 18, "The amd64 PostgreSQL client tools must use major 18.");
+required(JSON.stringify(Object.keys(platforms["linux/arm64"] ?? {}).sort()) === JSON.stringify([
+  "locked_feature_ids_present_once_in_metadata",
+  "runtime",
+].sort()), "The arm64 verification receipt must contain the exact maintained-image observations.");
 required(platforms["linux/arm64"]?.locked_feature_ids_present_once_in_metadata === true, "The arm64 locked-Feature-ID metadata check must be retained.");
 required(["not_observed", "passed"].includes(platforms["linux/arm64"]?.runtime), "The receipt must name the arm64 runtime-observation state.");
 required(/^[0-9a-f]{64}$/.test(receipt.verification?.workflow_log_sha256 ?? ""), "The receipt must bind the exact workflow log.");
+
+required(JSON.stringify(Object.keys(receipt.policy?.ssh ?? {}).sort()) === JSON.stringify([
+  "client_authentication",
+  "image_layer_host_keys",
+  "lifecycle",
+  "root_login",
+].sort()), "The receipt must bind the exact maintained SSH policy boundary.");
+required(receipt.policy.ssh.lifecycle === "official_devcontainers_sshd_feature", "The receipt must retain the maintained SSH lifecycle owner.");
+required(receipt.policy.ssh.image_layer_host_keys === "accepted_for_disposable_github_tunneled_development", "The receipt must retain the accepted image-layer host-key boundary.");
+required(receipt.policy.ssh.client_authentication === "public_key_only", "The receipt must retain key-only client authentication.");
+required(receipt.policy.ssh.root_login === "denied", "The receipt must retain denied SSH root login.");
 
 required(receipt.rejected_predecessor?.required_visibility === "private_forever", "The rejected package must remain permanently private.");
 const rejectedPackage = receipt.rejected_predecessor?.package;
 const expectedRejectedPackage = ["ghcr.io/firstdraft", "drawing-board-devcontainer"].join("/");
 required(rejectedPackage === expectedRejectedPackage, "The receipt must name the exact rejected package.");
+required(receipt.rejected_predecessor?.reason === "Quarantined under the superseded per-container-host-key policy; it remains unapproved for consumption.", "The rejected-package reason must not restate the superseded categorical host-key policy.");
 const trackedPaths = childProcess.execFileSync("git", ["ls-files", "-z"], { encoding: "utf8" }).split("\0").filter(Boolean);
 for (const path of trackedPaths) {
   if (path === receiptPath || !fs.statSync(path).isFile()) continue;
