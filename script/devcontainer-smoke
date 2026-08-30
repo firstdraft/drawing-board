@@ -74,7 +74,8 @@ FIRSTDRAFT_STAGING_API_URL="$FIRSTDRAFT_STAGING_API_URL" node -e '
 
 claude_skill_path="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/skills/$FIRSTDRAFT_CLAUDE_SKILL_NAME"
 codex_skill_path="$HOME/.agents/skills/create-full-stack-app"
-expected_skill_path="$HOME/.cache/firstdraft/skills/$FIRSTDRAFT_SKILLS_REVISION/skills/create-full-stack-app"
+skills_checkout="$HOME/.cache/firstdraft/skills/$FIRSTDRAFT_SKILLS_REVISION"
+expected_skill_path="$skills_checkout/skills/create-full-stack-app"
 for skill_path in "$claude_skill_path" "$codex_skill_path"; do
   test -L "$skill_path"
   test -r "$skill_path/SKILL.md"
@@ -82,6 +83,22 @@ for skill_path in "$claude_skill_path" "$codex_skill_path"; do
   test "$(cd "$skill_path" && pwd -P)" = "$expected_skill_path"
 done
 grep -Fq "firstdraft_cli plan compile --output ./application" "$codex_skill_path/SKILL.md"
+grep -Fq "current-root adoption" "$codex_skill_path/SKILL.md"
+
+FIRSTDRAFT_CLI_VERSION="$FIRSTDRAFT_CLI_VERSION" \
+  SKILLS_COMPATIBILITY_PATH="$skills_checkout/release/compatibility.json" \
+  node -e '
+    const fs = require("node:fs");
+    const compatibility = JSON.parse(
+      fs.readFileSync(process.env.SKILLS_COMPATIBILITY_PATH, "utf8"),
+    );
+    const expectedCli = [`= ${process.env.FIRSTDRAFT_CLI_VERSION}`];
+    const valid = compatibility.format === "firstdraft.release-compatibility/1" &&
+      compatibility.component === "skills" &&
+      JSON.stringify(compatibility.requires?.cli) === JSON.stringify(expectedCli) &&
+      /^[0-9a-f]{64}$/.test(compatibility.plugin_source?.tarball_sha256 ?? "");
+    process.exit(valid ? 0 : 1);
+  '
 
 prompt_input="$(codex debug prompt-input "Use the create-full-stack-app Skill.")"
 skill_target="$(cd "$codex_skill_path" && pwd -P)/SKILL.md"

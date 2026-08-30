@@ -28,9 +28,12 @@ name the Skill or translate the request into a command.
   approved remote when that repository exists, or preserve it under the Drawing Board's ignored, bind-mounted `tmp/`
   before starting a different Compile. Do not use `/tmp`, the container home, or another path that a Codespace
   rebuild discards.
-- If a Codespaces forwarded-port URL reaches Rails' **Blocked hosts** page, report the known target-owned defect and
-  stop. Do not edit or clear `config.hosts`, or add host-admission environment variables to the Drawing Board or the
-  generated application.
+- The pinned CLI also supports explicit POSIX current-root adoption with `--output .`, but that is not this
+  template's default. Select it only when the user asks to turn this exact root into the application and has approved
+  moving the existing Drawing Board material under `design/`; never infer it from a generic request to Compile.
+- If a Codespaces forwarded-port URL reaches Rails' **Blocked hosts** page, preserve the exact generated revision,
+  report the observed response, and stop. Do not edit or clear `config.hosts`, or add host-admission environment
+  variables to the Drawing Board or the generated application.
 - Zero-flag `bin/firstdraft plan compile` is a separate mode for a user who explicitly asks for a private GitHub
   repository. Never switch modes to recover from an ambiguous start. Neither mode deploys the application.
 - Use `bin/firstdraft` for every First Draft command. When the installed Skill shows `firstdraft ...`, pass those

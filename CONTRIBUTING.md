@@ -80,29 +80,29 @@ runs the template-root runtime smoke twice for every pull request. The generated
 a separate qualification input because `./application` is absent from the template checkout. A change to an exact
 pin should name the compatible upstream revision or package and preserve the same version in every checked consumer.
 
-The current candidate consumes a private development image by immutable manifest digest. CI authenticates with its
-job token so the private candidate can be reviewed, but ordinary template-derived Codespaces are not qualified to
-pull it yet. The public/anonymous boundary is a later explicit and irreversible package-visibility action. To update
-the image:
+The current template consumes a public development image by immutable manifest digest. A credential-free manifest
+request reproduced that exact multi-platform index, so ordinary template-derived Codespaces can pull it without
+access to the First Draft organization. CI still authenticates with its job token, but that is not an availability
+requirement. To update the image:
 
 1. change `.devcontainer/Dockerfile` or `.devcontainer/image/devcontainer.json`;
 2. let the current Dev Container CLI regenerate `.devcontainer/image/devcontainer-lock.json`, then review every
    resolved Feature version and digest rather than editing the lock by hand;
 3. push one `devcontainer-image-candidate-safe-<short-sha>` tag to run the candidate-only image workflow;
-4. verify both private image platforms, then record that private receipt and immutable digest for review;
-5. after separate visibility approval, make only the corrected package public, prove a credential-free pull by
-   immutable digest, and update the receipt's observation; and
-6. run the contracts, the built-container smoke twice, and one fresh non-prebuilt Codespace comparison before the
-   public image enters the ordinary template.
+4. verify both image platforms, then record the reviewed receipt and immutable digest;
+5. prove a credential-free manifest read by immutable digest and update the receipt's observation; and
+6. run the contracts, the built-container smoke twice, and one fresh non-prebuilt Codespace comparison before
+   calling the successor digest qualified for the ordinary template.
 
 The candidate workflow does not move a stable or `latest` tag. The image receipt binds the source revision, source
-tree, workflow run, platforms, and manifest digest consumed by the template, while naming anonymous pull and the
-comparison Codespace as unobserved until they actually run. The Docker-outside-of-Docker Feature reaches the host
-daemon: that host is a disposable VM in Codespaces, but it is the developer's own machine on the supported local
-path. Do not run an untrusted workspace or agent with that socket mounted. The workspace starts only its exact
-Compose-owned Selenium service when `script/application-smoke` or `script/selenium start` requests browser proof.
+tree, workflow run, platforms, and manifest digest consumed by the template. The current receipt records anonymous
+access as passed and leaves the comparison Codespace unobserved until it actually runs. The Docker-outside-of-Docker
+Feature reaches the host daemon: that host is a disposable VM in Codespaces, but it is the developer's own machine
+on the supported local path. Do not run an untrusted workspace or agent with that socket mounted. The workspace
+starts only its exact Compose-owned Selenium service when `script/application-smoke` or `script/selenium start`
+requests browser proof.
 The comparison Codespace must also prove that `script/selenium` can resolve the Compose project from that runtime's
-container identity; the current private-image receipt does not claim that observation or a speculative fallback.
+container identity; the current public-image receipt does not claim that observation or a speculative fallback.
 
 ## Credentials and external systems
 

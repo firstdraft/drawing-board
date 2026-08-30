@@ -7,8 +7,8 @@ developing and testing the generated Rails Foundation in that same Codespace. Th
 remains the authentication provider, and the existing GitHub Publication flow remains available for callers that
 want a separate repository.
 
-The first useful slice is `./application`. Compiling into the Drawing Board repository root is a later packet after
-the nested flow has been used and evaluated.
+The beginner/default slice is `./application`. CLI 0.2.2 also supports explicit current-root adoption, but Drawing
+Board qualifies the nested flow first and does not select root adoption unless the user deliberately chooses it.
 
 ## Packet 1: direct artifact output in the CLI
 
@@ -116,7 +116,7 @@ their owning tools rather than copying them. Drawing Board continues to install 
 so plugin publication or catalog promotion is not required for this packet. CLI `latest`, plugin publication, and
 catalog promotion remain separate release choices.
 
-The released packet-2.5 inputs observed on 2026-08-28 are:
+The original packet-2.5 inputs observed on 2026-08-28 were:
 
 - CLI `0.2.1`, source/tag commit `d38ef3e54a6476b3a91f22a17fe7bd47aa6d6d68`, tree
   `e62ee3ff1fb6d188c5d2c5a6e5e0efd50b40245f`, published under npm's `next` tag while `latest` remains `0.1.0`;
@@ -124,11 +124,26 @@ The released packet-2.5 inputs observed on 2026-08-28 are:
   `6f3db12c017e884d8b14c66f7d82e64229ec2073`, installed by Drawing Board from source; and
 - staging advertising First Draft API contract `0.3.0`.
 
-Drawing Board now pins that CLI/Skills pair and teaches direct `./application` output as its ordinary path. The
-candidate plugin `0.2.1` digest is `36e3e80db76d4af6c2af96d87fe42e00b944aab01e16584e6eb5149dc3f196b1`, but this source-pin packet does not publish
-plugin bytes, move a catalog, or move npm's `latest` dist-tag. The `next` tag moved to CLI `0.2.1` in step 3. Packet
-3 owns the observed non-prebuilt journey rather than inferring it from these compatible release coordinates; the
-result below also preserves what that journey did not yet prove.
+That Drawing Board revision pinned the CLI/Skills pair and taught direct `./application` output as its ordinary
+path. The candidate plugin `0.2.1` digest is
+`36e3e80db76d4af6c2af96d87fe42e00b944aab01e16584e6eb5149dc3f196b1`, but this source-pin packet does not publish
+plugin bytes, move a catalog, or move npm's `latest` dist-tag. At that boundary, npm's `next` tag selected CLI
+`0.2.1`. Packet 3 owns the observed non-prebuilt journey rather than inferring it from these compatible release
+coordinates; the result below also preserves what that journey did not yet prove.
+
+The 2026-08-30 successor pin candidate uses:
+
+- CLI `0.2.2` from source/tag commit `799a184cb2453ceadf5575f7b46ba975e084f192`, tree
+  `7c66247b4d8460b130a5d65443466575a9a3cea1`, package SHA-256
+  `42814e22249da7f46a186814cbfcb883c62f081b6c25bd8951f54cb43bc1902a`, published under npm's `next` tag while
+  `latest` remains `0.1.0`; and
+- Skills source `0a765f88d1cd500168e18ce1adda03802773f35e`, tree
+  `4a6c87a5853d13332f7a4b04be01ed46c3e08605`, candidate package SHA-256
+  `6ba0efb4fcb2dbf06d412ea8847593593fa832dc9cbcb419857a74c42e6cf74f`, requiring exact CLI `0.2.2`.
+
+Drawing Board installs Skills from that exact source revision, so the unpublished plugin package does not block this
+template. CLI 0.2.2 retains absent `./application` output and zero-flag Publication while adding explicit current-root
+adoption. The beginner journey continues to select `./application`; root adoption remains a deliberate alternative.
 
 ## Packet 3: one real non-prebuilt Codespace journey
 
@@ -193,53 +208,55 @@ in-Codespace conversational authoring pass, boot the browser process through ste
 step 7's retained-context explanation and bounded source change. Those remain explicit acceptance work rather than
 being inferred from installation, `bin/rails server`, or Compilation success.
 
+### Successor qualification still required
+
+The CLI 0.2.2/current-Skills/public-image candidate needs one fresh template-derived Codespace observation before
+it becomes the current end-to-end receipt. The run should retain:
+
+1. credential-free retrieval of the exact workspace-image manifest and the create-to-available and first-SSH times;
+2. installation of the exact CLI and Skills pins, both Skill links, and their compatibility record;
+3. one signed-in continuing agent, the approved Neighborhood Guide Plan, and one task-scoped staging token;
+4. one approved `--output ./application` Compile with no Publication or Service-created GitHub repository;
+5. the nested parentless initialization and complete generated-application smoke;
+6. the generated app's own `bin/dev` through the ordinary GitHub forwarded URL, without a local host or CSRF patch;
+   and
+7. the same agent explaining one retained Plan decision, making one bounded source change that follows it, and
+   passing the focused generated-app check.
+
+Only that retained run may move `comparison_codespace` from `not_yet_observed` to `passed`. Root adoption is a
+separate optional observation and is not a prerequisite for the beginner `./application` workflow.
+
 Retain exact Service, CLI, Drawing Board, Plan, GapSet, artifact, generated tree, nested initial commit, container,
 database, smoke output, and browser coordinates. If the Compilation start has an unknown outcome without a retained
 identity, abort the qualification, preserve its Project/request/response/timing evidence, and ask a Service operator
 to reconcile it; do not retry, switch modes, or create a replacement Project as an improvised recovery. Stop the
 Codespace after proof or a recorded abort. Do not treat a local Docker rehearsal as the Codespace observation.
 
-## Later packet: compile into an existing root
+## Available alternative: compile into an existing root
 
-`firstdraft plan compile --output .` is deliberately not part of the first slice. It should work in an arbitrary
-directory rather than recognize Drawing Board specially. Because `.` already exists, the later noninteractive
-contract needs an explicit relocation option, provisionally:
+CLI 0.2.2 implements POSIX current-root adoption in any eligible real directory rather than recognizing Drawing
+Board specially:
 
 ```sh
-firstdraft plan compile --output . --move-existing-to design
+firstdraft plan compile --output .
 ```
 
-The intended result is the generated Foundation at the working root and preexisting non-secret design materials
-under `./design`. If the root is already a Git repository, its history is retained. If it is not, the later packet
-must explicitly choose and document whether root initialization belongs in the command; the implementation may not
-silently assume that `.git/info/exclude` exists or manufacture a parentless repository without that decision.
+The CLI reserves the root before network work, verifies the artifact outside it, and journals the installation.
+On success it moves every preexisting non-Git top-level entry beneath `design/`, installs the generated Foundation
+at the root, and reports the root-adoption result. It preserves an existing `.git` directory and history, stages the
+tracked moves and exact generated paths without staging previously untracked or ignored files, and leaves a non-Git
+root non-Git. The authoring Plan and private CLI state move under `design/.firstdraft`, which remains the location
+for later First Draft commands.
 
-Before moving anything, the transaction inventories every existing path's physical location and
-tracked/staged/untracked/ignored state, including the applicable repository `.gitignore` files,
-`.git/info/exclude`, and configured global excludes. It carries forward every exclusion that protects a moved path
-before relocation and never automatically stages a path that was previously untracked. It stages and validates the
-complete generated artifact outside the working root before mutating any existing path or Git metadata. In the
-Drawing Board instance, `.env`, `.firstdraft/state.json`, and other credential or concurrency state must remain
-ignored and must never be staged or committed. The private candidate at
-`design/.firstdraft/foundation-plan.json` also remains deliberately untracked; the generated root
-`.firstdraft/submitted-foundation-plan.json` is the tracked exact Plan record. The generated root `.gitignore` and
-both generated artifact-owned `.firstdraft` files remain exact.
+Root adoption rejects unsupported platforms, nested worktrees, unsafe entry types, an existing `design` or
+`.firstdraft-root-output`, unclean tracked Git state, unmerged or sparse state, submodules, and concurrent adoption.
+A failed transaction either restores the original identities or retains its private journal for explicit recovery.
+It never creates a Git repository, starts Publication, deploys, or substitutes for absent `./application` output.
 
-Any later root-mode write to `.git/info/exclude` or other existing Git metadata is an explicit, journaled part of
-the relocation transaction. A failure that leaves any relocated bytes on disk retains the protective exclusions;
-the transaction may remove them only after a full rollback restores both the original bytes and their original
-ignore sources. A recoverable partial result reports which protections remain. The command must also define
-collisions for `.firstdraft`, `.gitignore`, `AGENTS.md`, and other artifact paths; reject nested or linked paths, an
-existing `design` destination, and an unsafe partial relocation; and preserve both original design bytes and exact
-generated bytes.
-
-Qualification must prove that root Git sees previously tracked non-secret design paths at their moved names and the
-generated Foundation paths, that previously untracked paths were not swept into the index, and that every
-credential/private-state path remains ignored and untracked with a clean credential scan. There is no interactive
-prompt in this agent-first phase.
-
-This later packet replaces neither `--output ./application` nor GitHub Publication. Its detailed filesystem
-transaction should be designed only after the nested flow is exercised.
+Drawing Board deliberately keeps `./application` as the beginner default because it preserves a visible boundary
+between design material and generated source and has a qualified initializer/smoke workflow. The successor
+qualification should prove that default path first. A separate, explicit root-adoption observation may then verify
+the current-root result without turning it into the template default.
 
 ## Ownership and sequencing
 
@@ -247,9 +264,9 @@ transaction should be designed only after the nested flow is exercised.
 - That does not remove release coupling: a generated artifact file-set, ignore-rule, or mode change, or a generated
   Ruby/Node/PostgreSQL bump, requires a coordinated Drawing Board update to its `.firstdraft` allowlist, exact-byte
   fixture, container pins, and smoke assertions in the same candidate.
-- CLI owns the direct mode, output-path validation, polling, artifact verification, and exact materialization. The
-  later root mode deliberately widens that owner into relocation and existing Git metadata; its transaction and
-  rollback contract require a separate review after packet 3 rather than inheriting packet 1's approval.
+- CLI owns direct mode, output-path validation, polling, artifact verification, exact materialization, and the
+  current-root relocation transaction. Drawing Board selects the absent `application/` path by default and must not
+  restate or reimplement the root transaction.
 - Drawing Board owns its combined Dev Container and nested-repository initialization.
 - The authoring Skill teaches the coherent command sequence only after the CLI contract lands; it does not duplicate
   detailed transport or container contracts.
@@ -257,8 +274,8 @@ transaction should be designed only after the nested flow is exercised.
 - Broad Foundation Plan realization gaps and the documentation/website audit are separate work lanes.
 
 Land packet 1 and packet 2 independently after their repository checks and reviews. Complete packet 2.5 and prove
-its exact released/pinned tuple before packet 3. Use packet 3 to decide whether the root-output packet is still
-valuable and to refine its relocation contract.
+its exact released/pinned tuple before packet 3. Qualify the successor `./application` journey before making any
+Drawing Board claim about the optional root-output experience.
 
 ## Review questions
 
