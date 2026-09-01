@@ -2,15 +2,12 @@
 set -Eeuo pipefail
 
 port=3000
+codespaces_env_file="${CODESPACES_ENV_FILE:-/workspaces/.codespaces/shared/.env}"
+codespace_name="${CODESPACE_NAME:-}"
 
 if [[ "${CODESPACES:-}" != "true" ]]; then
   echo "Codespaces port refresh skipped outside GitHub Codespaces."
   exit 0
-fi
-
-if [[ -z "${CODESPACE_NAME:-}" ]]; then
-  echo "CODESPACE_NAME is required when CODESPACES=true." >&2
-  exit 1
 fi
 
 for command in gh ss; do
@@ -20,18 +17,70 @@ for command in gh ss; do
   fi
 done
 
-port_visibility() {
+if [[ -z "${codespace_name}" ]]; then
+  if [[ ! -r "${codespaces_env_file}" ]]; then
+    echo "Codespaces did not export CODESPACE_NAME and ${codespaces_env_file} is not readable." >&2
+    exit 1
+  fi
+
+  while IFS= read -r line; do
+    if [[ "${line}" == CODESPACE_NAME=* ]]; then
+      candidate_name="${line#CODESPACE_NAME=}"
+      if [[ -z "${candidate_name}" || ( -n "${codespace_name}" && "${codespace_name}" != "${candidate_name}" ) ]]; then
+        echo "Codespaces did not provide one consistent CODESPACE_NAME in ${codespaces_env_file}." >&2
+        exit 1
+      fi
+      codespace_name="${candidate_name}"
+    fi
+  done <"${codespaces_env_file}"
+
+  if [[ -z "${codespace_name}" ]]; then
+    echo "Codespaces did not provide CODESPACE_NAME in ${codespaces_env_file}." >&2
+    exit 1
+  fi
+fi
+
+github_cli() {
+  if [[ -n "${GH_TOKEN:-}" || -n "${GITHUB_TOKEN:-}" ]]; then
+    gh "$@"
+    return
+  fi
+
+  if [[ ! -r "${codespaces_env_file}" ]]; then
+    echo "Codespaces did not export GITHUB_TOKEN and ${codespaces_env_file} is not readable." >&2
+    return 1
+  fi
+
+  local line token="" token_count=0
+  while IFS= read -r line; do
+    if [[ "${line}" == GITHUB_TOKEN=* ]]; then
+      token="${line#GITHUB_TOKEN=}"
+      token_count="$((token_count + 1))"
+    fi
+  done <"${codespaces_env_file}"
+
+  if [[ "${token_count}" != "1" || "${token}" != ghu_* ]]; then
+    echo "Codespaces did not provide one usable GITHUB_TOKEN in ${codespaces_env_file}." >&2
+    return 1
+  fi
+
+  GH_TOKEN="${token}" gh "$@"
+}
+
+port_state() {
   local visibility
-  visibility="$(
-    gh codespace ports \
-      --codespace "${CODESPACE_NAME}" \
+  if ! visibility="$(
+    github_cli codespace ports \
+      --codespace "${codespace_name}" \
       --json sourcePort,visibility \
       --jq ".[] | select(.sourcePort == ${port}) | .visibility"
-  )"
+  )"; then
+    return 1
+  fi
 
   if [[ -z "${visibility}" ]]; then
-    echo "Codespaces did not register forwarded port ${port}; inspect the Ports panel and Dev Container logs." >&2
-    return 1
+    printf 'absent'
+    return
   fi
   if [[ "${visibility}" == *$'\n'* ]]; then
     echo "Codespaces reported more than one forwarded-port record for ${port}." >&2
@@ -43,15 +92,47 @@ port_visibility() {
 
 set_visibility() {
   local visibility="$1"
-  gh codespace ports visibility "${port}:${visibility}" --codespace "${CODESPACE_NAME}"
+  github_cli codespace ports visibility "${port}:${visibility}" --codespace "${codespace_name}"
+}
+
+listener_state_result="unknown"
+read_listener_state() {
+  local rows
+  listener_state_result="unknown"
+  if ! rows="$(ss -H -ltn "sport = :${port}")"; then
+    echo "Could not determine whether port ${port} has a listener." >&2
+    return 1
+  fi
+
+  if [[ -n "${rows}" ]]; then
+    listener_state_result="active"
+  else
+    listener_state_result="absent"
+  fi
 }
 
 public_transition_started=0
+port_registration_removed=0
 restore_private_on_exit() {
   local status="$?"
   if [[ "${public_transition_started}" == "1" ]]; then
+    if [[ "${port_registration_removed}" == "1" ]]; then
+      echo "Port refresh left no forwarded port; the next terminal listener will be forwarded privately." >&2
+      return "${status}"
+    fi
+
+    local state="unknown"
+    state="$(port_state 2>/dev/null || printf 'unknown')"
+    if [[ "${state}" == "private" ]]; then
+      return "${status}"
+    fi
+    if [[ "${state}" == "absent" ]]; then
+      echo "Port refresh left no forwarded port; the next terminal listener will be forwarded privately." >&2
+      return "${status}"
+    fi
+
     echo "Port refresh was interrupted; restoring private visibility for port ${port}." >&2
-    if ! set_visibility private; then
+    if ! set_visibility private || [[ "$(port_state 2>/dev/null || printf 'unknown')" != "private" ]]; then
       echo "URGENT: Codespaces did not restore private visibility for port ${port}; change it to Private in the Ports panel." >&2
     fi
   fi
@@ -59,23 +140,35 @@ restore_private_on_exit() {
 }
 trap restore_private_on_exit EXIT
 
-current_visibility="$(port_visibility)"
+current_visibility="$(port_state)"
+if [[ "${current_visibility}" == "absent" ]]; then
+  if ! read_listener_state; then
+    exit 1
+  fi
+  current_listener_state="${listener_state_result}"
+  if [[ "${current_listener_state}" != "absent" ]]; then
+    echo "Port ${port} has an active listener but no forwarded-port registration; stop the server before refreshing it." >&2
+    exit 1
+  fi
+  echo "Codespaces port ${port} has no stale registration; its next terminal listener will be forwarded privately."
+  exit 0
+fi
 if [[ "${current_visibility}" != "private" ]]; then
   echo "Restoring forwarded port ${port} from ${current_visibility} to private before refresh." >&2
   public_transition_started=1
   set_visibility private
-  if [[ "$(port_visibility)" != "private" ]]; then
+  if [[ "$(port_state)" != "private" ]]; then
     echo "Codespaces did not confirm private visibility for port ${port}; stopping before refresh." >&2
     exit 1
   fi
   public_transition_started=0
 fi
 
-if ! listener_rows="$(ss -H -ltn "sport = :${port}")"; then
-  echo "Could not determine whether port ${port} has a listener; stopping before any visibility change." >&2
+if ! read_listener_state; then
   exit 1
 fi
-if [[ -n "${listener_rows}" ]]; then
+current_listener_state="${listener_state_result}"
+if [[ "${current_listener_state}" == "active" ]]; then
   echo "Refusing to re-register port ${port} while a listener is active; stop the server and rerun script/refresh-codespaces-private-port." >&2
   exit 1
 fi
@@ -83,8 +176,34 @@ fi
 echo "Refreshing the unbound Codespaces port ${port} registration; final visibility will remain private."
 public_transition_started=1
 set_visibility public
-set_visibility private
-if [[ "$(port_visibility)" != "private" ]]; then
+private_error=""
+if private_error="$(set_visibility private 2>&1)"; then
+  final_state="$(port_state)"
+else
+  final_port_state="$(port_state)"
+  if [[ "${final_port_state}" == "absent" ]]; then
+    port_registration_removed=1
+  fi
+  if ! read_listener_state; then
+    echo "Could not verify the no-listener condition after Codespaces removed the port ${port} registration." >&2
+    exit 1
+  fi
+  final_listener_state="${listener_state_result}"
+  if [[ "${final_port_state}" == "absent" && "${final_listener_state}" == "absent" ]]; then
+    final_state="absent"
+  else
+    printf '%s\n' "${private_error}" >&2
+    exit 1
+  fi
+fi
+
+if [[ "${final_state}" == "absent" ]]; then
+  public_transition_started=0
+  trap - EXIT
+  echo "Codespaces cleared the unbound port ${port} registration; its next terminal listener will be forwarded privately."
+  exit 0
+fi
+if [[ "${final_state}" != "private" ]]; then
   echo "Codespaces did not confirm restored private visibility for port ${port}." >&2
   exit 1
 fi

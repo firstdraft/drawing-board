@@ -224,7 +224,9 @@ request `3a23a4e6-92e0-4475-a345-34ff755a5f7a` reproduced that boundary with loc
 then applied the existing student Rails template's exact public-to-private visibility reset. Post-reset request
 `09174d73-2baa-480d-a41c-bb6e42c4b2fb` immediately reached the unchanged Rails process and returned the separately
 expected `Blocked hosts` response. Drawing Board now runs a guarded, diagnostic version of that reset on Codespaces
-attach only while port 3000 has no listener, and restores and verifies private visibility. This tunnel containment
+attach only while port 3000 has no listener. If Codespaces removes the unbound registration between the visibility
+commands, the next integrated-terminal listener creates a fresh private registration; every other incomplete or
+exposed result fails. This tunnel containment
 does not retire the 2026-08-28 generated Rails host-admission finding or prove a state-changing POST; those remain
 target-owned correction and proof.
 

@@ -15,6 +15,10 @@ const mockBin = path.join(temporaryRoot, "bin");
 const statePath = path.join(temporaryRoot, "visibility");
 const logPath = path.join(temporaryRoot, "gh.log");
 const privateAttemptsPath = path.join(temporaryRoot, "private-attempts");
+const listenerAttemptsPath = path.join(temporaryRoot, "listener-attempts");
+const codespacesEnvPath = path.join(temporaryRoot, "codespaces.env");
+const malformedEnvPath = path.join(temporaryRoot, "malformed.env");
+const missingNameEnvPath = path.join(temporaryRoot, "missing-name.env");
 
 function writeExecutable(name, contents) {
   const destination = path.join(mockBin, name);
@@ -32,8 +36,12 @@ function run(changes = {}, pathValue = `${mockBin}:/usr/bin:/bin`) {
       PORT_REFRESH_LOG: logPath,
       PORT_REFRESH_STATE: statePath,
       PORT_REFRESH_PRIVATE_ATTEMPTS: privateAttemptsPath,
+      PORT_REFRESH_LISTENER_ATTEMPTS: listenerAttemptsPath,
       CODESPACES: "true",
       CODESPACE_NAME: "drawing-board-test",
+      CODESPACES_ENV_FILE: codespacesEnvPath,
+      GH_TOKEN: "",
+      GITHUB_TOKEN: "",
       ...changes,
     },
   });
@@ -51,6 +59,9 @@ try {
     `#!/usr/bin/env bash
 set -euo pipefail
 printf '%s\\n' "$*" >>"$PORT_REFRESH_LOG"
+if [[ "\${MOCK_REQUIRE_GH_TOKEN:-false}" == "true" && "\${GH_TOKEN:-}" != "ghu_drawing_board_test" ]]; then
+  exit 41
+fi
 if [[ "$1 $2" == "codespace ports" && "\${3:-}" != "visibility" ]]; then
   state="$(<"$PORT_REFRESH_STATE")"
   [[ "$state" == "missing" ]] || printf '%s\\n' "$state"
@@ -60,6 +71,13 @@ if [[ "$1 $2 $3" == "codespace ports visibility" ]]; then
   visibility="\${4#*:}"
   if [[ "$visibility" == "public" && "\${MOCK_PUBLIC_FAILURE:-false}" == "true" ]]; then
     exit 42
+  fi
+  if [[ "$visibility" == "public" && "\${MOCK_PUBLIC_REMOVES_PORT:-false}" == "true" ]]; then
+    printf '%s' missing >"$PORT_REFRESH_STATE"
+    exit 0
+  fi
+  if [[ "$visibility" == "private" && "$(<"$PORT_REFRESH_STATE")" == "missing" ]]; then
+    exit 44
   fi
   if [[ "$visibility" == "private" && "\${MOCK_PRIVATE_FAILURES:-0}" != "0" ]]; then
     attempts=0
@@ -79,6 +97,15 @@ exit 64
   writeExecutable(
     "ss",
     `#!/usr/bin/env bash
+if [[ -n "\${MOCK_LISTENER_ERROR_AFTER:-}" ]]; then
+  attempts=0
+  [[ ! -f "$PORT_REFRESH_LISTENER_ATTEMPTS" ]] || attempts="$(<"$PORT_REFRESH_LISTENER_ATTEMPTS")"
+  attempts="$((attempts + 1))"
+  printf '%s' "$attempts" >"$PORT_REFRESH_LISTENER_ATTEMPTS"
+  if (( attempts > MOCK_LISTENER_ERROR_AFTER )); then
+    exit 2
+  fi
+fi
 case "\${MOCK_LISTENER:-false}" in
   true) printf '%s\\n' 'LISTEN 0 4096 0.0.0.0:3000 0.0.0.0:*'; exit 0 ;;
   false) exit 0 ;;
@@ -86,6 +113,7 @@ case "\${MOCK_LISTENER:-false}" in
 esac
 `,
   );
+  fs.writeFileSync(codespacesEnvPath, "CODESPACE_NAME=drawing-board-test\nCODESPACE_NAME=drawing-board-test\nGITHUB_TOKEN=ghu_drawing_board_test\n", {mode: 0o600});
 
   fs.writeFileSync(statePath, "private");
   const first = run();
@@ -100,6 +128,38 @@ esac
     "codespace ports --codespace drawing-board-test --json sourcePort,visibility --jq .[] | select(.sourcePort == 3000) | .visibility",
   ]);
 
+  fs.writeFileSync(statePath, "private");
+  fs.writeFileSync(logPath, "");
+  const protectedEnvironmentToken = run({MOCK_REQUIRE_GH_TOKEN: "true"});
+  assert.equal(protectedEnvironmentToken.status, 0, protectedEnvironmentToken.stderr);
+  assert.equal(fs.readFileSync(statePath, "utf8"), "private");
+
+  fs.writeFileSync(statePath, "private");
+  fs.writeFileSync(logPath, "");
+  const protectedEnvironmentName = run({CODESPACE_NAME: "", MOCK_REQUIRE_GH_TOKEN: "true"});
+  assert.equal(protectedEnvironmentName.status, 0, protectedEnvironmentName.stderr);
+  assert.equal(fs.readFileSync(statePath, "utf8"), "private");
+
+  fs.writeFileSync(statePath, "private");
+  fs.writeFileSync(logPath, "");
+  const unboundPortRemoval = run({MOCK_PUBLIC_REMOVES_PORT: "true"});
+  assert.equal(unboundPortRemoval.status, 0, unboundPortRemoval.stderr);
+  assert.match(unboundPortRemoval.stdout, /cleared the unbound port 3000 registration/);
+  assert.equal(fs.readFileSync(statePath, "utf8"), "missing");
+  assert.equal(logLines().filter((line) => line.includes(" visibility ")).length, 2);
+
+  fs.writeFileSync(statePath, "private");
+  fs.writeFileSync(logPath, "");
+  fs.rmSync(listenerAttemptsPath, {force: true});
+  const unboundPortUnknownListener = run({MOCK_PUBLIC_REMOVES_PORT: "true", MOCK_LISTENER_ERROR_AFTER: "1"});
+  assert.notEqual(unboundPortUnknownListener.status, 0);
+  assert.match(unboundPortUnknownListener.stderr, /Could not determine whether port 3000 has a listener/);
+  assert.match(unboundPortUnknownListener.stderr, /Could not verify the no-listener condition/);
+  assert.doesNotMatch(unboundPortUnknownListener.stderr, /URGENT/);
+  assert.doesNotMatch(unboundPortUnknownListener.stdout, /cleared the unbound port/);
+  assert.equal(fs.readFileSync(statePath, "utf8"), "missing");
+
+  fs.writeFileSync(statePath, "private");
   fs.writeFileSync(logPath, "");
   const repeated = run();
   assert.equal(repeated.status, 0, repeated.stderr);
@@ -133,11 +193,10 @@ esac
   fs.writeFileSync(logPath, "");
   const failedPublic = run({MOCK_PUBLIC_FAILURE: "true"});
   assert.notEqual(failedPublic.status, 0);
-  assert.match(failedPublic.stderr, /Port refresh was interrupted; restoring private visibility/);
+  assert.doesNotMatch(failedPublic.stderr, /URGENT/);
   assert.equal(fs.readFileSync(statePath, "utf8"), "private");
   assert.deepEqual(logLines().filter((line) => line.includes(" visibility ")), [
     "codespace ports visibility 3000:public --codespace drawing-board-test",
-    "codespace ports visibility 3000:private --codespace drawing-board-test",
   ]);
 
   fs.writeFileSync(statePath, "private");
@@ -161,9 +220,26 @@ esac
   fs.writeFileSync(statePath, "missing");
   fs.writeFileSync(logPath, "");
   const missing = run();
-  assert.notEqual(missing.status, 0);
-  assert.match(missing.stderr, /did not register forwarded port 3000/);
+  assert.equal(missing.status, 0, missing.stderr);
+  assert.match(missing.stdout, /has no stale registration/);
   assert.equal(logLines().some((line) => line.includes(" visibility ")), false);
+
+  const missingWithListener = run({MOCK_LISTENER: "true"});
+  assert.notEqual(missingWithListener.status, 0);
+  assert.match(missingWithListener.stderr, /active listener but no forwarded-port registration/);
+
+  const missingWithUnknownListener = run({MOCK_LISTENER: "error"});
+  assert.notEqual(missingWithUnknownListener.status, 0);
+  assert.match(missingWithUnknownListener.stderr, /Could not determine whether port 3000 has a listener/);
+
+  const missingTokenSource = run({CODESPACES_ENV_FILE: path.join(temporaryRoot, "missing.env")});
+  assert.notEqual(missingTokenSource.status, 0);
+  assert.match(missingTokenSource.stderr, /did not export GITHUB_TOKEN/);
+
+  fs.writeFileSync(malformedEnvPath, "not-a-codespaces-environment\n");
+  const malformedTokenSource = run({CODESPACES_ENV_FILE: malformedEnvPath});
+  assert.notEqual(malformedTokenSource.status, 0);
+  assert.match(malformedTokenSource.stderr, /did not provide one usable GITHUB_TOKEN/);
 
   fs.writeFileSync(logPath, "");
   const outside = run({CODESPACES: "false", CODESPACE_NAME: ""});
@@ -171,9 +247,10 @@ esac
   assert.match(outside.stdout, /skipped outside GitHub Codespaces/);
   assert.deepEqual(logLines(), []);
 
-  const missingName = run({CODESPACE_NAME: ""});
+  fs.writeFileSync(missingNameEnvPath, "GITHUB_TOKEN=ghu_drawing_board_test\n");
+  const missingName = run({CODESPACE_NAME: "", CODESPACES_ENV_FILE: missingNameEnvPath});
   assert.notEqual(missingName.status, 0);
-  assert.match(missingName.stderr, /CODESPACE_NAME is required/);
+  assert.match(missingName.stderr, /did not provide CODESPACE_NAME/);
 
   const realSs = spawnSync("ss", ["--version"], {encoding: "utf8"});
   if (realSs.status === 0) {
