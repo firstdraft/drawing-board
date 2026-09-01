@@ -208,6 +208,26 @@ in-Codespace conversational authoring pass, boot the browser process through ste
 step 7's retained-context explanation and bounded source change. Those remain explicit acceptance work rather than
 being inferred from installation, `bin/rails server`, or Compilation success.
 
+### Observed successor tunnel blocker on 2026-09-01
+
+The successor attempt in Codespace `fd-direct-025-85d2035-gggqjg9r42vvv4` reached a distinct provider-side blocker.
+VS Code 1.133.0 (`a5b500951314efd502d07465bd138dfbd714a960`) launched its Node 24.18.0 remote extension host without
+`--supportGlobalNavigator`; GitHub Codespaces extension 1.18.16 then raised `PendingMigrationError` while loading
+Axios and Microsoft Dev Tunnels. Puma was healthy on `0.0.0.0:3000`, local GET returned 200, and the Ports view
+resolved the exact process and private URL, but both an authenticated browser request and an official
+`X-Github-Token` request returned 502 before Rails received them.
+
+The runtime Dev Container now carries VS Code's documented `extensions.supportNodeGlobalNavigator` migration
+setting. A fresh immutable-ref Codespace proved the extension-host flag and absence of the migration error, but its
+private URL still returned relay 502 before Rails. In Codespace `fd-nav-ca8165f-0901-www7pwj4v25446`, pre-reset
+request `3a23a4e6-92e0-4475-a345-34ff755a5f7a` reproduced that boundary with local HTTP 200. A controlled comparison
+then applied the existing student Rails template's exact public-to-private visibility reset. Post-reset request
+`09174d73-2baa-480d-a41c-bb6e42c4b2fb` immediately reached the unchanged Rails process and returned the separately
+expected `Blocked hosts` response. Drawing Board now runs a guarded, diagnostic version of that reset on Codespaces
+attach only while port 3000 has no listener, and restores and verifies private visibility. This tunnel containment
+does not retire the 2026-08-28 generated Rails host-admission finding or prove a state-changing POST; those remain
+target-owned correction and proof.
+
 ### Successor qualification still required
 
 The CLI 0.2.2/current-Skills/public-image candidate needs one fresh template-derived Codespace observation before
@@ -218,7 +238,9 @@ it becomes the current end-to-end receipt. The run should retain:
 3. one signed-in continuing agent, the approved Neighborhood Guide Plan, and one task-scoped staging token;
 4. one approved `--output ./application` Compile with no Publication or Service-created GitHub repository;
 5. the nested parentless initialization and complete generated-application smoke;
-6. the generated app's own `bin/dev` through the ordinary GitHub forwarded URL, without a local host or CSRF patch;
+6. the generated app's own `bin/dev` through the ordinary private GitHub forwarded URL, with the remote extension
+   host using `--supportGlobalNavigator`, no `PendingMigrationError`, the post-attach port refresh ending private,
+   and both GET and state-changing POST reaching Rails through the target-owned narrow host/Origin handling;
    and
 7. the same agent explaining one retained Plan decision, making one bounded source change that follows it, and
    passing the focused generated-app check.

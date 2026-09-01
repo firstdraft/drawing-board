@@ -44,6 +44,7 @@ cross-repository sequence and its safety boundaries live in
 | `script/check-image-receipt.mjs` | Exact source, publication, platform, and rejected-package receipt contract |
 | `script/devcontainer-image-smoke` | Default command, locked Feature-ID, maintained SSH lifecycle, and PostgreSQL checks |
 | `script/devcontainer-smoke` | Runtime smoke executed inside the built Dev Container |
+| `script/refresh-codespaces-private-port` | Safe post-attach refresh for the private Rails forwarded-port registration |
 | `script/initialize-application` | Parentless nested Git initialization for direct-download output |
 | `script/selenium` | On-demand Selenium start, status, and stop inside the Dev Container |
 | `script/application-smoke` | Setup, PostgreSQL, readiness, and full CI proof for a generated `./application` |
@@ -110,6 +111,41 @@ starts only its exact Compose-owned Selenium service when `script/application-sm
 requests browser proof.
 The comparison Codespace must also prove that `script/selenium` can resolve the Compose project from that runtime's
 container identity; the current public-image receipt does not claim that observation or a speculative fallback.
+
+The runtime Dev Container opts the remote extension host into Node's supported `navigator` global through
+`extensions.supportNodeGlobalNavigator`. A 2026-09-01 browser-Codespaces observation found VS Code 1.133.0 and the
+GitHub Codespaces extension 1.18.16 loading Axios and Microsoft Dev Tunnels while VS Code's migration guard still
+replaced that global with a throwing getter and raised `PendingMigrationError`. The private forwarded URL then
+returned 502 before a healthy Rails server received the request. This is the conventional VS Code migration setting
+documented in the
+[VS Code 1.101 release notes](https://code.visualstudio.com/updates/v1_101). The exact VS Code 1.133.0 source
+[registers it at the default window scope](https://github.com/microsoft/vscode/blob/a5b500951314efd502d07465bd138dfbd714a960/src/vs/workbench/contrib/extensions/browser/extensions.contribution.ts#L363-L367),
+which accepts remote settings, and the
+[remote server turns it into the extension host's `--supportGlobalNavigator` argument](https://github.com/microsoft/vscode/blob/a5b500951314efd502d07465bd138dfbd714a960/src/vs/server/node/extensionHostConnection.ts#L283-L290).
+Dev Container settings are applied to the remote Codespaces machine as described by
+[GitHub's Dev Container documentation](https://docs.github.com/en/codespaces/setting-up-your-project-for-codespaces/adding-a-dev-container-configuration/introduction-to-dev-containers).
+A fresh Codespace proved that the setting supplies `--supportGlobalNavigator` and removes the migration error, but
+the unchanged private forwarded URL still returned a relay-level 502. The setting remains because it closes that
+independently observed extension-host failure; it is not the tunnel repair.
+
+The repository's long-running student Rails template supplied the missing control: at exact revision
+[`7bfb0c17`](https://github.com/appdev-projects/rails-8-template/blob/7bfb0c173b13203dbbae612ea410b893d041d240/bin/fix-ports#L1-L9),
+its post-attach hook changes port 3000 from public back to private specifically to repair Codespaces 502 responses.
+Repeating that transition once in the fresh Drawing Board Codespace changed the unchanged request from relay 502
+with no Rails log to Rails 403 with an exact `Blocked hosts` log. `script/refresh-codespaces-private-port` performs the same
+registration refresh on every Codespaces attach, but only while port 3000 has no listener. It reports every GitHub
+CLI operation, restores and verifies private visibility, and fails
+instead of exposing an active application or hiding an error. GitHub documents
+[`CODESPACES` and `CODESPACE_NAME`](https://docs.github.com/en/codespaces/developing-in-a-codespace/default-environment-variables-for-your-codespace)
+as the runtime discriminator and
+[private as the default forwarded-port visibility](https://docs.github.com/en/codespaces/developing-in-a-codespace/forwarding-ports-in-your-codespace);
+the current CLI's visibility command is the supported control surface. This is a containment for an observed
+provider registration defect, not a custom tunnel or application workaround.
+
+The repaired tunnel exposed the already-recorded generated Rails HostAuthorization boundary. Do not copy the
+student template's broad `config.hosts.clear` or disabled origin check into Drawing Board. Generated-app host and
+Origin handling remain target-owned follow-up work and require their own exact browser GET and state-changing POST
+proof.
 
 ## Credentials and external systems
 

@@ -138,9 +138,13 @@ required(configuration.service === "rails-app", "The Dev Container must attach t
 required(JSON.stringify(configuration.runServices) === JSON.stringify(["rails-app", "postgres"]), "Only the workspace and PostgreSQL may start by default.");
 required(configuration.workspaceFolder === "/workspaces/drawing-board", "The workspace path must stay stable.");
 required(configuration.remoteUser === "vscode", "The Rails runtime uses the non-root vscode user.");
+required(JSON.stringify(configuration.customizations?.vscode?.settings) ===
+  JSON.stringify({ "extensions.supportNodeGlobalNavigator": true }),
+  "The remote extension host settings must contain only the reviewed navigator migration setting.");
 required(configuration.containerEnv?.DB_HOST === "postgres", "Generated Foundations must reach PostgreSQL by service name.");
 required(configuration.containerEnv?.SELENIUM_HOST === "selenium", "Generated system tests must reach Selenium by service name.");
 required(JSON.stringify(configuration.forwardPorts) === JSON.stringify([3000, 5432]), "Rails and PostgreSQL ports must be forwarded.");
+required(configuration.postAttachCommand === "script/refresh-codespaces-private-port", "Codespaces must refresh the private Rails port on attach.");
 required(compose.includes("- ..:/workspaces/drawing-board:cached"), "Compose must mount the complete Drawing Board.");
 required(compose.includes(`${imageReceipt.publication.package}@${imageReceipt.publication.manifest}`), "The workspace image must match its immutable receipt.");
 required(imageReceipt.publication.visibility === "public", "The workspace image must retain its observed public visibility.");
@@ -177,6 +181,8 @@ required(ciWorkflow.includes("FIRSTDRAFT_REQUIRE_IMAGE_SOURCE_COMMIT=1 script/ch
 required(ciWorkflow.includes("script/check-depth-one"), "CI must exercise the real depth-one receipt contract.");
 required(ciWorkflow.includes("script/devcontainer-smoke && script/devcontainer-smoke"), "CI must prove the Dev Container smoke is repeatable.");
 NODE
+
+node script/check-codespaces-private-port.mjs
 
 if ! git check-ignore --quiet application/example; then
   echo "Generated application output must remain outside the Drawing Board Git repository." >&2
