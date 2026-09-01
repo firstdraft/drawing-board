@@ -132,10 +132,14 @@ The repository's long-running student Rails template supplied the missing contro
 [`7bfb0c17`](https://github.com/appdev-projects/rails-8-template/blob/7bfb0c173b13203dbbae612ea410b893d041d240/bin/fix-ports#L1-L9),
 its post-attach hook changes port 3000 from public back to private specifically to repair Codespaces 502 responses.
 Repeating that transition once in the fresh Drawing Board Codespace changed the unchanged request from relay 502
-with no Rails log to Rails 403 with an exact `Blocked hosts` log. `script/refresh-codespaces-private-port` performs the same
-registration refresh on every Codespaces attach, but only while port 3000 has no listener. It reports every GitHub
-CLI operation, restores and verifies private visibility, and fails
-instead of exposing an active application or hiding an error. GitHub documents
+with no Rails log to Rails 403 with an exact `Blocked hosts` log. `script/refresh-codespaces-private-port` performs
+the same registration refresh on every Codespaces attach, but only while port 3000 has no listener. Codespaces can
+remove that unbound registration between the public and private commands; the script accepts only that exact
+no-listener result, after which the next server started in the integrated terminal is forwarded privately by
+default. It reports every other GitHub CLI error and fails instead of exposing an active application or hiding an
+unexpected result. Lifecycle commands obtain the Codespace name and session-scoped `GITHUB_TOKEN` from Codespaces'
+protected shared environment when they have not yet been exported into their process; they never print or persist
+either value. GitHub documents
 [`CODESPACES` and `CODESPACE_NAME`](https://docs.github.com/en/codespaces/developing-in-a-codespace/default-environment-variables-for-your-codespace)
 as the runtime discriminator and
 [private as the default forwarded-port visibility](https://docs.github.com/en/codespaces/developing-in-a-codespace/forwarding-ports-in-your-codespace);
