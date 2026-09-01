@@ -26,10 +26,14 @@
   "forwardPorts": [3000, 5432],
   "customizations": {
     "vscode": {
-      "extensions": ["Shopify.ruby-lsp", "bradlc.vscode-tailwindcss"]
+      "extensions": ["Shopify.ruby-lsp", "bradlc.vscode-tailwindcss"],
+      "settings": {
+        "extensions.supportNodeGlobalNavigator": true
+      }
     }
   },
   "remoteUser": "vscode",
   "onCreateCommand": "sudo chown -R vscode:vscode /home/vscode/.claude /home/vscode/.codex /home/vscode/.cache",
-  "postCreateCommand": ".devcontainer/setup-agents"
+  "postCreateCommand": ".devcontainer/setup-agents",
+  "postAttachCommand": "script/refresh-codespaces-private-port"
 }
