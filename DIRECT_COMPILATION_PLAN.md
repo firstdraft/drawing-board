@@ -230,25 +230,59 @@ exposed result fails. This tunnel containment
 does not retire the 2026-08-28 generated Rails host-admission finding or prove a state-changing POST; those remain
 target-owned correction and proof.
 
-### Successor qualification still required
+### Observed successor qualification on 2026-09-01/02
 
-The CLI 0.2.2/current-Skills/public-image candidate needs one fresh template-derived Codespace observation before
-it becomes the current end-to-end receipt. The run should retain:
+One fresh template-derived, non-prebuilt Codespace completed the successor journey:
 
-1. credential-free retrieval of the exact workspace-image manifest and the create-to-available and first-SSH times;
-2. installation of the exact CLI and Skills pins, both Skill links, and their compatibility record;
-3. one signed-in continuing agent, the approved Neighborhood Guide Plan, and one task-scoped staging token;
-4. one approved `--output ./application` Compile with no Publication or Service-created GitHub repository;
-5. the nested parentless initialization and complete generated-application smoke;
-6. the generated app's own `bin/dev` through the ordinary private GitHub forwarded URL, with the remote extension
-   host using `--supportGlobalNavigator`, no `PendingMigrationError`, the post-attach port refresh ending private,
-   and both GET and state-changing POST reaching Rails through the target-owned narrow host/Origin handling;
-   and
-7. the same agent explaining one retained Plan decision, making one bounded source change that follows it, and
-   passing the focused generated-app check.
+- Drawing Board `117a45e040ce579f84aa69dd8968a560301199bc`, tree
+  `af28087081d85fa93cd82969b057914e3a73d29a`, was copied byte-for-byte into parentless template-repository commit
+  `d228b0782122ce4f0625fd1cc08b3a73f40313c9`. The public workspace-image manifest
+  `sha256:06602be5cc829d5142c12b06c505dbf8353a3ade6751ca4bf01a785ea2c3e6e3` was retrievable without credentials.
+- The sole `basicLinux32gb` East US Codespace `fd-successor-117a45e-0901-5wwqjwwxj27vrr` reported no prebuild. It
+  reached `Available` 197 seconds after creation and the first SSH probe completed in six seconds. Runtime setup
+  installed CLI `0.2.2`, Skills `0a765f88d1cd500168e18ce1adda03802773f35e`, Claude Code `2.1.226`, and Codex
+  `0.147.0`, with both Skill links targeting the exact source checkout.
+- Staging advertised API contract `0.3.0` and its web and worker used Service
+  `cc72dad5b26b887f3f21496b568b80678ceac47f`, tree `4aea5019e2d9e43031b68a03d2129bfca4d0013e`.
+  The same signed-in Claude session `8615af73-f549-461c-8155-7818785d3c0d` explained the approved Neighborhood
+  Guide Plan, submitted its exact SHA-256 `1e88f919436d779176abd115f79f84293d4ea4579d21cc07bdc64db3b1a2a962`,
+  and retained Analysis `01a06000-5908-715f-936a-4d448a818705`. The reviewed GapSet was empty, with SHA-256
+  `8126a9155702c201da5d06013366f1afb824e6bd7100c5866be5ff8b1282684e`. The observed releases were Analyzer
+  `foundation-plan-rails/application-2026-08-28-reviewed-realization` and Compiler
+  `foundation-plan-rails/compiler-application-2026-08-28-reviewed-realization`.
+- After explicit approval of those exact bytes, gaps, and direct effect, the session invoked exactly one
+  `bin/firstdraft plan compile --output ./application`. Compilation
+  `01a06006-8c58-7206-b335-4d346ebfe8da` succeeded with artifact-source SHA-256
+  `a9d7b0a67748073f8ae0d867daada532f48b357c4a04b3cb4dbbfbf523e00eba`, manifest SHA-256
+  `f3b0175f5be0a587247af14a2ea29f0e61d79f2a8676e5fefd2ccce4fb036244`, 494,373 bytes, and 169 files. Service
+  inspection proved a zero-to-one Compilation count and no Publication. The owner's 556-repository GitHub
+  inventory was byte-identical before and after Compile, so the Service created no repository.
+- `script/initialize-application application` produced parentless nested commit
+  `248c19fc76adccb47056aca1b3d6ac28e0e35d42`, tree `a025f870dc6cf8bfcf7e52e8d6d3f9c3690be5c5`,
+  on clean `main` with no remote. The unchanged generated app then passed root `script/application-smoke`; its
+  `script/selenium start` resolved the Compose project from the runtime container label without a fallback. The
+  smoke passed setup, PostgreSQL readiness, 60 Rails tests with 247 assertions, seven system tests with 34
+  assertions, and complete CI in 83.41 seconds under Ruby 4.0.5 and Node 24.18.0. The first external noninteractive
+  SSH invocation lacked Codespaces' normally exported name/domain variables and stopped before database
+  preparation; the exact app passed when the SSH harness supplied those platform values. This is an external-harness
+  boundary, not an integrated-terminal source repair.
+- A live terminal `bin/dev` served the app through its ordinary private
+  `fd-successor-117a45e-0901-5wwqjwwxj27vrr-3000.app.github.dev` URL. The remote extension host carried
+  `--supportGlobalNavigator` and logged no `PendingMigrationError`. An authenticated GET returned 200; a genuine
+  Place form POST with GitHub's rewritten `Origin: http://localhost:3000` returned 303 and committed exactly one
+  row; the same-session missing-CSRF negative returned 422 without another row; and an altered forwarded Host
+  returned 403 while the exact Host returned 200. After server shutdown, the guarded port refresh ended with no
+  listener and private visibility.
+- The same agent explained the Plan's public Place CRUD decision, changed exactly the Places index lede to make that
+  decision visible, and passed YAML parsing, an exact translation check, and the focused scaffold integration test
+  at one run and one assertion. The edit remained uncommitted in the nested no-remote repository for inspection.
+- The task-scoped staging token was revoked, the old credential received `401 authentication_required`, credential
+  material was removed from the Codespace, the agent logged out, and the sole Codespace reached `Shutdown` after
+  one stop request.
 
-Only that retained run may move `comparison_codespace` from `not_yet_observed` to `passed`. Root adoption is a
-separate optional observation and is not a prerequisite for the beginner `./application` workflow.
+This exact observation moves the workspace image's `comparison_codespace` result to `passed` and completes the
+beginner `./application` qualification. It does not qualify `--output .`, arm64 image runtime, Publication,
+deployment, or persistence of the unpushed nested application after the disposable Codespace.
 
 Retain exact Service, CLI, Drawing Board, Plan, GapSet, artifact, generated tree, nested initial commit, container,
 database, smoke output, and browser coordinates. If the Compilation start has an unknown outcome without a retained

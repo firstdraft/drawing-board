@@ -103,14 +103,13 @@ GitHub-tunneled development environment; client authentication remains key-only 
 supersedes the per-container-host-key experiment, but does not approve consumption of its quarantined package.
 
 The candidate workflow does not move a stable or `latest` tag. The image receipt binds the source revision, source
-tree, workflow run, platforms, and manifest digest consumed by the template. The current receipt records anonymous
-access as passed and leaves the comparison Codespace unobserved until it actually runs. The Docker-outside-of-Docker
-Feature reaches the host daemon: that host is a disposable VM in Codespaces, but it is the developer's own machine
-on the supported local path. Do not run an untrusted workspace or agent with that socket mounted. The workspace
-starts only its exact Compose-owned Selenium service when `script/application-smoke` or `script/selenium start`
-requests browser proof.
-The comparison Codespace must also prove that `script/selenium` can resolve the Compose project from that runtime's
-container identity; the current public-image receipt does not claim that observation or a speculative fallback.
+tree, workflow run, platforms, and manifest digest consumed by the template. The current receipt records both
+anonymous access and the retained comparison Codespace as passed. That exact Codespace also proved that
+`script/selenium` resolves the Compose project from its runtime container identity; no speculative fallback was
+needed. The Docker-outside-of-Docker Feature reaches the host daemon: that host is a disposable VM in Codespaces,
+but it is the developer's own machine on the supported local path. Do not run an untrusted workspace or agent with
+that socket mounted. The workspace starts only its exact Compose-owned Selenium service when
+`script/application-smoke` or `script/selenium start` requests browser proof.
 
 The runtime Dev Container opts the remote extension host into Node's supported `navigator` global through
 `extensions.supportNodeGlobalNavigator`. A 2026-09-01 browser-Codespaces observation found VS Code 1.133.0 and the
