@@ -149,7 +149,7 @@ required(compose.includes("- ..:/workspaces/drawing-board:cached"), "Compose mus
 required(compose.includes(`${imageReceipt.publication.package}@${imageReceipt.publication.manifest}`), "The workspace image must match its immutable receipt.");
 required(imageReceipt.publication.visibility === "public", "The workspace image must retain its observed public visibility.");
 required(imageReceipt.publication.anonymous_pull === "passed", "The exact workspace image must retain its anonymous-pull observation.");
-required(imageReceipt.publication.comparison_codespace === "not_yet_observed", "The comparison Codespace must remain unclaimed before it runs.");
+required(imageReceipt.publication.comparison_codespace === "passed", "The exact workspace image must retain its comparison-Codespace observation.");
 required(imageReceipt.verification?.platforms?.["linux/arm64"]?.runtime === "not_observed", "The reviewed image must not claim arm64 runtime proof without a retained observation.");
 required(compose.includes("- postgres-data:/var/lib/postgresql"), "PostgreSQL 18 data must use its parent volume target.");
 required(compose.includes("condition: service_healthy"), "The workspace must wait for PostgreSQL readiness.");
