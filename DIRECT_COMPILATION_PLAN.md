@@ -316,6 +316,74 @@ between design material and generated source and has a qualified initializer/smo
 qualification should prove that default path first. A separate, explicit root-adoption observation may then verify
 the current-root result without turning it into the template default.
 
+### Observed current-root qualification on 2026-09-02
+
+One fresh, non-prebuilt Codespace completed that separate observation without changing the beginner default:
+
+- Drawing Board main `6f36fa22901ff818b7d369fb92ce042ec62a6a6f`, tree
+  `4b15c5ade7465e16e7c922b996470b88b082a23e`, was copied byte-for-byte into parentless test-repository commit
+  `93f7b99777f1466c20548d9bacb3317f98cad4f1`. The public workspace image remained
+  `ghcr.io/firstdraft/drawing-board-workspace@sha256:06602be5cc829d5142c12b06c505dbf8353a3ade6751ca4bf01a785ea2c3e6e3`.
+  The East US Codespace reported no prebuild, reached the first retained `Available` snapshot 222 seconds after the
+  create request, and completed its first SSH probe eight seconds later. An earlier pre-authentication Codespace
+  expired after the configured one-hour
+  retention with no staging credential, Plan, Analysis, Compile, or Publication; it is not part of the qualified
+  external-operation sequence.
+- Runtime setup installed CLI `0.2.2`, Skills `0a765f88d1cd500168e18ce1adda03802773f35e`, Claude Code `2.1.226`,
+  and Codex `0.147.0`. Staging advertised API contract `0.3.0`; its observed web and worker Service revision was
+  `cc72dad5b26b887f3f21496b568b80678ceac47f`, with the 2026-08-28 reviewed-realization Analyzer and Compiler
+  releases. One signed-in Claude session `5ecb8613-813c-4a08-b60a-7d7b37d4ffae` retained the design context through
+  Plan review, Compile, and the later source edit.
+- The session explained the approved Neighborhood Guide Plan at SHA-256
+  `1e88f919436d779176abd115f79f84293d4ea4579d21cc07bdc64db3b1a2a962`, retained valid Analysis
+  `01a063fc-9e09-7bd7-b097-441f2afbd68d`, and presented its empty GapSet at SHA-256
+  `45bad750de4a3674ab7c5a2bb578cbd7bcc647a91ee3e7df5f514b15df32bd08`. After explicit approval of those
+  exact bytes, the empty gap result, and the relocation effect, it invoked exactly one
+  `bin/firstdraft plan compile --output .` from the workspace root. Compilation
+  `01a06400-b750-7753-beb9-5f7aa86e4e49` succeeded with artifact-source SHA-256
+  `77caf405d9fa104a5c301722b35cf543e5c293a4e6d591e86895b0085a874630`, manifest SHA-256
+  `51ec1026e1adf41cbf857b34bcd20d55cff640aa91b36176e9bdc1e312cbd7e9`, 494,373 bytes, and 169 files.
+  Service inspection proved a zero-to-one Compilation count and no Publication. The owner's 557-repository GitHub
+  inventory was byte-identical before and after Compile, so the Service created no repository.
+- Root adoption moved all 15 preexisting non-Git top-level entries under `design/`, preserved `.git`, its original
+  commit and remote, staged the 37 tracked moves plus 169 generated paths, left ignored `.env`, `.firstdraft`, and
+  `tmp` material relocated under `design/` unstaged, and left no nested `.git`, `application/`, or recovery journal.
+  Committing the staged
+  result produced `fba5ce7daa55c2c5013bc1910303e53283817fc1`, tree
+  `0a646f8162bf608476847ab4041a92caae0af935`, as the child of the original template commit. This successful run
+  rechecked the transaction's clean-root, absent-`design`, absent-journal, exact-index, and Git-preservation fences;
+  it did not induce a failed transaction to repeat the CLI's separate rollback tests.
+- Root `bin/setup` passed in 115.21 seconds. The first unchanged `CI=1 bin/ci` made one current-container boundary
+  visible: all non-system gates passed, but seven system tests could not resolve `selenium` because the already-live
+  Drawing Board container had started only its original `rails-app` and PostgreSQL services before root relocation.
+  Starting the already-declared sibling through relocated `design/script/selenium start` took 121.68 seconds on a
+  cold image pull. The unchanged CI then passed in 66.71 seconds internally and 76.81 seconds including wrapper
+  cleanup: 60 Rails tests with 247 assertions and seven system tests with 34 assertions. The helper stopped Selenium.
+  This required no generated-source patch, custom browser service, or Codespace rebuild, but root adoption does not
+  yet have the default path's one-command `script/application-smoke` orchestration inside the still-running container.
+- Root `bin/dev` reached readiness through the ordinary private forwarded URL. A genuine Place form POST returned
+  303 and committed exactly one row; a missing-CSRF-token POST returned 422 with state unchanged; the exact forwarded
+  Host returned 200 and an altered Host returned 403. After shutdown, the guarded port refresh completed in ten
+  seconds with no listener and private visibility.
+- In the same Claude session, the agent recovered the Plan's public Place CRUD decision, changed only the Places
+  index lede to make that decision visible, and passed safe YAML loading, exact I18n lookup, and the focused scaffold
+  integration test at one run and one assertion. The clean commit
+  `107b2b338b56b90c6330d565a71fecb8e42430f6`, tree
+  `f71f86ac968448c213a19fdfbccd21e5b30f32c4`, retained the root-adoption commit, original history, remote, submitted
+  Plan, and GapSet.
+- The task-scoped staging token was revoked and then received `401 authentication_required`; credential and transient
+  files were removed; Claude reported `loggedIn: false`; Selenium and the Rails listener were absent; port 3000 was
+  private; and the exact Codespace reached `Shutdown` after one stop request. No Publication, package release,
+  deployment, or application-repository push occurred.
+
+The comparison supports the existing mode split. Current-root adoption preserves one Git history and lets one agent
+carry the reviewed design directly into ordinary Rails work without a nested repository or second workspace. It also
+replaces the workspace layout in place, moves First Draft commands under `design/`, requires an immediate inspection
+and commit, and currently needs the relocated Selenium helper when qualification continues inside the container that
+predated the move. `./application` remains the clearer beginner default and the only path with a dedicated nested
+repository initializer followed by one-command smoke orchestration; `--output .` is a qualified, deliberate
+alternative for a user who values one repository and understands the structural transition.
+
 ## Ownership and sequencing
 
 - Service owns Compilation lifecycle and artifact bytes; no Service change is needed for packets 1 or 2.
