@@ -63,4 +63,17 @@ name the Skill or translate the request into a command.
   remote only with the user's approval. Continue inside that directory. After explicit Publication succeeds, report
   the validated private GitHub URL and continue only in a separate checkout when the user asks.
 
+## Continue after Compile
+
+Help the user open the private port-3000 preview and make one useful change in the same conversation. Work directly
+in the generated application with its normal Rails tools, tests, and README. Compile is not a synchronization tool
+for an edited application. Keep missing Plan meaning visible in the retained GapSet, but do not require every gap
+to be closed before ordinary development or handoff.
+
+Follow the [beginner guide](README.md#8-save-your-app-to-github) for saving the separate application repository and
+deployment. Deployment is an ordinary application-development step when the user requests it, not another Compile
+or a prerequisite for continuing locally. Inspect that application's production configuration and current provider
+guides; prefer Rails conventions over new First Draft deployment machinery. Never infer permission to spend money,
+publish source, or expose private data from an earlier Compile approval.
+
 When changing the Drawing Board template itself, read `CONTRIBUTING.md` and run `script/check`.
