@@ -147,8 +147,10 @@ provider registration defect, not a custom tunnel or application workaround.
 
 The repaired tunnel exposed the already-recorded generated Rails HostAuthorization boundary. Do not copy the
 student template's broad `config.hosts.clear` or disabled origin check into Drawing Board. Generated-app host and
-Origin handling remain target-owned follow-up work and require their own exact browser GET and state-changing POST
-proof.
+Origin handling remain target-owned. The [successor qualification](DIRECT_COMPILATION_PLAN.md#observed-successor-qualification-on-2026-09-0102)
+subsequently proved a private forwarded browser GET, valid-CSRF state-changing POST, missing-CSRF rejection, and
+unrelated-Host rejection on its exact generated artifact. Preserve that dated proof; it is not a claim about every
+future generated target revision.
 
 ## Credentials and external systems
 
@@ -168,3 +170,15 @@ the README and verify the affected journey before landing it: template-to-`appli
 separate-repository journey for Publication. [DIRECT_COMPILATION_PLAN.md](DIRECT_COMPILATION_PLAN.md) owns the
 current direct-journey acceptance steps and every explicitly unfinished step; do not call that journey complete
 until those steps are observed.
+
+The internal-alpha delivery scope is the editor-first loop in the README: Codespace, installed Skill, existing
+agent, direct Compile, boot, ordinary source iteration, and an application deployment. A separate Plan web editor,
+public plugin promotion, and completion of all realization gaps are not prerequisites. The existing web surface
+supplies access and credentials; an explorable read-only Plan view can improve independently.
+
+The retained direct-journey receipts prove compile, boot, browser mutation, and same-agent iteration, not a hosted
+application deployment. The README's Render/Neon route is provider-backed guidance, not an observed deployment
+receipt. Before claiming that final leg qualified, exercise a saved generated application repository, a live Render
+web service using Neon, persistent sample records across a redeploy, and one tested source edit reaching the live
+URL. Record the actual source and provider configuration without secrets. Do not rerun unchanged Codespace image or
+Compile qualification solely because this guide changes.
