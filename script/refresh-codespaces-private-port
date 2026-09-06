@@ -169,7 +169,7 @@ if ! read_listener_state; then
 fi
 current_listener_state="${listener_state_result}"
 if [[ "${current_listener_state}" == "active" ]]; then
-  echo "Refusing to re-register port ${port} while a listener is active; stop the server and rerun script/refresh-codespaces-private-port." >&2
+  printf 'Refusing to re-register port %s while a listener is active; stop the server and rerun %q.\n' "${port}" "${BASH_SOURCE[0]}" >&2
   exit 1
 fi
 
