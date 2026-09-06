@@ -144,7 +144,6 @@ required(JSON.stringify(configuration.customizations?.vscode?.settings) ===
 required(configuration.containerEnv?.DB_HOST === "postgres", "Generated Foundations must reach PostgreSQL by service name.");
 required(configuration.containerEnv?.SELENIUM_HOST === "selenium", "Generated system tests must reach Selenium by service name.");
 required(JSON.stringify(configuration.forwardPorts) === JSON.stringify([3000, 5432]), "Rails and PostgreSQL ports must be forwarded.");
-required(configuration.postAttachCommand === "script/refresh-codespaces-private-port", "Codespaces must refresh the private Rails port on attach.");
 required(compose.includes("- ..:/workspaces/drawing-board:cached"), "Compose must mount the complete Drawing Board.");
 required(compose.includes(`${imageReceipt.publication.package}@${imageReceipt.publication.manifest}`), "The workspace image must match its immutable receipt.");
 required(imageReceipt.publication.visibility === "public", "The workspace image must retain its observed public visibility.");

@@ -15,13 +15,15 @@ A repository created from this template must provide one ready-to-use workspace 
 - bare `firstdraft` on the Codespace PATH resolves to `bin/firstdraft`, and AGENTS.md routes Skill-issued commands
   through that wrapper; and
 - the same container carries the current generated Foundation's Ruby and Node toolchain plus healthy PostgreSQL;
-  generated browser tests start the pinned Selenium service on demand, so an ignored application under
-  `./application` can be developed without a second Codespace.
+  generated browser tests start the pinned Selenium service on demand, so the generated application can be
+  developed without a second Codespace.
 
-The template does not commit generated application source. `application/` is ignored local output; its Rails source
-remains distinct from the Drawing Board even though both use one container. The pinned CLI and Skill make direct
-materialization available, and Drawing Board's `AGENTS.md` selects the absent `application/` directory as this
-template's default completion mode. Zero-flag GitHub Publication remains a separate explicit mode. The accepted
+The template itself does not contain generated application source. For the internal alpha, Drawing Board's
+`AGENTS.md` selects explicit `--output .` approval: the application replaces the workspace layout, original material
+moves under `design/`, and the same Git repository and remote hold both. Inspect and commit the staged baseline
+before setup or edits. Do not run the nested initializer or application smoke after root adoption, including their
+relocated copies. The optional `--output ./application` mode keeps an ignored, separate nested application; only that
+mode uses the initializer and application smoke. Zero-flag GitHub Publication remains another explicit mode. The accepted
 cross-repository sequence and its safety boundaries live in
 [DIRECT_COMPILATION_PLAN.md](DIRECT_COMPILATION_PLAN.md).
 
@@ -49,7 +51,7 @@ cross-repository sequence and its safety boundaries live in
 | `script/selenium` | On-demand Selenium start, status, and stop inside the Dev Container |
 | `script/application-smoke` | Setup, PostgreSQL, readiness, and full CI proof for a generated `./application` |
 
-The initializer follows the generated application's own ignore rules. The only artifact-owned paths allowed to
+The nested initializer follows the generated application's own ignore rules. The only artifact-owned paths allowed to
 bypass those rules are `.firstdraft/submitted-foundation-plan.json` and `.firstdraft/gaps.json`. Any other ignored
 path is preserved and stops initialization; a future generated ignored file must update this narrow allowlist and
 its exact-byte fixture in the same coordinated release. Canonical `0644` and `0755` modes are part of the generated
@@ -145,6 +147,17 @@ as the runtime discriminator and
 the current CLI's visibility command is the supported control surface. This is a containment for an observed
 provider registration defect, not a custom tunnel or application workaround.
 
+The `postAttachCommand` resolves that same helper at `script/refresh-codespaces-private-port` before root adoption
+and `design/script/refresh-codespaces-private-port` afterward. This uses the standard
+[Dev Container shell lifecycle](https://containers.dev/implementors/json_reference/#lifecycle-scripts), not a new
+service: the [reference implementation](https://github.com/devcontainers/cli/blob/main/src/spec-common/injectHeadless.ts)
+runs a string command in `/bin/sh` with the workspace as its working directory. An inline path selection survives
+the move even when the already-running container retains its original lifecycle configuration. Helper errors still
+propagate, including its active-listener refusal; no port policy changes with the path. The focused
+`script/check-codespaces-private-port.mjs` exercises the configured command before and after a fixture's `script/`
+directory moves under `design/`, alongside the existing private-port and listener cases. That local proof is not a
+new Codespaces observation.
+
 The repaired tunnel exposed the already-recorded generated Rails HostAuthorization boundary. Do not copy the
 student template's broad `config.hosts.clear` or disabled origin check into Drawing Board. Generated-app host and
 Origin handling remain target-owned. The [successor qualification](DIRECT_COMPILATION_PLAN.md#observed-successor-qualification-on-2026-09-0102)
@@ -166,13 +179,15 @@ are owned by [firstdraft/firstdraft](https://github.com/firstdraft/firstdraft); 
 
 Keep [README.md](README.md) focused on the beginner journey. Put maintainer commands and implementation details here,
 and keep agent-only guardrails in [AGENTS.md](AGENTS.md). If a workflow change affects what a tester must do, update
-the README and verify the affected journey before landing it: template-to-`application/` for direct mode, or the
-separate-repository journey for Publication. [DIRECT_COMPILATION_PLAN.md](DIRECT_COMPILATION_PLAN.md) owns the
+the README and verify the affected journey before landing it: root adoption for the internal-alpha path, nested
+`application/` when selected, or the separate-repository journey for Publication.
+[DIRECT_COMPILATION_PLAN.md](DIRECT_COMPILATION_PLAN.md) owns the
 current direct-journey acceptance steps and every explicitly unfinished step; do not call that journey complete
 until those steps are observed.
 
 The internal-alpha delivery scope is the editor-first loop in the README: Codespace, installed Skill, existing
-agent, direct Compile, boot, ordinary source iteration, and an application deployment. A separate Plan web editor,
+agent, approved root Compile, boot, source inspection, ordinary source iteration, and saving to the same repository.
+Deployment is optional follow-on work, not a pre-send gate for that code-sharing test. A separate Plan web editor,
 public plugin promotion, and completion of all realization gaps are not prerequisites. The existing web surface
 supplies access and credentials; an explorable read-only Plan view can improve independently.
 

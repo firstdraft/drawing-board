@@ -10,7 +10,10 @@ import {fileURLToPath} from "node:url";
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const refresher = path.join(repositoryRoot, "script", "refresh-codespaces-private-port");
+const {postAttachCommand} = JSON.parse(fs.readFileSync(path.join(repositoryRoot, ".devcontainer", "devcontainer.json"), "utf8"));
+assert.equal(typeof postAttachCommand, "string", "The post-attach command must use the Dev Container shell lifecycle.");
 const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), "drawing-board-port-refresh-test-"));
+const workspaceRoot = path.join(temporaryRoot, "workspace with spaces");
 const mockBin = path.join(temporaryRoot, "bin");
 const statePath = path.join(temporaryRoot, "visibility");
 const logPath = path.join(temporaryRoot, "gh.log");
@@ -27,8 +30,8 @@ function writeExecutable(name, contents) {
 }
 
 function run(changes = {}, pathValue = `${mockBin}:/usr/bin:/bin`) {
-  return spawnSync(refresher, [], {
-    cwd: repositoryRoot,
+  return spawnSync("/bin/sh", ["-c", postAttachCommand], {
+    cwd: workspaceRoot,
     encoding: "utf8",
     env: {
       ...process.env,
@@ -53,6 +56,9 @@ function logLines() {
 }
 
 try {
+  fs.mkdirSync(path.join(workspaceRoot, "script"), {recursive: true});
+  fs.copyFileSync(refresher, path.join(workspaceRoot, "script", "refresh-codespaces-private-port"));
+  fs.chmodSync(path.join(workspaceRoot, "script", "refresh-codespaces-private-port"), 0o755);
   fs.mkdirSync(mockBin);
   writeExecutable(
     "gh",
@@ -277,6 +283,38 @@ esac
     assert.equal(realNoListener.status, 0, realNoListener.stderr);
     assert.equal(fs.readFileSync(statePath, "utf8"), "private");
   }
+
+  fs.mkdirSync(path.join(workspaceRoot, "design"));
+  fs.renameSync(path.join(workspaceRoot, "script"), path.join(workspaceRoot, "design", "script"));
+  for (let attach = 0; attach < 2; attach += 1) {
+    fs.writeFileSync(statePath, "private");
+    fs.writeFileSync(logPath, "");
+    const adoptedRoot = run();
+    assert.equal(adoptedRoot.status, 0, adoptedRoot.stderr);
+    assert.match(adoptedRoot.stdout, /private visibility confirmed/);
+    assert.equal(fs.readFileSync(statePath, "utf8"), "private");
+    assert.equal(logLines().filter((line) => line.includes(" visibility ")).length, 2);
+  }
+
+  fs.writeFileSync(logPath, "");
+  const adoptedListener = run({MOCK_LISTENER: "true"});
+  assert.notEqual(adoptedListener.status, 0);
+  assert.match(adoptedListener.stderr, /Refusing to re-register port 3000 while a listener is active/);
+  assert.match(adoptedListener.stderr, /rerun .*design\/script\/refresh-codespaces-private-port/);
+  assert.equal(logLines().some((line) => line.includes(" visibility ")), false);
+  assert.equal(fs.readFileSync(statePath, "utf8"), "private");
+
+  const adoptedOutside = run({CODESPACES: "false"});
+  assert.equal(adoptedOutside.status, 0, adoptedOutside.stderr);
+  assert.match(adoptedOutside.stdout, /skipped outside GitHub Codespaces/);
+
+  fs.renameSync(path.join(workspaceRoot, "design", "script"), path.join(workspaceRoot, "design", "missing-script"));
+  fs.writeFileSync(logPath, "");
+  const missingHelper = run();
+  assert.notEqual(missingHelper.status, 0);
+  assert.match(missingHelper.stderr, /design\/script\/refresh-codespaces-private-port/);
+  assert.deepEqual(logLines(), []);
+  console.log("Codespaces post-attach contracts passed before and after root adoption, including listener guards.");
 } finally {
   fs.rmSync(temporaryRoot, {recursive: true, force: true});
 }

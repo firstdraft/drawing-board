@@ -2,13 +2,16 @@
 
 ## Goal
 
-Let an agent author a Foundation Plan in a Drawing Board Codespace, compile it into `./application`, and continue
-developing and testing the generated Rails Foundation in that same Codespace. This is an additive path. GitHub
+Let an agent author a Foundation Plan in a Drawing Board Codespace, compile it into the workspace root, and continue
+developing and testing the generated Rails Foundation in that same Codespace and Git repository. GitHub
 remains the authentication provider, and the existing GitHub Publication flow remains available for callers that
 want a separate repository.
 
-The beginner/default slice is `./application`. CLI 0.2.2 also supports explicit current-root adoption, but Drawing
-Board qualifies the nested flow first and does not select root adoption unless the user deliberately chooses it.
+The internal-alpha guide now selects CLI 0.2.2's `--output .` mode after explicit approval of the Plan, gaps, and
+move of existing Drawing Board files into `design/`. Git history and the remote remain in place; inspect and commit
+the staged baseline before setup or edits. Never run the nested initializer or application smoke after that move.
+The optional `./application` and Publication paths remain available. The packets and dated receipts below preserve
+the earlier nested-first delivery sequence; they are not instructions to initialize a nested app after root Compile.
 
 ## Packet 1: direct artifact output in the CLI
 
@@ -143,7 +146,8 @@ The 2026-08-30 successor pin candidate uses:
 
 Drawing Board installs Skills from that exact source revision, so the unpublished plugin package does not block this
 template. CLI 0.2.2 retains absent `./application` output and zero-flag Publication while adding explicit current-root
-adoption. The beginner journey continues to select `./application`; root adoption remains a deliberate alternative.
+adoption. At that successor-pin boundary, the beginner journey still selected `./application`; the current guide's
+root-first choice is recorded above.
 
 ## Packet 3: one real non-prebuilt Codespace journey
 
@@ -290,13 +294,13 @@ identity, abort the qualification, preserve its Project/request/response/timing 
 to reconcile it; do not retry, switch modes, or create a replacement Project as an improvised recovery. Stop the
 Codespace after proof or a recorded abort. Do not treat a local Docker rehearsal as the Codespace observation.
 
-## Available alternative: compile into an existing root
+## Compile into an existing root
 
 CLI 0.2.2 implements POSIX current-root adoption in any eligible real directory rather than recognizing Drawing
 Board specially:
 
 ```sh
-firstdraft plan compile --output .
+bin/firstdraft plan compile --output .
 ```
 
 The CLI reserves the root before network work, verifies the artifact outside it, and journals the installation.
@@ -311,14 +315,15 @@ Root adoption rejects unsupported platforms, nested worktrees, unsafe entry type
 A failed transaction either restores the original identities or retains its private journal for explicit recovery.
 It never creates a Git repository, starts Publication, deploys, or substitutes for absent `./application` output.
 
-Drawing Board deliberately keeps `./application` as the beginner default because it preserves a visible boundary
-between design material and generated source and has a qualified initializer/smoke workflow. The successor
-qualification should prove that default path first. A separate, explicit root-adoption observation may then verify
-the current-root result without turning it into the template default.
+Drawing Board now selects root adoption for the internal-alpha handoff so the same conversation can move from Plan
+to inspectable source and an ordinary feature commit in one repository. The older nested path retains its separate
+initializer/smoke workflow. Root mode instead uses generated `bin/setup` and `bin/ci` at the root, with
+`design/script/selenium` for browser checks in the original running container; see the current README.
 
 ### Observed current-root qualification on 2026-09-02
 
-One fresh, non-prebuilt Codespace completed that separate observation without changing the beginner default:
+One fresh, non-prebuilt Codespace completed that separate observation; it did not change the beginner default at
+that time:
 
 - Drawing Board main `6f36fa22901ff818b7d369fb92ce042ec62a6a6f`, tree
   `4b15c5ade7465e16e7c922b996470b88b082a23e`, was copied byte-for-byte into parentless test-repository commit
@@ -360,7 +365,7 @@ One fresh, non-prebuilt Codespace completed that separate observation without ch
   cold image pull. The unchanged CI then passed in 66.71 seconds internally and 76.81 seconds including wrapper
   cleanup: 60 Rails tests with 247 assertions and seven system tests with 34 assertions. The helper stopped Selenium.
   This required no generated-source patch, custom browser service, or Codespace rebuild, but root adoption does not
-  yet have the default path's one-command `script/application-smoke` orchestration inside the still-running container.
+  yet have the nested path's one-command `script/application-smoke` orchestration inside the still-running container.
 - Root `bin/dev` reached readiness through the ordinary private forwarded URL. A genuine Place form POST returned
   303 and committed exactly one row; a missing-CSRF-token POST returned 422 with state unchanged; the exact forwarded
   Host returned 200 and an altered Host returned 403. After shutdown, the guarded port refresh completed in ten
@@ -380,9 +385,9 @@ The comparison supports the existing mode split. Current-root adoption preserves
 carry the reviewed design directly into ordinary Rails work without a nested repository or second workspace. It also
 replaces the workspace layout in place, moves First Draft commands under `design/`, requires an immediate inspection
 and commit, and currently needs the relocated Selenium helper when qualification continues inside the container that
-predated the move. `./application` remains the clearer beginner default and the only path with a dedicated nested
-repository initializer followed by one-command smoke orchestration; `--output .` is a qualified, deliberate
-alternative for a user who values one repository and understands the structural transition.
+predated the move. `./application` has a dedicated nested repository initializer followed by one-command smoke
+orchestration. The internal-alpha guide now favors `--output .` for its one-repository handoff and teaches the
+structural transition explicitly; no new CLI transaction or orchestration layer is implied by that choice.
 
 ## Ownership and sequencing
 
@@ -391,7 +396,7 @@ alternative for a user who values one repository and understands the structural 
   Ruby/Node/PostgreSQL bump, requires a coordinated Drawing Board update to its `.firstdraft` allowlist, exact-byte
   fixture, container pins, and smoke assertions in the same candidate.
 - CLI owns direct mode, output-path validation, polling, artifact verification, exact materialization, and the
-  current-root relocation transaction. Drawing Board selects the absent `application/` path by default and must not
+  current-root relocation transaction. Drawing Board selects approved root adoption for the internal alpha and must not
   restate or reimplement the root transaction.
 - Drawing Board owns its combined Dev Container and nested-repository initialization.
 - The authoring Skill teaches the coherent command sequence only after the CLI contract lands; it does not duplicate
@@ -400,8 +405,8 @@ alternative for a user who values one repository and understands the structural 
 - Broad Foundation Plan realization gaps and the documentation/website audit are separate work lanes.
 
 Land packet 1 and packet 2 independently after their repository checks and reviews. Complete packet 2.5 and prove
-its exact released/pinned tuple before packet 3. Qualify the successor `./application` journey before making any
-Drawing Board claim about the optional root-output experience.
+its exact released/pinned tuple before packet 3. The dated nested and root observations above remain separate proof;
+changing the guide's preferred mode does not expand either observation to a new candidate or a container rebuild.
 
 ## Review questions
 
