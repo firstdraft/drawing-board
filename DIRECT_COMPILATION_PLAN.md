@@ -13,6 +13,16 @@ the staged baseline before setup or edits. Never run the nested initializer or a
 The optional `./application` and Publication paths remain available. The packets and dated receipts below preserve
 the earlier nested-first delivery sequence; they are not instructions to initialize a nested app after root Compile.
 
+## Current Skills source pin
+
+The 2026-09-05 root-handoff update selects Skills source
+[`8ae02160b44b40d21ec432cf2d1ab2772f9aae6b`](https://github.com/firstdraft/skills/commit/8ae02160b44b40d21ec432cf2d1ab2772f9aae6b),
+tree `735a9bc933a3d6e6062f36252750a16ce844c28e`. Its handoff keeps ordinary Rails feature work at the generated root
+and forbids the moved nested-only helpers after root adoption. Compatibility still requires exact CLI `0.2.2`;
+all CLI, agent, and runtime version pins are unchanged. Setup fetches this exact Skills Git revision, not a new npm
+plugin release. This source pin does not claim a new installation, Codespaces, or published-plugin qualification;
+the dated receipts below retain the earlier Skills SHA they actually exercised.
+
 ## Packet 1: direct artifact output in the CLI
 
 Exact implementation candidate before this document:
