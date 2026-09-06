@@ -154,8 +154,9 @@ The 2026-08-30 successor pin candidate uses:
   `4a6c87a5853d13332f7a4b04be01ed46c3e08605`, candidate package SHA-256
   `6ba0efb4fcb2dbf06d412ea8847593593fa832dc9cbcb419857a74c42e6cf74f`, requiring exact CLI `0.2.2`.
 
-Drawing Board installs Skills from that exact source revision, so the unpublished plugin package does not block this
-template. CLI 0.2.2 retains absent `./application` output and zero-flag Publication while adding explicit current-root
+Drawing Board installed Skills from that exact source revision at that boundary, so the unpublished plugin package
+did not block the template. CLI 0.2.2 retains absent `./application` output and zero-flag Publication while adding
+explicit current-root
 adoption. At that successor-pin boundary, the beginner journey still selected `./application`; the current guide's
 root-first choice is recorded above.
 
