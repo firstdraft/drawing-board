@@ -77,9 +77,10 @@ For Claude, run this and follow its sign-in prompts:
 claude
 ```
 
-Use the account that already has Claude Code access. If the browser does not open, press `c` at the login prompt to
-copy the full URL, then open it in your browser. If the browser shows a login code, paste it into the terminal's
-`Paste code here if prompted` field, not into chat. Wait for the terminal to confirm the login.
+Use the account that already has Claude Code access. If the browser does not open, click the printed login URL, or
+select the full URL and open it in your browser. You can also press `c` at the login prompt to copy the URL. If the
+browser shows a login code, paste it into the terminal's `Paste code here if prompted` field, not into chat. Wait
+for the terminal to confirm the login.
 
 If pasting into that interactive field does nothing, return to the shell and run:
 
@@ -123,7 +124,8 @@ to explain the exact reason; do not delete files to force it through.
 Root Compile moves the original planning files, including private CLI state and `.env`, into `design/`. It stages
 the tracked moves and generated source in the **existing Git repository**; it does not create a second repository.
 After inspecting that staged result for credentials, the agent commits it as the untouched generated baseline.
-Later First Draft authoring commands run from `design/` through its `bin/firstdraft` wrapper.
+The root `bin/` now belongs to the generated app, so bare `firstdraft` no longer runs the wrapper that loads `.env`
+and requires staging. For later First Draft authoring commands, change into `design/` and use `bin/firstdraft`.
 
 If you want a separate private GitHub repository instead, say so before approving the Compile. The agent will use
 the distinct Publication mode and give you that repository's URL. This mode requires the **Connect GitHub App** step
