@@ -18,13 +18,22 @@ A repository created from this template must provide one ready-to-use workspace 
   generated browser tests start the pinned Selenium service on demand, so the generated application can be
   developed without a second Codespace.
 
+PostgreSQL health checks use TCP so the entrypoint's temporary Unix-socket-only initialization server cannot
+release the workspace dependency early. Keep the existing five-second cadence; the measured one-second alternative
+saves about four seconds locally but adds sustained polling, and Codespaces rejected the startup-only interval.
+See the [follow-up startup measurements](STARTUP_FOLLOWUP.md).
+
 The template itself does not contain generated application source. For the internal alpha, Drawing Board's
 `AGENTS.md` selects explicit `--output .` approval: the application replaces the workspace layout, original material
-moves under `design/`, and the same Git repository and remote hold both. Inspect and commit the staged baseline
-before setup or edits. Do not run the nested initializer or application smoke after root adoption, including their
+moves under `design/`, and the same Git repository holds both. The primary **Use this template → Open in a
+codespace** route starts without a remote. Inspect and commit the staged baseline, then publish it from VS Code or
+the [Codespaces publication API](#publish-from-the-codespace-terminal) to the user's own private repository before
+setup or edits. Preserve and use an existing remote when the user chooses
+repository-first creation. Do not run the nested initializer or application smoke after root adoption, including their
 relocated copies. The optional `--output ./application` mode keeps an ignored, separate nested application; only that
-mode uses the initializer and application smoke. Zero-flag GitHub Publication remains another explicit mode. The accepted
-cross-repository sequence and its safety boundaries live in
+mode uses the initializer and application smoke. **Compile and publish through First Draft** selects the separate
+zero-flag Publication mode; **Create GitHub repository** saves the existing workspace and does not Compile again.
+The accepted cross-repository sequence and its safety boundaries live in
 [DIRECT_COMPILATION_PLAN.md](DIRECT_COMPILATION_PLAN.md).
 
 ## Repository map
@@ -165,6 +174,77 @@ subsequently proved a private forwarded browser GET, valid-CSRF state-changing P
 unrelated-Host rejection on its exact generated artifact. Preserve that dated proof; it is not a claim about every
 future generated target revision.
 
+## Codespaces prebuilds
+
+The primary template launch can reuse the prebuild on `firstdraft/drawing-board`; a new repository created with
+**Create a new repository** does not inherit that configuration. Keep the README's **Use this template → Open in a
+codespace** route and its private-repository checkpoint after Compile.
+
+Manage the existing configuration under **Settings → Codespaces**, for `main` and
+`.devcontainer/devcontainer.json`. Keep prebuild optimization enabled so a usable older prebuild can serve a launch
+while its successor runs. The observed configuration uses **Every push**, all five regions, two retained versions,
+and failure notifications to the maintainer. Region coverage and retention are cost choices; choose them from the
+actual audience rather than adding a separate configuration for each generated repository.
+
+Keep the agent/CLI/Skill install in `postCreateCommand` so tool updates need no workspace-image publication. The
+[hosted experiment](PREBUILD_EXPERIMENT.md) moved preparation into `updateContentCommand`: two prepared launches
+averaged 55.7 seconds to setup completion versus 60.3 seconds for two existing-prebuild baselines. First native CLI
+execution still waited on file reads after snapshot restore. That roughly five-second saving did not justify the
+extra installation paths. The [second round](STARTUP_FOLLOWUP.md) also found no useful improvement from file
+read-ahead or concurrent warm-up. Its baked tool image made cold creation about 53 seconds slower in two matched
+pairs. The shared image already contains the slower-changing Rails/system toolchain.
+
+Setup reads pins from the **checked-out source**, which can itself come from an older prebuild. In the experiment,
+requesting the branch after a push restored the previous commit while its new prebuild was unavailable. Keep
+**Every push**, wait for a successful prebuild of the intended revision before qualifying a new pin, and verify the
+Codespace's actual tree. Direct-template creation starts a new Git history, so compare its tree rather than expecting
+the template commit SHA. Post-create installation does not by itself guarantee the latest remote pins.
+
+To investigate a slow launch, record the exact template commit, region, machine, creation time, editor-ready time,
+and `Drawing Board setup complete.` time. In that Codespace, check whether it actually used a prebuild:
+
+```sh
+gh api "/user/codespaces/$CODESPACE_NAME" --jq '.prebuild'
+git rev-parse HEAD 'HEAD^{tree}'
+```
+
+Use **Codespaces: View Creation Log** to separate provisioning/container work from lifecycle commands. A green
+prebuild workflow alone does not prove a particular Codespace used it. Compare the same revision and region before
+claiming a speedup. See [GitHub's prebuild semantics](https://docs.github.com/en/codespaces/prebuilding-your-codespaces/about-github-codespaces-prebuilds),
+[configuration options](https://docs.github.com/en/codespaces/prebuilding-your-codespaces/configuring-prebuilds), and
+the [startup investigation](STARTUP_INVESTIGATION.md) for measurements and proof boundaries.
+
+## Publish from the Codespace terminal
+
+An agent can publish an unpublished direct-template Codespace using its built-in `GITHUB_TOKEN`. Use GitHub's
+[Codespaces publication endpoint](https://docs.github.com/en/rest/codespaces/codespaces#create-a-repository-from-an-unpublished-codespace);
+the general `gh repo create` and `POST /user/repos` routes rejected that token in the live test. No additional login,
+PAT, or First Draft API command is needed for this route.
+
+First inspect and commit the baseline without credentials, confirm that no remote exists, and obtain approval of
+the personal owner, repository name, and private publication. If a remote already exists, use that approved remote
+instead. Run this from the Codespace's integrated terminal, substituting the approved name:
+
+```sh
+gh api --method POST "/user/codespaces/$CODESPACE_NAME/publish" \
+  -f name="my-app" -F private=true \
+  --jq '.repository | {full_name, private, html_url}'
+```
+
+Verify the returned owner/name and `private: true`. This creates the repository, associates the Codespace with it,
+and grants its token write access. It does not add local `origin` or push commits. From the generated application's
+Git root, use the returned repository URL:
+
+```sh
+git remote add origin https://github.com/OWNER/REPO.git && git push -u origin HEAD
+```
+
+Verify the remote baseline commit and retained `design/` files before continuing. Later saves use ordinary commits
+and `git push`. If creation succeeds but the push fails, keep the repository and repair the reported push failure;
+do not create another repository. After an ambiguous API result, inspect the Codespace's repository association and
+the approved repository read-only before any retry. The [live receipt](STARTUP_INVESTIGATION.md#publication-credentials)
+proves private creation and two pushes using only the built-in token, with a small Git fixture.
+
 ## Credentials and external systems
 
 Never commit a First Draft API token, GitHub token, agent credential, or generated `.env`. `script/check` scans the
@@ -186,7 +266,7 @@ current direct-journey acceptance steps and every explicitly unfinished step; do
 until those steps are observed.
 
 The internal-alpha delivery scope is the editor-first loop in the README: Codespace, installed Skill, existing
-agent, approved root Compile, boot, source inspection, ordinary source iteration, and saving to the same repository.
+agent, approved root Compile, private-repository publication, boot, source inspection, ordinary source iteration, and saving to the same repository.
 Deployment is optional follow-on work, not a pre-send gate for that code-sharing test. A separate Plan web editor,
 public plugin promotion, and completion of all realization gaps are not prerequisites. The existing web surface
 supplies access and credentials; an explorable read-only Plan view can improve independently.

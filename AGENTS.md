@@ -2,7 +2,8 @@
 
 This repository starts as a planning workspace. Help the user describe one application and maintain its current
 Foundation Plan through the installed `create-full-stack-app` Skill. The internal-alpha path compiles into this
-root, preserving its Git history and remote while moving the original Drawing Board material under `design/`.
+root, preserving its Git history and any existing remote while moving the original Drawing Board material under
+`design/`. The recommended template Codespace starts without a remote; Compile does not require one.
 A plain request such as "Make me an app that tracks my inventory" is enough to begin; do not require the user to
 name the Skill or translate the request into a command.
 
@@ -18,8 +19,12 @@ name the Skill or translate the request into a command.
   of the reviewed Plan, gaps, and relocation of this Drawing Board into `design/` before running it from the physical
   workspace root. A generic Compile request does not authorize that relocation. If root eligibility fails, preserve
   the workspace and explain the exact refusal; do not delete files or switch modes to force it through.
-- After root adoption, keep the existing `.git` and remote. Inspect and commit the staged generated baseline before
-  setup or source edits, checking that no credentials are staged. Never run `script/initialize-application` or
+- After root adoption, keep the existing `.git` and any remote. Inspect and commit the staged generated baseline,
+  checking that no credentials are staged. Before setup or source edits, save it to the user's own **private**
+  repository through VS Code's **Publish to GitHub** or the [Codespaces publication API](CONTRIBUTING.md#publish-from-the-codespace-terminal).
+  Obtain approval of the owner and repository name, then verify the baseline arrived. If a remote already exists,
+  show it and push there with approval instead. Never infer publication permission from Compile approval.
+  Never run `script/initialize-application` or
   `script/application-smoke`, including their copies under `design/`: those helpers require a separate nested app.
   Run ordinary Rails commands at the new root. For later First Draft authoring commands, enter `design/` and use its
   `bin/firstdraft`; do not rely on the original container's bare `firstdraft` PATH after relocation.
@@ -35,8 +40,11 @@ name the Skill or translate the request into a command.
 - If a Codespaces forwarded-port URL reaches Rails' **Blocked hosts** page, preserve the exact generated revision,
   report the observed response, and stop. Do not edit or clear `config.hosts`, or add host-admission environment
   variables to the Drawing Board or the generated application.
-- Zero-flag `bin/firstdraft plan compile` is a separate mode for a user who explicitly asks for a private GitHub
-  repository. Never switch modes to recover from an ambiguous start. No Compile mode deploys the application.
+- **Create GitHub repository** means save the existing workspace privately, add `origin`, and push its commits;
+  it does not request another Compile. **Compile and publish through First Draft** explicitly selects zero-flag
+  `bin/firstdraft plan compile`, which compiles and creates a separate private artifact repository through the service.
+  Use VS Code's actual **Publish to GitHub** label for its UI. Never switch modes to recover from an ambiguous start.
+  No Compile mode deploys the application.
 - Use `bin/firstdraft` for every First Draft command. When the installed Skill shows `firstdraft ...`, pass those
   same arguments to this repository wrapper. It loads the ignored `.env`, requires staging, and launches the exact
   pinned standalone CLI for both Claude and Codex. Do not bypass it, call the service with improvised HTTP, or
@@ -55,13 +63,14 @@ name the Skill or translate the request into a command.
 - Never print, log, commit, or request a First Draft token in chat. The local `.env` is agent-readable development
   credential delivery, not isolation from either agent; `bin/agent-doctor` reports presence only.
 - Never request a GitHub personal access token. Direct output creates no Publication or repository. If the user
-  explicitly selects Publication, it uses the GitHub account already connected to First Draft and creates a fresh
-  private repository, not a branch or pull request in this Drawing Board. Route an installation-readiness failure
-  back to First Draft's **Connect GitHub App** flow; do not improvise credentials.
+  explicitly selects **Compile and publish through First Draft**, it uses the GitHub account already connected to
+  First Draft and creates a fresh private repository, not a branch or pull request in this Drawing Board. Route an
+  installation-readiness failure back to First Draft's **Connect GitHub App** flow; do not improvise credentials.
 - Do not publish or release packages from this repository.
-- After root Compile succeeds, report the generated-baseline commit, existing remote, and root
-  `.firstdraft/submitted-foundation-plan.json` and `.firstdraft/gaps.json`. Help save later edits in a separate commit
-  and push to that same repository when authorized. In nested mode, report the nested initial commit and no-remote
+- After root Compile succeeds, report the generated-baseline commit, remote or unpublished state, and root
+  `.firstdraft/submitted-foundation-plan.json` and `.firstdraft/gaps.json`. Make the private-repository checkpoint
+  visible immediately; afterward save later edits in separate commits and push to that repository when authorized.
+  In nested mode, report the nested initial commit and no-remote
   boundary; before the Codespace is deleted, offer to create and push a remote only with the user's approval.
   After explicit Publication succeeds, report the validated private GitHub URL and continue only in a separate
   checkout when the user asks.
@@ -73,8 +82,8 @@ in the generated application with its normal Rails tools, tests, and README. Com
 for an edited application. Keep missing Plan meaning visible in the retained GapSet, but do not require every gap
 to be closed before ordinary development or handoff.
 
-Follow the [beginner guide](README.md#8-save-your-app-to-github) for saving to the existing repository after root
-adoption. Deployment is optional application-development work when the user requests it, not another Compile
+Follow the [beginner guide](README.md#6-save-your-app-to-github) for publishing the baseline and then pushing later
+commits. Deployment is optional application-development work when the user requests it, not another Compile
 or a prerequisite for the internal-alpha test. Inspect that application's production configuration and current provider
 guides; prefer Rails conventions over new First Draft deployment machinery. Never infer permission to spend money,
 publish source, or expose private data from an earlier Compile approval.

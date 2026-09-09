@@ -2,13 +2,13 @@
 
 This repository is a workspace for building an app with Claude or Codex. Describe your idea, review the plan with
 your agent, and First Draft generates a Rails starting point at this repository's root. The original Drawing Board
-files move into `design/`; your Git history and remote stay in place. Keep working with the same agent to make it
-your own.
+files move into `design/`; your Git history and any existing remote stay in place. Save the generated baseline to
+your own private GitHub repository, then keep working with the same agent to make it your own.
 
 You do not need to install programming tools on your computer. The GitHub Codespace created from this template
 contains everything the agent needs.
 
-The path is: **describe → review → generate → open → inspect → change → save**. You stay in the same Codespace throughout.
+The path is: **describe → review → generate → save → open → inspect → change**. You stay in the same Codespace throughout.
 First Draft is an internal alpha: use test projects and sample data. The generated app is a head start, not a
 finished product. Sharing code is enough for this test; deployment is optional.
 
@@ -20,24 +20,32 @@ You will need:
 - access to <https://staging.firstdraft.com>; and
 - a Claude or Codex account with access to its coding agent.
 
-Use the same personal GitHub account for the Drawing Board, Codespace, and First Draft sign-in.
+Use the same personal GitHub account to create the Codespace and sign in to First Draft.
 
 ## 1. Create your Drawing Board
 
 1. Open [firstdraft/drawing-board](https://github.com/firstdraft/drawing-board).
-2. Select **Use this template**, then **Create a new repository**.
-3. Give the repository a name for your app idea, choose **Private**, and select **Create repository**.
+2. Select **Use this template**, then **Open in a codespace**.
 
-This repository starts as your Drawing Board and becomes your application after you approve root Compile.
+Your Drawing Board opens in VS Code in the browser, with local Git history but no GitHub remote. You can describe
+and compile your app before choosing a repository name. In [step 6](#6-save-your-app-to-github), you will publish
+the generated baseline to your own private repository. This launch can use the template's prebuilt environment.
+This is GitHub's supported
+[template Codespace workflow](https://docs.github.com/en/codespaces/developing-in-a-codespace/creating-a-codespace-from-a-template).
 
-## 2. Open the Codespace
+If you need an organization-owned repository or a remote before starting, choose **Use this template → Create a new
+repository** instead. Select the intended owner, give it a name, choose **Private**, and create it. In that new
+repository, select **Code → Codespaces → Create codespace on main**. Follow the same guide; at step 6, push to that
+existing repository.
 
-1. In your new Drawing Board repository, select **Code**.
-2. Select **Codespaces**.
-3. Select **Create codespace on main**.
-4. Wait for the terminal to say `Drawing Board setup complete.`
+## 2. Wait for workspace setup
 
-The first setup may take a few minutes. Leave the browser tab open while it finishes.
+If VS Code asks, select **Trust Folder & Continue** for this Drawing Board. Leave the browser tab open until the
+terminal says `Drawing Board setup complete.`
+
+Setup installs the pinned agents, First Draft CLI, and First Draft Skill, and prepares your local configuration.
+GitHub can reuse the template's prebuilt environment to shorten startup. If a prebuild is unavailable, the first
+start may take a few minutes.
 The workspace starts its database automatically. Browser tests start their browser service only when they need it,
 so the first browser-test run may take a little longer while that service downloads.
 
@@ -47,9 +55,10 @@ so the first browser-test run may take a little longer while that service downlo
 2. Select **Sign in with GitHub**.
 3. Leave that browser tab open so you can create the token in the next step.
 
-This sign-in is enough for the ordinary in-workspace path. If you want First Draft to create a separate private
-GitHub repository instead, also select **Connect GitHub App** and follow GitHub's prompts. **Only select
-repositories** is sufficient; GitHub automatically gives the App access to repositories it creates.
+This sign-in is enough for the ordinary in-workspace path. If you want First Draft's separate Publication mode to
+create the application's private GitHub repository instead of compiling in this Codespace, also select **Connect
+GitHub App** and follow GitHub's prompts. **Only select repositories** is sufficient; GitHub automatically gives the
+App access to repositories it creates.
 
 For that optional Publication path, the requested permissions let First Draft create the private repository, write
 the application source, and include its GitHub Actions workflow. They do not give the App access to unselected
@@ -114,8 +123,9 @@ important choices, and show you anything the generated application will leave fo
 When the Plan looks right, explicitly approve the root transition:
 
 > I approve this Plan and the gaps you showed me. Compile with --output . from this Drawing Board root. I approve
-> moving the existing Drawing Board material into design/ while preserving this repository's Git history and remote.
-> Inspect and commit the staged generated baseline before setup or source edits. Do not deploy.
+> moving the existing Drawing Board material into design/ while preserving this repository's Git history and any
+> existing remote. Inspect the staged result for credentials and commit the generated baseline before setup or source
+> edits. Then help me save it to my own private GitHub repository using step 6 below. Do not deploy.
 
 The agent runs `bin/firstdraft plan compile --output .`. Tracked Git changes must be clean, and `design/` and the
 root-output recovery directory must not already exist. If the CLI refuses, preserve the workspace and ask the agent
@@ -124,20 +134,57 @@ to explain the exact reason; do not delete files to force it through.
 Root Compile moves the original planning files, including private CLI state and `.env`, into `design/`. It stages
 the tracked moves and generated source in the **existing Git repository**; it does not create a second repository.
 After inspecting that staged result for credentials, the agent commits it as the untouched generated baseline.
+An `origin` remote is not required for this Compile; any existing remote is preserved.
 The root `bin/` now belongs to the generated app, so bare `firstdraft` no longer runs the wrapper that loads `.env`
 and requires staging. For later First Draft authoring commands, change into `design/` and use `bin/firstdraft`.
 
-If you want a separate private GitHub repository instead, say so before approving the Compile. The agent will use
-the distinct Publication mode and give you that repository's URL. This mode requires the **Connect GitHub App** step
-from §3. The [optional nested-output path](#optional-keep-the-app-in-application) is also available. No Compile mode
+If you want First Draft to compile and create a separate private GitHub repository, say **Compile and publish
+through First Draft** before approving the Compile. The agent will use that distinct mode and give you the
+repository's URL. It does not save this Codespace's commits. This mode requires the **Connect GitHub App** step from
+§3. The [optional nested-output path](#optional-keep-the-app-in-application) is also available. No Compile mode
 deploys the application.
 
 Codex may ask permission for an exact `bin/firstdraft ...` command to contact `staging.firstdraft.com`. Approve that
 command; do not grant unrelated network access.
 
-## 6. Open your app
+## 6. Save your app to GitHub
 
-After the generated baseline is committed, run the generated application's setup from the repository root:
+**Save the generated baseline now, before setup, preview, or your first feature.** Until you publish it, the
+Codespace is your only copy. Stopping preserves its files; deleting it, including through
+[automatic expiry](https://docs.github.com/en/codespaces/setting-your-user-preferences/configuring-automatic-deletion-of-your-codespaces),
+removes them even if you made local commits.
+
+1. Have the agent confirm that the generated baseline is committed and contains no credentials. Keep `design/.env`
+   and the private planning state ignored.
+2. In VS Code, open **Source Control** in the left sidebar. Select **Publish to GitHub**; depending on the editor,
+   this button may say **Publish Branch**.
+3. Enter your app's repository name and select **Publish to GitHub private repository**. The new repository belongs
+   to the personal GitHub account that created the Codespace.
+4. Select **Open on GitHub**. Verify that the repository is **Private** and that the generated-baseline commit,
+   application source, and retained `design/` material arrived before continuing.
+
+Publish **inside VS Code** so it adds the new remote and pushes your commits. Publishing through the separate
+“Your codespaces” page leaves the existing Codespace unlinked. See
+[VS Code's publishing guide](https://code.visualstudio.com/docs/sourcecontrol/repos-remotes#publish-to-github) and
+[GitHub's template publishing instructions](https://docs.github.com/en/codespaces/developing-in-a-codespace/creating-a-codespace-from-a-template#publishing-to-a-repository-on-github).
+
+Your agent can also [publish from the Codespace terminal](CONTRIBUTING.md#publish-from-the-codespace-terminal)
+after you approve the private repository's name. Ask it to **Create GitHub repository** to save the existing
+workspace privately; this uses the Codespace's existing GitHub credential and does not Compile again.
+
+If you created a repository before opening the Codespace, use its existing remote instead of creating another:
+
+> Show me the intended GitHub repository for this workspace. Confirm the generated baseline contains no
+> credentials, push that commit to the existing remote, and verify it arrived.
+
+Root Compile keeps **one Git history**. Publishing adds its first remote, or an existing remote stays in place.
+Continue committing and pushing from the application root as you work. If GitHub requests authorization, use its
+normal sign-in; do not put tokens in source or chat. This uses ordinary GitHub tools and does not require First
+Draft's optional Publication mode.
+
+## 7. Open your app
+
+After the generated baseline is saved on GitHub, run the generated application's setup from the repository root:
 
 ```sh
 bin/setup --skip-server
@@ -188,7 +235,7 @@ the observed current-container path; do not rebuild the container or add a custo
 If you explicitly chose Publication, open the private repository from the URL the agent provides. Create a
 Codespace there and follow its README instead; the original Drawing Board remains a separate planning workspace.
 
-## 7. Make your first change
+## 8. Make your first change
 
 Return to the **same agent conversation**. It still has the context from planning your app. Choose one small change:
 
@@ -198,7 +245,8 @@ Return to the **same agent conversation**. It still has the context from plannin
 Then try a change that matters to your idea: a clearer form, a useful field, or the next missing feature. The agent
 works directly in the application at the root, using its README and normal Rails tools. Review the diff and save
 the feature in a **separate commit**. Run its focused tests and the broader checks above from that clean checkpoint;
-record baseline and feature results separately. You can keep editing, testing, and refreshing the preview this way.
+record baseline and feature results separately. Push the tested feature commit to the same repository and verify
+that it arrived. You can keep editing, testing, and refreshing the preview this way.
 
 You do **not** need another Compile for ordinary development. Compile creates a new starting point; it does not
 merge changes into the app you have been editing. Keep the planning files, but do not overwrite your application
@@ -208,18 +256,6 @@ If you close the Codespace, reopen the existing one from [Your codespaces](https
 than creating another. Start the app again with `bin/dev` and resume your agent conversation. Stopping a Codespace
 preserves its files; deleting it does not.
 
-## 8. Save your app to GitHub
-
-Do this before relying on the Codespace as your only copy:
-
-> Show me this repository's existing GitHub remote. Push the generated-baseline and separate feature commits there,
-> without including credentials, and verify that both commits arrived.
-
-Root Compile keeps **one Git history and the same remote**. The repository you created in step 1 now contains the
-application and the retained `design/` material. Continue committing and pushing from the application root as you
-work. If GitHub requests authorization, use its normal sign-in; do not put tokens in source or chat.
-
-This uses ordinary GitHub tools after direct Compile; it does not require First Draft's optional Publication mode.
 Your source is yours to work on with another editor, agent, or developer.
 
 ## Optional: keep the app in `application/`
@@ -281,10 +317,10 @@ Before Compile, if the initial Codespace setup did not finish, run:
 bin/agent-doctor --installation-only
 ```
 
-If the doctor reports that an agent, CLI, or Skill is unavailable or mismatched, run
-`.devcontainer/setup-agents` again; it is safe to repeat. If that still fails, use **Codespaces: Rebuild Container**.
+If the doctor reports that an agent, CLI, or Skill is unavailable or mismatched, run `.devcontainer/setup-agents`
+again; it is safe to repeat. If that still fails, use **Codespaces: Rebuild Container**.
 
-If a First Draft command reports a token, origin, or `.env` problem, run:
+If a First Draft command reports a token, API origin, or `.env` problem, run:
 
 ```sh
 bin/agent-doctor
