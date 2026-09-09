@@ -130,4 +130,5 @@ printf 'Next: paste your staging First Draft token into the `FIRSTDRAFT_API_TOKE
 printf 'Then run `claude` or `codex` and describe the app you want.\n'
 printf 'The internal-alpha path is `--output .`: approve moving this Drawing Board into `design/`, then continue in the app at the root.\n'
 printf 'Keep the same Git repository; never run the nested application initializer after root adoption.\n'
-printf 'Ask explicitly for a private GitHub repository if you want the separate Publication mode.\n'
+printf 'After root Compile, ask to "Create GitHub repository" to save this workspace privately (README step 6).\n'
+printf 'Choose "Compile and publish through First Draft" only for the separate Publication mode.\n'
