@@ -1,0 +1,8 @@
+{
+  "name": "Drawing Board isolated tool-image experiment",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "../.."
+  },
+  "remoteUser": "vscode"
+}

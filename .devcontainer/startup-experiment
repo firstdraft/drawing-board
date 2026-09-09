@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+devcontainer_dir="$(cd "$(dirname "$0")" && pwd)"
+codespace_name="${CODESPACE_NAME:-}"
+if [[ -z "$codespace_name" && -r /workspaces/.codespaces/shared/.env ]]; then
+  while IFS= read -r line; do
+    if [[ "$line" == CODESPACE_NAME=* ]]; then
+      codespace_name="${line#CODESPACE_NAME=}"
+      break
+    fi
+  done </workspaces/.codespaces/shared/.env
+fi
+
+mode=sequential
+case "$codespace_name" in
+  fd-r2-read-streampar-*) mode=stream-parallel ;;
+  fd-r2-read-stream-*) mode=stream ;;
+  fd-r2-read-par-*) mode=parallel ;;
+esac
+
+stamp() { printf 'STARTUP_PROBE %s %s\n' "$EPOCHREALTIME" "$*"; }
+stamp "begin mode=$mode"
+
+if [[ "$mode" == stream* ]]; then
+  claude_binary="$(readlink -f "$HOME/.local/bin/claude")"
+  [[ -x "$claude_binary" ]]
+  stamp "stream_begin bytes=$(stat -c %s "$claude_binary")"
+  cat "$claude_binary" >/dev/null
+  stamp stream_end
+fi
+
+if [[ "$mode" == *parallel ]]; then
+  logs="$(mktemp -d /tmp/firstdraft-startup-versions.XXXXXX)"
+  pids=()
+  for cli in claude codex firstdraft; do
+    (
+      stamp "$cli begin"
+      "$HOME/.local/bin/$cli" --version
+      stamp "$cli end"
+    ) >"$logs/$cli" 2>&1 &
+    pids+=("$!")
+  done
+  status=0
+  for pid in "${pids[@]}"; do
+    if ! wait "$pid"; then status=1; fi
+  done
+  cat "$logs/claude" "$logs/codex" "$logs/firstdraft"
+  rm -r "$logs"
+  [[ "$status" == 0 ]]
+fi
+
+stamp setup_begin
+"$devcontainer_dir/setup-agents"
+stamp end
