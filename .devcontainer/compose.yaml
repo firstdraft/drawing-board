@@ -26,11 +26,9 @@ services:
       POSTGRES_PASSWORD: postgres
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U postgres"]
-      start_interval: 1s
-      start_period: 10s
-      interval: 5s
+      interval: 1s
       timeout: 5s
-      retries: 5
+      retries: 25
 
 volumes:
   postgres-data:
