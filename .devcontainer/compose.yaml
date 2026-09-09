@@ -1,6 +1,6 @@
 services:
   rails-app:
-    image: ghcr.io/firstdraft/drawing-board-workspace@sha256:06602be5cc829d5142c12b06c505dbf8353a3ade6751ca4bf01a785ea2c3e6e3
+    image: ghcr.io/firstdraft/drawing-board-workspace@sha256:39999b32dfc1e02f67044b875bf03ffb2efc4066cb46418657516e50bba5ba4d
     volumes:
       - ..:/workspaces/drawing-board:cached
     command: sleep infinity
