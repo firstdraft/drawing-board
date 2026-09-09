@@ -84,7 +84,7 @@ FIRSTDRAFT_STAGING_API_URL="$FIRSTDRAFT_STAGING_API_URL" node -e '
 
 claude_skill_path="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/skills/$FIRSTDRAFT_CLAUDE_SKILL_NAME"
 codex_skill_path="$HOME/.agents/skills/create-full-stack-app"
-skills_checkout="$HOME/.cache/firstdraft/skills/$FIRSTDRAFT_SKILLS_REVISION"
+skills_checkout="$HOME/.local/share/firstdraft/skills/$FIRSTDRAFT_SKILLS_REVISION"
 expected_skill_path="$skills_checkout/skills/create-full-stack-app"
 for skill_path in "$claude_skill_path" "$codex_skill_path"; do
   test -L "$skill_path"

@@ -36,7 +36,8 @@ cross-repository sequence and its safety boundaries live in
 | `.devcontainer/compose.yaml` | Drawing Board, default PostgreSQL, and on-demand Selenium lifecycle |
 | `.devcontainer/devcontainer.json` | Codespace services, lifecycle, volumes, ports, and workspace environment |
 | `.devcontainer/agent-versions.env` | Exact Claude, Codex, CLI, and Skills pins |
-| `.devcontainer/setup-agents` | Idempotent installation and Skill linking |
+| `.devcontainer/prepare-agents` | Prepare pinned tools and Skill source during prebuilds; reuse matching versions |
+| `.devcontainer/setup-agents` | Reconcile preparation, initialize local configuration, and link the Skill |
 | `.env.example` | Non-secret staging configuration copied to ignored `.env` |
 | `bin/firstdraft` | Shared credential-loading and origin-pinning CLI wrapper |
 | `bin/agent-doctor` | Installation and credential diagnostics without token disclosure |
@@ -59,6 +60,18 @@ artifact contract; a mismatch requires a fresh compile into an absent directory 
 A mode mismatch aborts initialization before the nested repository exists. Preserve that directory under the
 Drawing Board's ignored, bind-mounted `tmp/` before recompiling; never use `/tmp` or the container home, and never
 delete or overwrite it to manufacture an absent destination.
+
+## Prebuild preparation
+
+`updateContentCommand` prepares the pinned agents, First Draft CLI, and Skill source. GitHub runs this command
+while creating a prebuild. `postCreateCommand` checks the same pins again, downloads missing or changed versions
+when necessary, and initializes the user's workspace configuration and Skill links. A matching prebuild therefore
+needs no npm install or Skill fetch during post-create. A Codespace without a prebuild follows the same commands.
+
+Tools live in `~/.local`; Skill checkouts live in `~/.local/share/firstdraft/skills/<revision>`. Neither location is
+hidden by the fresh `.cache`, `.claude`, or `.codex` volume mounts. Keep credentials and `.env` initialization in
+post-create. Tool and Skill pin changes still require no workspace image publication. Use an **Every push**
+prebuild trigger so changes to the pin file and preparation script refresh the prebuild.
 
 ## Work on the template
 

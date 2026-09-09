@@ -35,7 +35,7 @@ if [[ -x /usr/sbin/sshd && -f /etc/environment ]]; then
   rm "$environment_snapshot"
 fi
 
-skills_cache_root="$HOME/.cache/firstdraft/skills"
+skills_cache_root="$HOME/.local/share/firstdraft/skills"
 claude_skills_root="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/skills"
 codex_skills_root="$HOME/.agents/skills"
 mkdir -p \
@@ -68,37 +68,9 @@ if [[ "$firstdraft_environment_mode" != "600" ]]; then
   exit 1
 fi
 
-npm install --global --prefix "$HOME/.local" \
-  "@anthropic-ai/claude-code@$CLAUDE_CODE_VERSION" \
-  "@firstdraft.com/cli@$FIRSTDRAFT_CLI_VERSION" \
-  "@openai/codex@$CODEX_VERSION"
-
+"$devcontainer_dir/prepare-agents"
 skills_checkout="$skills_cache_root/$FIRSTDRAFT_SKILLS_REVISION"
 skill_source="$skills_checkout/skills/create-full-stack-app"
-
-if [[ ! -d "$skills_checkout/.git" ]]; then
-  if [[ -e "$skills_checkout" ]]; then
-    echo "Incomplete First Draft Skill cache at $skills_checkout; preserve it for inspection." >&2
-    exit 1
-  fi
-
-  temporary_checkout="$(mktemp -d "$skills_cache_root/.checkout.XXXXXX")"
-  git -C "$temporary_checkout" init --quiet
-  git -C "$temporary_checkout" remote add origin https://github.com/firstdraft/skills.git
-  git -C "$temporary_checkout" fetch --quiet --depth=1 origin "$FIRSTDRAFT_SKILLS_REVISION"
-  git -C "$temporary_checkout" checkout --quiet --detach FETCH_HEAD
-  mv "$temporary_checkout" "$skills_checkout"
-fi
-
-if [[ "$(git -C "$skills_checkout" rev-parse HEAD)" != "$FIRSTDRAFT_SKILLS_REVISION" ]]; then
-  echo "First Draft Skill cache revision does not match the configured revision." >&2
-  exit 1
-fi
-
-if [[ ! -r "$skill_source/SKILL.md" ]]; then
-  echo "The configured First Draft Skill is missing SKILL.md." >&2
-  exit 1
-fi
 
 # shellcheck disable=SC2016
 codex_plugin_name="$(node -e '
