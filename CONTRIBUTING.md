@@ -87,6 +87,10 @@ the built container. The simplest manual route is to open a Codespace on the bra
 script/devcontainer-smoke
 ```
 
+The smoke checks the pinned Ruby version and its mise-selected runtime. Interactive
+[mise activation](https://mise.jdx.dev/dev-tools/shims.html) places the installed executable ahead of its shim,
+so the resolved command path legitimately differs between the VS Code terminal and noninteractive CI.
+
 GitHub Actions authenticates to GHCR, starts the pinned Dev Container, runs the source and depth-one contracts, and
 runs the template-root runtime smoke twice for every pull request. The generated-application branch of that smoke is
 a separate qualification input because `./application` is absent from the template checkout. A change to an exact

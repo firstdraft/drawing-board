@@ -66,7 +66,7 @@ compile_help="$(firstdraft plan compile --help)"
 grep -F -- "--output" <<<"$compile_help" >/dev/null
 
 test "$(command -v firstdraft)" = "$PWD/bin/firstdraft"
-test "$(command -v ruby)" = "$HOME/.local/share/mise/shims/ruby"
+test "$(ruby -rrbconfig -e 'print RbConfig.ruby')" = "$(mise which ruby)"
 test ! -L .env
 test -f .env
 test -O .env
