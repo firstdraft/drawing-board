@@ -116,6 +116,7 @@ CODEX_SKILL_NAME="$FIRSTDRAFT_CODEX_SKILL_NAME" \
   CODEX_SKILL_LINK="$codex_skill_path/SKILL.md" \
   CODEX_SKILL_TARGET="$skill_target" \
   node -e '
+  const path = require("node:path");
   const input = JSON.parse(require("node:fs").readFileSync(0, "utf8"));
   const textBlocks = input.flatMap((item) => item.content ?? [])
     .filter((content) => content.type === "input_text")
@@ -125,9 +126,19 @@ CODEX_SKILL_NAME="$FIRSTDRAFT_CODEX_SKILL_NAME" \
   const skillLines = skillInventory?.split("\n").filter((line) =>
     line.startsWith(`- ${process.env.CODEX_SKILL_NAME}:`),
   ) ?? [];
-  const discovered = skillLines.length === 1 && expectedPaths.some((path) =>
-    skillLines[0].endsWith(`(file: ${path})`),
+  const locator = skillLines.length === 1 ? skillLines[0].match(/\(file: (.+)\)$/)?.[1] : undefined;
+  const roots = new Map(
+    [...(skillInventory?.matchAll(/^- `(r\d+)` = `([^`]+)`$/gm) ?? [])]
+      .map((match) => [match[1], match[2]]),
   );
+  const alias = locator?.match(/^(r\d+)\/(.+)$/);
+  const root = alias && roots.get(alias[1]);
+  const resolvedPath = alias ? root && path.join(root, alias[2]) : locator;
+  const discovered = typeof resolvedPath === "string" && path.isAbsolute(resolvedPath) &&
+    expectedPaths.includes(resolvedPath);
+  if (!discovered) {
+    console.error("Codex must discover exactly one First Draft Skill at its expected linked or source path.");
+  }
   process.exit(discovered ? 0 : 1);
 ' <<<"$prompt_input"
 
