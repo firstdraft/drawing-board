@@ -20,14 +20,25 @@ the earlier nested-first delivery sequence; they are not instructions to initial
 ## Current Skills source pin
 
 Drawing Board selects Skills source
-[`629a4d5dce05306226ed3ba75f80b7bb0562e004`](https://github.com/firstdraft/skills/commit/629a4d5dce05306226ed3ba75f80b7bb0562e004),
-tree `b8a930db43e5a6d8ae62e58423b198517853f704`. Its handoff keeps ordinary Rails feature work at the generated root,
-forbids the moved nested-only helpers, and distinguishes saving the existing workspace with **Create GitHub
-repository** from **Compile and publish through First Draft**. Compatibility still requires exact First Draft CLI
-`0.2.2`; its pin, Claude's pin, and the language/runtime pins are unchanged. The Codex change is described below.
-Drawing Board setup fetches this exact Skills Git revision, independently of plugin catalog selection. This source
-pin does not claim a new Codespaces or published-plugin qualification; the dated receipts below retain the earlier
-Skills SHA they actually exercised.
+[`7920d06717d0f70a1d7afe1405a8754109f7d388`](https://github.com/firstdraft/skills/commit/7920d06717d0f70a1d7afe1405a8754109f7d388),
+tree `8cf3c0a78ba3b5392aea588ba84430db961d7d77`, the source of shared plugin `0.2.2`.
+The canonical helper selects `./bin/firstdraft` before a bundled or PATH CLI. Before Compilation this is Drawing
+Board's root wrapper. After root adoption, the Skill directs later First Draft commands to run from `design/`, so
+`./bin/firstdraft` resolves to the moved wrapper and retains its credential setup. Ordinary Rails work stays at the
+generated root; the Skill forbids the moved nested-only initializer and smoke helpers. **Create GitHub repository**
+saves the current workspace; **Compile and publish through First Draft** creates a separate compiled repository.
+CLI `0.2.2`, both agent versions, and language/runtime pins are unchanged by this Skill update.
+
+The [0.2.2 release receipt](https://github.com/firstdraft/skills/blob/fb6c8e63105f1f139e6ae59f3958f9c98b44cd69/evidence/2026-09-10-shared-plugin-0.2.2-release.md)
+records exact-package tests against the real local service with Claude and a synthetic HTTP fixture with Codex.
+That receipt records a byte-for-byte comparison of all nine canonical Skill files, including the helper and
+references, between the registry package and this source revision. Drawing Board nevertheless fetches the Git revision and uses its own
+wrapper and installed CLI; package tests do not establish that environment's complete workflow.
+The [new-pin hosted container contract](https://github.com/firstdraft/drawing-board/actions/runs/34563183070)
+passed at Drawing Board `26caab0e4cefd05236dedea1f9332307c43bef97`, running `script/devcontainer-smoke` twice against
+this pin. It verifies exact versions and Skill discovery without sign-in or Compilation. The dated records below
+retain the earlier Skills revisions they exercised. No fresh authenticated Codespace journey has run at this Skill
+revision with either agent; a Codex hosted journey remains unproved.
 
 ## Codex qualification boundary (2026-09-10)
 
@@ -38,14 +49,14 @@ This compatibility failure, rather than a new First Draft CLI or Skill requireme
 
 Local `0.154.0` command-help checks passed. Separate model tests exercised the shared packaged Skill candidate,
 published CLI `0.2.2`, and authentication/approval continuity against a local HTTP fixture. The
-[Skills receipt](https://github.com/firstdraft/skills/blob/main/evidence/2026-09-10-codex-onboarding.md) records exact
-package identities and boundaries. These tests do not qualify Drawing Board's unchanged source Skill pin or live
-First Draft Analysis and Compilation.
+[Skills receipt](https://github.com/firstdraft/skills/blob/7920d06717d0f70a1d7afe1405a8754109f7d388/evidence/2026-09-10-codex-onboarding.md) records exact
+package identities and boundaries. The fixture tests do not prove real First Draft Analysis or Compilation.
+The separate real-service package tests linked above used Claude; they do not establish a Codex Compiler journey.
 `bin/agent-doctor --installation-only` checks login and resume command availability. Hosted
 `script/devcontainer-smoke` additionally checks the pinned version and exact Skill inventory; neither check signs
 in or proves the complete agent journey.
 
-The [hosted container contract](https://github.com/firstdraft/drawing-board/actions/runs/34561285350) passed at
+The earlier [hosted container contract](https://github.com/firstdraft/drawing-board/actions/runs/34561285350) passed at
 `aa7ec605ba3f57dc2b05f2bb65244e3d31aba74e`, including both runtime-smoke invocations with Codex `0.154.0` and the
 updated alias-aware Skill-path check. That is container/installation evidence, without agent sign-in or Compilation.
 
