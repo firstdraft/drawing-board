@@ -50,6 +50,10 @@ name the Skill or translate the request into a command.
   pinned standalone CLI for both Claude and Codex. Do not bypass it, call the service with improvised HTTP, or
   install another CLI version. If Codex's sandbox blocks the expected staging request, request approval for that
   exact wrapper command; do not work around the sandbox or broaden network access.
+  After the user confirms authentication is configured or approves that command, resume the already authorized
+  operation with the existing Plan and identities. Do not request the same approval again. If a request may already
+  have reached the service, follow the Skill's mode-specific recovery to choose the next command; confirmation
+  alone is not a retry instruction.
 - Drawing Board setup creates `.env` from `.env.example` without overwriting it. The user pastes the staging token
   there once. Never read, print, edit, or commit `.env`; do not ask for `/plugin` configuration, Codespaces secrets,
   shell exports, or a GitHub PAT. Use `bin/agent-doctor --installation-only` for installation diagnostics and the
@@ -81,6 +85,10 @@ Help the user open the private port-3000 preview and make one useful change in t
 in the generated application with its normal Rails tools, tests, and README. Compile is not a synchronization tool
 for an edited application. Keep missing Plan meaning visible in the retained GapSet, but do not require every gap
 to be closed before ordinary development or handoff.
+
+For Codex reconnection, guide the user to `codex resume` at the same physical workspace root and the original
+conversation. After root adoption, use the generated root's instructions for ordinary source edits; do not restart
+Plan authoring or move the writing session into `design/` for a feature request.
 
 Follow the [beginner guide](README.md#6-save-your-app-to-github) for publishing the baseline and then pushing later
 commits. Deployment is optional application-development work when the user requests it, not another Compile

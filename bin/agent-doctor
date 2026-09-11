@@ -124,7 +124,8 @@ check_skill \
 if [[ "$installation_only" == "true" ]]; then
   if claude auth status --help >/dev/null 2>&1 &&
     codex login status --help >/dev/null 2>&1 &&
-    codex login --device-auth --help >/dev/null 2>&1; then
+    codex login --device-auth --help >/dev/null 2>&1 &&
+    codex resume --help >/dev/null 2>&1; then
     printf '%-24s available\n' "Agent command contract"
   else
     printf '%-24s unavailable\n' "Agent command contract"

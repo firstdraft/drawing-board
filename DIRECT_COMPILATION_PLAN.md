@@ -19,13 +19,44 @@ the earlier nested-first delivery sequence; they are not instructions to initial
 
 ## Current Skills source pin
 
-The 2026-09-05 root-handoff update selects Skills source
-[`8ae02160b44b40d21ec432cf2d1ab2772f9aae6b`](https://github.com/firstdraft/skills/commit/8ae02160b44b40d21ec432cf2d1ab2772f9aae6b),
-tree `735a9bc933a3d6e6062f36252750a16ce844c28e`. Its handoff keeps ordinary Rails feature work at the generated root
-and forbids the moved nested-only helpers after root adoption. Compatibility still requires exact CLI `0.2.2`;
-all CLI, agent, and runtime version pins are unchanged. Drawing Board setup fetches this exact Skills Git
-revision, not a new npm plugin release. This source pin does not claim a new Codespaces or published-plugin qualification;
-the dated receipts below retain the earlier Skills SHA they actually exercised.
+Drawing Board selects Skills source
+[`629a4d5dce05306226ed3ba75f80b7bb0562e004`](https://github.com/firstdraft/skills/commit/629a4d5dce05306226ed3ba75f80b7bb0562e004),
+tree `b8a930db43e5a6d8ae62e58423b198517853f704`. Its handoff keeps ordinary Rails feature work at the generated root,
+forbids the moved nested-only helpers, and distinguishes saving the existing workspace with **Create GitHub
+repository** from **Compile and publish through First Draft**. Compatibility still requires exact First Draft CLI
+`0.2.2`; its pin, Claude's pin, and the language/runtime pins are unchanged. The Codex change is described below.
+Drawing Board setup fetches this exact Skills Git revision, independently of plugin catalog selection. This source
+pin does not claim a new Codespaces or published-plugin qualification; the dated receipts below retain the earlier
+Skills SHA they actually exercised.
+
+## Codex qualification boundary (2026-09-10)
+
+The active Codex package is [`@openai/codex@0.154.0`](https://github.com/openai/codex/releases/tag/rust-v0.154.0).
+An actual local `gpt-6-astra` model turn with `0.147.0` returned HTTP 400 saying that the model required a newer
+Codex version, before any Skill or First Draft service use. The same model starts successfully with `0.154.0`.
+This compatibility failure, rather than a new First Draft CLI or Skill requirement, motivates the pin change.
+
+Local `0.154.0` command-help checks passed. Separate model tests exercised the shared packaged Skill candidate,
+published CLI `0.2.2`, and authentication/approval continuity against a local HTTP fixture. The
+[Skills receipt](https://github.com/firstdraft/skills/blob/main/evidence/2026-09-10-codex-onboarding.md) records exact
+package identities and boundaries. These tests do not qualify Drawing Board's unchanged source Skill pin or live
+First Draft Analysis and Compilation.
+`bin/agent-doctor --installation-only` checks login and resume command availability. Hosted
+`script/devcontainer-smoke` additionally checks the pinned version and exact Skill inventory; neither check signs
+in or proves the complete agent journey.
+
+The [hosted container contract](https://github.com/firstdraft/drawing-board/actions/runs/34561285350) passed at
+`aa7ec605ba3f57dc2b05f2bb65244e3d31aba74e`, including both runtime-smoke invocations with Codex `0.154.0` and the
+updated alias-aware Skill-path check. That is container/installation evidence, without agent sign-in or Compilation.
+
+OpenAI's [Skill instructions](https://learn.chatgpt.com/docs/build-skills#how-chatgpt-and-codex-use-skills) document
+`/skills` selection and `$` mentions; local discovery supplies the `firstdraft:create-full-stack-app` name. The
+README uses those supported interfaces, without claiming an observed interactive picker or message-entry smoke.
+
+The retained hosted full-journey receipts exercised **Claude**, with Codex `0.147.0` installed. Fresh browser device
+sign-in, Codex's Codespace permission prompts, a Codex-driven Plan-to-root-Compile journey, and resuming that
+conversation after a Codespace stop/start remain unproved. Local model/CLI results and a green container contract
+must not be reported as that hosted Codex journey.
 
 ## Packet 1: direct artifact output in the CLI
 

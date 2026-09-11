@@ -18,7 +18,7 @@ You will need:
 
 - a personal GitHub account;
 - access to <https://staging.firstdraft.com>; and
-- a Claude or Codex account with access to its coding agent.
+- a Claude account with Claude Code access, or a ChatGPT account with Codex access.
 
 Use the same personal GitHub account to create the Codespace and sign in to First Draft.
 
@@ -80,6 +80,10 @@ The token is not a GitHub password or personal access token. Keep it out of chat
 Open the Codespace terminal and choose **one** agent. Drawing Board has already installed both agents and the First
 Draft Skill; you do not need to install a plugin separately.
 
+These are instructions for the terminal inside this prepared Codespace. For a blank local folder or a different
+project, start with the [First Draft Skills repository](https://github.com/firstdraft/skills); installing a Skill
+alone does not create Drawing Board's workspace, tools, or `.env` setup.
+
 For Claude, run this and follow its sign-in prompts:
 
 ```sh
@@ -108,14 +112,31 @@ codex login --device-auth
 codex
 ```
 
-For device sign-in, leave the terminal waiting, open the address it prints in your browser, and enter that terminal's
-one-time code. If device login is unavailable, enable it in your ChatGPT security settings or follow
-[OpenAI's remote sign-in guide](https://learn.chatgpt.com/docs/auth#login-on-headless-devices). Once signed in, you can
-start later sessions with just `codex`; you do not need to log in again for every Compile.
+For device sign-in, leave the terminal waiting, open the address it prints in your browser, sign in to your ChatGPT
+account, and enter that terminal's one-time code. Wait for the terminal to confirm login before starting `codex`.
+If the code expires or login is interrupted, rerun `codex login --device-auth` from the shell and use its new code.
+If device login is unavailable, enable it in your ChatGPT security settings, or ask your ChatGPT workspace admin to
+enable it. See [OpenAI's remote sign-in guide](https://learn.chatgpt.com/docs/auth#login-on-headless-devices).
+
+At the shell, `codex login status` checks for a saved login. Agent sign-in is separate from the First Draft token in
+step 4; do not paste either credential into chat or copy credentials between machines. You do not need to sign in
+again for every Compile. To continue an existing conversation, use `codex resume` from the same workspace root and
+select that conversation; running `codex` starts a new one.
+
+Codex may ask permission for an exact `bin/firstdraft ...` command to contact `staging.firstdraft.com`, including
+during Plan submission before Compile. Review and approve that command when it matches the work you requested;
+Codex can then continue the operation. This [sandbox approval](https://learn.chatgpt.com/docs/agent-approvals-security#sandbox-and-approvals)
+does not require another login or broader network access. If authentication needed fixing, return to the same
+conversation and tell the agent it is ready so it can continue the existing Plan.
 
 Then describe the app in ordinary language. For example:
 
 > Make me an app that helps me keep track of the plants in my home.
+
+Both agents should use the installed First Draft Skill for this request. To select it explicitly in Codex, enter
+`/skills` and choose `firstdraft:create-full-stack-app`, or start your message with
+`$firstdraft:create-full-stack-app`. Then describe your idea. See
+[Codex's Skill instructions](https://learn.chatgpt.com/docs/build-skills#how-chatgpt-and-codex-use-skills).
 
 Answer the agent's follow-up questions. It will turn your answers into a Foundation Plan, ask you to review the
 important choices, and show you anything the generated application will leave for later work.
@@ -143,9 +164,6 @@ through First Draft** before approving the Compile. The agent will use that dist
 repository's URL. It does not save this Codespace's commits. This mode requires the **Connect GitHub App** step from
 §3. The [optional nested-output path](#optional-keep-the-app-in-application) is also available. No Compile mode
 deploys the application.
-
-Codex may ask permission for an exact `bin/firstdraft ...` command to contact `staging.firstdraft.com`. Approve that
-command; do not grant unrelated network access.
 
 ## 6. Save your app to GitHub
 
@@ -253,8 +271,11 @@ merge changes into the app you have been editing. Keep the planning files, but d
 to make an edit.
 
 If you close the Codespace, reopen the existing one from [Your codespaces](https://github.com/codespaces), rather
-than creating another. Start the app again with `bin/dev` and resume your agent conversation. Stopping a Codespace
-preserves its files; deleting it does not.
+than creating another. Start the app again with `bin/dev` in one terminal. In another terminal at the application
+root, resume your original agent conversation; for Codex, run `codex resume` and select it. Keep ordinary source
+edits at the application root after Compile; `design/` is only for later First Draft authoring work. See
+[Codex's resume command](https://learn.chatgpt.com/docs/developer-commands#codex-resume).
+Stopping a Codespace preserves its files; deleting it does not.
 
 Your source is yours to work on with another editor, agent, or developer.
 
