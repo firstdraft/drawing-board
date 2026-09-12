@@ -253,6 +253,23 @@ the observed current-container path; do not rebuild the container or add a custo
 If you explicitly chose Publication, open the private repository from the URL the agent provides. Create a
 Codespace there and follow its README instead; the original Drawing Board remains a separate planning workspace.
 
+## Optional: preview a native app
+
+If your Plan requested an iPhone or Android client, check the generated `IOS_PREVIEW.md` or `ANDROID_PREVIEW.md`.
+An eligible Compilation emits the native project and its preview tools. Native navigation currently uses public
+screens; private sign-in, protected navigation, and push remain support gaps. Keep your intended access rules and
+requested clients in the Plan instead of making records public to obtain a native app.
+
+Save the compiled baseline to your private GitHub repository first. GitHub builds the native preview from pushed
+source; Revyl can run that build in your browser. Most Rails changes need only a web refresh, while native changes
+need another build. Follow the emitted guide for account setup, usage allowances, and stopping the device.
+
+**Android preview in Revyl is awaiting a compatible device image.** The tested image had WebView 113, while Hotwire
+Native requires 120 or newer. Continue in the web preview or a local Android emulator with a current WebView;
+`android/README.md` describes the local path. Do not lower the requirement or sign into Google Play to force the
+trial through. The [testing guide](https://gist.github.com/raghubetina/9c962f11c5c4c4240bf145675b9e562d) records the
+observed preview limits.
+
 ## 8. Make your first change
 
 Return to the **same agent conversation**. It still has the context from planning your app. Choose one small change:
