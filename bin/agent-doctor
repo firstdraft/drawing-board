@@ -97,29 +97,21 @@ check_shared_environment() {
   fi
 }
 
-check_skill() {
-  local label="$1"
-  local skill_path="$2"
-  if [[ -r "$skill_path/SKILL.md" ]] &&
-    [[ "$(git -C "$skill_path" rev-parse HEAD 2>/dev/null)" == "$FIRSTDRAFT_SKILLS_REVISION" ]]; then
-    printf '%-24s %s\n' "$label" "$FIRSTDRAFT_SKILLS_REVISION"
-  else
-    printf '%-24s missing or revision mismatch\n' "$label"
-    status=1
-  fi
-}
 
 check_version "Claude Code" "$CLAUDE_CODE_VERSION" claude --version
 check_version "Codex" "$CODEX_VERSION" codex --version
 check_version "First Draft CLI" "$FIRSTDRAFT_CLI_VERSION" \
   "$HOME/.local/bin/firstdraft" --version
 check_workspace_cli
-check_skill \
-  "First Draft Claude Skill" \
-  "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/skills/$FIRSTDRAFT_CLAUDE_SKILL_NAME"
-check_skill \
-  "First Draft Codex Skill" \
-  "$HOME/.agents/skills/create-full-stack-app"
+if ! node "$repository_root/.devcontainer/agent-skills.mjs" check \
+  --checkout "$HOME/.cache/firstdraft/skills/$FIRSTDRAFT_SKILLS_REVISION" \
+  --revision "$FIRSTDRAFT_SKILLS_REVISION" \
+  --claude-root "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/skills" \
+  --codex-root "$HOME/.agents/skills" \
+  --claude-authoring-name "$FIRSTDRAFT_CLAUDE_SKILL_NAME" \
+  --codex-authoring-name "$FIRSTDRAFT_CODEX_SKILL_NAME"; then
+  status=1
+fi
 
 if [[ "$installation_only" == "true" ]]; then
   if claude auth status --help >/dev/null 2>&1 &&

@@ -43,7 +43,8 @@ existing repository.
 If VS Code asks, select **Trust Folder & Continue** for this Drawing Board. Leave the browser tab open until the
 terminal says `Drawing Board setup complete.`
 
-Setup installs the pinned agents, First Draft CLI, and First Draft Skill, and prepares your local configuration.
+Setup installs the pinned agents, First Draft CLI, and the Skills from the reviewed release, and prepares your local
+configuration.
 GitHub can reuse the template's prebuilt environment to shorten startup. If a prebuild is unavailable, the first
 start may take a few minutes.
 The workspace starts its database automatically. Browser tests start their browser service only when they need it,
@@ -277,7 +278,15 @@ until a compatible Revyl image is available. The
 
 ## 8. Make your first change
 
-Return to the **same agent conversation**. It still has the context from planning your app. Choose one small change:
+Return to the **same agent conversation**. It still has the context from planning your app. If you prepared a design
+or chose reference screens, make matching that design your first task:
+
+> Read the app's README and UI.md, if present. Use my design references to shape the generated scaffold. Reuse its
+> shared components and theme, preserve its Rails forms and navigation, and check the affected screens in the browser.
+
+The app's UI guidance and source own its component choices. The installed `extend-app-ui` and
+`review-ui-consistency` Skills can help when available; an older workspace can follow its app guidance directly.
+You can also begin with one small change:
 
 > Change the heading on the plant list to “My indoor jungle.” Update the application source, run the relevant test,
 > and help me check the change in the browser.
