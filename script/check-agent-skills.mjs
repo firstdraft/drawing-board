@@ -80,6 +80,9 @@ try {
   }
 
   verifyCodexSkills(three, roots.codex, codexPrompt(three));
+  const aliasedCodexRoot = path.join(temporary, "linked-codex");
+  symlinkSync(roots.codex, aliasedCodexRoot, "dir");
+  verifyCodexSkills(three, aliasedCodexRoot, codexPrompt(three));
   assert.throws(() => verifyCodexSkills(three, roots.codex, codexPrompt(three.slice(0, 2))), /exactly one/);
   const duplicate = codexPrompt([...three, three[2]]);
   assert.throws(() => verifyCodexSkills(three, roots.codex, duplicate), /exactly one/);

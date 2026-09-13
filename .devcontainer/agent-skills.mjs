@@ -110,7 +110,11 @@ export function verifyCodexSkills(skills, codexRoot, input) {
     const alias = locator?.match(/^(r\d+)\/(.+)$/);
     const aliasRoot = alias && roots.get(alias[1]);
     const resolved = alias ? aliasRoot && path.join(aliasRoot, alias[2]) : locator;
-    const expected = [path.join(codexRoot, name, "SKILL.md"), path.join(source, "SKILL.md")];
+    const expected = [
+      path.join(codexRoot, name, "SKILL.md"),
+      path.join(realpathSync(codexRoot), name, "SKILL.md"),
+      path.join(source, "SKILL.md"),
+    ];
     assert(expected.includes(resolved), "Codex loaded an unexpected path for " + codexName);
   }
 }
