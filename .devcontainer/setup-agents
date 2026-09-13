@@ -121,6 +121,8 @@ for skill_link in \
   ln -sfn "$skill_source" "$skill_link"
 done
 
+node "$devcontainer_dir/configure-codex.mjs"
+
 claude --version
 codex --version
 firstdraft --version
