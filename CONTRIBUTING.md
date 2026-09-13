@@ -10,7 +10,7 @@ Agents changing the template should also read [AGENTS.md](AGENTS.md).
 A repository created from this template must provide one ready-to-use workspace for Claude or Codex:
 
 - the Dev Container installs exact reviewed versions of both agents and the First Draft CLI;
-- one exact Skills revision is linked into both agents;
+- every Skill declared by one exact source revision is linked into both agents;
 - `.env` supplies the shared staging origin and token without entering Git;
 - bare `firstdraft` on the Codespace PATH resolves to `bin/firstdraft`, and AGENTS.md routes Skill-issued commands
   through that wrapper; and
@@ -47,11 +47,13 @@ The accepted cross-repository sequence and its safety boundaries live in
 | `.devcontainer/agent-versions.env` | Exact Claude, Codex, CLI, and Skills pins |
 | `.devcontainer/setup-agents` | Idempotent installation, Skill linking, and Codespaces defaults |
 | `.devcontainer/configure-codex.mjs` | Codespaces-only initialization of a missing user config |
+| `.devcontainer/agent-skills.mjs` | Pinned-manifest Skill inventory, shared linking, and discovery verification |
 | `.env.example` | Non-secret staging configuration copied to ignored `.env` |
 | `bin/firstdraft` | Shared credential-loading and origin-pinning CLI wrapper |
 | `bin/agent-doctor` | Installation and credential diagnostics without token disclosure |
 | `bin/review-plan-with-*` | Optional read-only review by the other installed agent |
 | `script/check` | Fast source, pin, wrapper, and credential contracts |
+| `script/check-agent-skills.mjs` | Offline one/multiple-Skill installation, upgrade/rollback, and discovery cases |
 | `script/check-depth-one` | Receipt validation in a real one-commit checkout without image-source history |
 | `script/check-image-receipt.mjs` | Exact source, publication, platform, and rejected-package receipt contract |
 | `script/devcontainer-image-smoke` | Default command, locked Feature-ID, maintained SSH lifecycle, and PostgreSQL checks |
@@ -96,6 +98,18 @@ GitHub Actions authenticates to GHCR, starts the pinned Dev Container, runs the 
 runs the template-root runtime smoke twice for every pull request. The generated-application branch of that smoke is
 a separate qualification input because `./application` is absent from the template checkout. A change to an exact
 pin should name the compatible upstream revision or package and preserve the same version in every checked consumer.
+
+Skill linking reads the pinned checkout's `.claude-plugin/plugin.json` and links all declared canonical Skill
+folders into Claude's configured `skills/` and Codex's `~/.agents/skills/`. Both clients therefore read the same
+reference files as well as the same entrypoints. The installer preflights collisions, preserves unrelated files
+and symlinks, and removes obsolete links only when they point into the managed First Draft revision cache.
+`bin/agent-doctor` checks the complete inventory; the container smoke also verifies every namespaced Codex Skill
+in model-visible context. The optional npm plugin remains a separate installation path owned by the Skills repo.
+
+The offline check covers one-Skill and three-Skill manifests without changing distribution pins. Linking changes
+alone do not make unreleased Skills available. Before qualifying the UI migration, the reviewed pin must declare
+`create-full-stack-app`, `extend-app-ui`, and `review-ui-consistency`; prove that exact inventory in a fresh container
+and both authenticated continuation workflows. Keep the current pins until that release is qualified.
 
 The current template consumes a public development image by immutable manifest digest. A credential-free manifest
 request reproduced that exact multi-platform index, so ordinary template-derived Codespaces can pull it without

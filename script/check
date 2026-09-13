@@ -78,11 +78,13 @@ for script in .devcontainer/setup-agents bin/agent-doctor bin/review-plan-with-c
 done
 
 for javascript in \
+  .devcontainer/agent-skills.mjs \
   bin/firstdraft \
   script/application-repository-inventory-lib.mjs \
   script/application-repository-inventory.mjs \
   script/check-image-receipt.mjs \
   script/check-firstdraft-wrapper.mjs \
+  script/check-agent-skills.mjs \
   script/check-initialize-application.mjs; do
   node --check "$javascript"
 done
@@ -91,6 +93,7 @@ if [[ ! -x bin/firstdraft ]]; then
   exit 1
 fi
 node script/check-firstdraft-wrapper.mjs
+node script/check-agent-skills.mjs
 node script/check-initialize-application.mjs
 
 expected_bin_entries=$'bin/agent-doctor\nbin/firstdraft\nbin/review-plan-with-claude\nbin/review-plan-with-codex'

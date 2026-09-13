@@ -74,7 +74,6 @@ npm install --global --prefix "$HOME/.local" \
   "@openai/codex@$CODEX_VERSION"
 
 skills_checkout="$skills_cache_root/$FIRSTDRAFT_SKILLS_REVISION"
-skill_source="$skills_checkout/skills/create-full-stack-app"
 
 if [[ ! -d "$skills_checkout/.git" ]]; then
   if [[ -e "$skills_checkout" ]]; then
@@ -90,36 +89,13 @@ if [[ ! -d "$skills_checkout/.git" ]]; then
   mv "$temporary_checkout" "$skills_checkout"
 fi
 
-if [[ "$(git -C "$skills_checkout" rev-parse HEAD)" != "$FIRSTDRAFT_SKILLS_REVISION" ]]; then
-  echo "First Draft Skill cache revision does not match the configured revision." >&2
-  exit 1
-fi
-
-if [[ ! -r "$skill_source/SKILL.md" ]]; then
-  echo "The configured First Draft Skill is missing SKILL.md." >&2
-  exit 1
-fi
-
-# shellcheck disable=SC2016
-codex_plugin_name="$(node -e '
-  const path = require("node:path");
-  const manifest = require(path.resolve(process.argv[1], ".claude-plugin/plugin.json"));
-  process.stdout.write(`${manifest.name}:create-full-stack-app`);
-' "$skills_checkout")"
-if [[ "$codex_plugin_name" != "$FIRSTDRAFT_CODEX_SKILL_NAME" ]]; then
-  echo "The configured Codex Skill name does not match the pinned source plugin." >&2
-  exit 1
-fi
-
-for skill_link in \
-  "$claude_skills_root/$FIRSTDRAFT_CLAUDE_SKILL_NAME" \
-  "$codex_skills_root/create-full-stack-app"; do
-  if [[ -e "$skill_link" && ! -L "$skill_link" ]]; then
-    echo "$skill_link already exists and is not a managed symlink; preserving it." >&2
-    exit 1
-  fi
-  ln -sfn "$skill_source" "$skill_link"
-done
+node "$devcontainer_dir/agent-skills.mjs" link \
+  --checkout "$skills_checkout" \
+  --revision "$FIRSTDRAFT_SKILLS_REVISION" \
+  --claude-root "$claude_skills_root" \
+  --codex-root "$codex_skills_root" \
+  --claude-authoring-name "$FIRSTDRAFT_CLAUDE_SKILL_NAME" \
+  --codex-authoring-name "$FIRSTDRAFT_CODEX_SKILL_NAME"
 
 node "$devcontainer_dir/configure-codex.mjs"
 
