@@ -182,6 +182,7 @@ required(ciWorkflow.includes("script/devcontainer-smoke && script/devcontainer-s
 NODE
 
 node script/check-codespaces-private-port.mjs
+node script/check-codex-configuration.mjs
 
 if ! git check-ignore --quiet application/example; then
   echo "Generated application output must remain outside the Drawing Board Git repository." >&2

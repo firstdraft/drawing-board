@@ -48,8 +48,9 @@ name the Skill or translate the request into a command.
 - Use `bin/firstdraft` for every First Draft command. When the installed Skill shows `firstdraft ...`, pass those
   same arguments to this repository wrapper. It loads the ignored `.env`, requires staging, and launches the exact
   pinned standalone CLI for both Claude and Codex. Do not bypass it, call the service with improvised HTTP, or
-  install another CLI version. If Codex's sandbox blocks the expected staging request, request approval for that
-  exact wrapper command; do not work around the sandbox or broaden network access.
+  install another CLI version. Fresh Codespaces use the container as Codex's sandbox with on-request approvals;
+  this does not authorize Compile, repository publication, or deployment. Preserve any user-selected sandbox
+  policy. If that policy blocks a command, request approval for the exact command rather than changing the policy.
   After the user confirms authentication is configured or approves that command, resume the already authorized
   operation with the existing Plan and identities. Do not request the same approval again. If a request may already
   have reached the service, follow the Skill's mode-specific recovery to choose the next command; confirmation

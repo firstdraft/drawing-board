@@ -123,11 +123,13 @@ step 4; do not paste either credential into chat or copy credentials between mac
 again for every Compile. To continue an existing conversation, use `codex resume` from the same workspace root and
 select that conversation; running `codex` starts a new one.
 
-Codex may ask permission for an exact `bin/firstdraft ...` command to contact `staging.firstdraft.com`, including
-during Plan submission before Compile. Review and approve that command when it matches the work you requested;
-Codex can then continue the operation. This [sandbox approval](https://learn.chatgpt.com/docs/agent-approvals-security#sandbox-and-approvals)
-does not require another login or broader network access. If authentication needed fixing, return to the same
-conversation and tell the agent it is ready so it can continue the existing Plan.
+In a fresh Codespace, Codex uses the Codespace as its sandbox and runs commands without routine approval prompts.
+This avoids the Linux namespace errors observed with Codex's inner sandbox. Codex can access files and credentials
+available inside that Codespace, so keep it dedicated to this project. Local devcontainers and existing Codex
+settings are preserved. See [OpenAI's sandbox guidance](https://learn.chatgpt.com/docs/agent-approvals-security).
+The `on-request` setting lets the agent ask for permission when needed; it does not enforce a prompt for every
+command. Tell the agent when you approve Compile, repository publication, or deployment. After fixing
+authentication, return to the same conversation to continue the existing Plan.
 
 Then describe the app in ordinary language. For example:
 

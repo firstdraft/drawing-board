@@ -225,3 +225,37 @@ and CI configuration remain unchanged. The setup banner uses the same publicatio
 No live Compilation, model response, or generated-application qualification
 was part of this round. A rebuilt upstream image that omits unnecessary Rust/cache content remains an unmeasured
 opportunity; this report does not claim that Codespaces has reached a universal speed limit.
+## Codex command sandbox — September 13, 2026
+
+An assisted student trial used template `557921f0debc3d9c1d6178f31aeb867740f571dd` in Codespace
+`cuddly-enigma-v6g9wg4g5fw5w6`, with two cores, 8 GB, East US, and a GitHub-reported prebuild. Installed Codex was
+`0.154.0`, CLI `0.2.2`, and both Skills resolved to `e84a6ecddfa6a4170774768f24ddc798c0f13331`.
+Plain `codex` failed even the shell command `pwd` with:
+
+```text
+bwrap: No permissions to create new namespace
+```
+
+Repeated individual command approvals interrupted the workflow. After the user approved using the Codespace as
+the sandbox, the same conversation resumed with:
+
+```sh
+codex --sandbox danger-full-access --ask-for-approval on-request resume
+```
+
+Plan authoring, root Compile, private VS Code publication, generated setup/CI, web and local Android previews,
+and a normal source edit then passed. The same conversation resumed after stopping and restarting the Codespace.
+It ended in `Shutdown`. The private [trial repository](https://github.com/raghubetina/fd-student-android-20260913)
+retains baseline `88779d43c70e45615f778d415b951a30d8e3c6ed` and source edit
+`c0e7b8da511a85b2b4d6c266be4257400750b2af`. First Draft authentication was reused; this was not an unaided student.
+
+This failure happens before the command can run, including commands needing no network, so granting network
+access alone would not address it. Changing container privileges/seccomp to enable nested namespaces was not
+tested. The chosen supported Codex setting uses the existing Codespace VM boundary and leaves the local
+devcontainer policy intact. It allows ordinary commands without per-command prompts, including after root Compile;
+the agent's on-request and conversation instructions are not a technical approval fence.
+
+The follow-up initializes a missing config after the Codex home volume is mounted. Existing settings, including
+dotfile symlinks, are preserved. Source checks cover those cases. The pinned binary smoke checks loaded full access
+and request instructions against a `never` control. These configuration checks are separate from the complete
+student workflow above, which selected the same policy through explicit CLI flags.

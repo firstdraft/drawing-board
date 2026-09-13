@@ -45,7 +45,8 @@ The accepted cross-repository sequence and its safety boundaries live in
 | `.devcontainer/compose.yaml` | Drawing Board, default PostgreSQL, and on-demand Selenium lifecycle |
 | `.devcontainer/devcontainer.json` | Codespace services, lifecycle, volumes, ports, and workspace environment |
 | `.devcontainer/agent-versions.env` | Exact Claude, Codex, CLI, and Skills pins |
-| `.devcontainer/setup-agents` | Idempotent installation and Skill linking |
+| `.devcontainer/setup-agents` | Idempotent installation, Skill linking, and Codespaces defaults |
+| `.devcontainer/configure-codex.mjs` | Codespaces-only initialization of a missing user config |
 | `.env.example` | Non-secret staging configuration copied to ignored `.env` |
 | `bin/firstdraft` | Shared credential-loading and origin-pinning CLI wrapper |
 | `bin/agent-doctor` | Installation and credential diagnostics without token disclosure |
@@ -179,6 +180,28 @@ unrelated-Host rejection on its exact generated artifact. Preserve that dated pr
 future generated target revision.
 
 ## Codespaces prebuilds
+
+`setup-agents` calls `configure-codex.mjs` to initialize a missing `$CODEX_HOME/config.toml` only when `CODESPACES=true`, with
+`sandbox_mode = "danger-full-access"` and `approval_policy = "on-request"`. The supported
+[Codex configuration](https://learn.chatgpt.com/docs/config-file/config-basic) keeps plain `codex` and `codex resume`
+usable after the [September 13 namespace failure](STARTUP_FOLLOWUP.md#codex-command-sandbox--september-13-2026).
+The Codespace's disposable VM
+provides isolation from the student's computer; Codex still has access to the workspace, credentials, network,
+and mounted Docker socket inside it. On-request approvals let the agent ask; they are not a command-level sandbox.
+Drawing Board's separate Compile and publication instructions still apply.
+
+The config is created during `postCreateCommand`, after the per-Codespace home volume is mounted. It survives root
+adoption and container restarts intentionally, supporting normal application work in the same Codespace. After
+Compile, the generated root `AGENTS.md` governs application work; Drawing Board's instructions move into `design/`.
+This home setting is not scoped to those instructions or to First Draft commands. Setup never overwrites an existing
+config or dotfile symlink and makes no change
+in local devcontainers, where the mounted Docker socket can reach the developer's host. A user preserving older
+settings can explicitly choose the same policy for a session with
+`codex --sandbox danger-full-access --ask-for-approval on-request resume` inside their Codespace.
+
+`script/check-codex-configuration.mjs` checks fresh volumes, repeated setup, local exclusion, and preservation of
+existing settings. The runtime smoke checks the pinned Codex binary's loaded sandbox and permission-request
+instructions, including a `never` control that must disable requests, without sign-in or a model request.
 
 The primary template launch can reuse the prebuild on `firstdraft/drawing-board`; a new repository created with
 **Create a new repository** does not inherit that configuration. Keep the README's **Use this template → Open in a
