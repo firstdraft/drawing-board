@@ -87,10 +87,10 @@ in the generated application with its normal Rails tools, tests, and README. Com
 for an edited application. Keep missing Plan meaning visible in the retained GapSet, but do not require every gap
 to be closed before ordinary development or handoff.
 
-For UI work, follow the generated app's `UI.md` when present and its actual shared components. Use installed
-`extend-app-ui` for continuation and `review-ui-consistency` for a requested review. Carry forward the user's design
-references; an ordinary feature does not authorize replacing the app's UI stack. Follow app guidance directly if
-those Skills are unavailable in an older pinned workspace.
+For UI work, follow the generated app's `UI.md` when present and its actual shared components. Use `extend-app-ui`
+for continuation and `review-ui-consistency` for a requested review when available; otherwise follow app guidance
+directly. Carry forward the user's design references; an ordinary feature does not authorize replacing the app's
+UI stack.
 
 For Codex reconnection, guide the user to `codex resume` at the same physical workspace root and the original
 conversation. After root adoption, use the generated root's instructions for ordinary source edits; do not restart

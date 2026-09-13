@@ -99,6 +99,18 @@ try {
   assert.equal(realpathSync(path.join(roots.claude, "user-skill")), independentSkill);
   assert.equal(readFileSync(path.join(roots.codex, "notes.txt"), "utf8"), "Keep this user file\n");
 
+  const aliasedCache = path.join(temporary, "linked-cache");
+  symlinkSync(cache, aliasedCache, "dir");
+  const aliasedRoots = { claude: path.join(temporary, "alias-claude"), codex: path.join(temporary, "alias-codex") };
+  for (const root of Object.values(aliasedRoots)) {
+    mkdirSync(root);
+    symlinkSync(path.join(aliasedCache, path.basename(oneRoot), "skills", names[0]), path.join(root, names[0]), "dir");
+  }
+  linkAgentSkills(three, aliasedRoots, aliasedCache);
+  verifyAgentSkills(three, aliasedRoots, aliasedCache);
+  linkAgentSkills(one, aliasedRoots, aliasedCache);
+  verifyAgentSkills(one, aliasedRoots, aliasedCache);
+
   writeFileSync(path.join(roots.codex, "extend-app-ui"), "Keep existing content\n");
   const prior = readlinkSync(path.join(roots.claude, names[0]));
   assert.throws(() => linkAgentSkills(three, roots, cache), /preserving it/);
@@ -124,7 +136,9 @@ try {
 
   const commandRoot = candidate("command", names);
   const git = (args) => {
-    const result = spawnSync("git", args, { cwd: commandRoot, encoding: "utf8" });
+    const result = spawnSync("git", [
+      "-c", "core.excludesFile=/dev/null", "-c", "core.hooksPath=/dev/null", "-c", "init.templateDir=", ...args,
+    ], { cwd: commandRoot, encoding: "utf8" });
     assert.equal(result.status, 0, result.stderr);
     return result.stdout.trim();
   };

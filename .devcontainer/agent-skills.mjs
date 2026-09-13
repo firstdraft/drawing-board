@@ -51,9 +51,10 @@ function linksFor(skills, roots) {
 function isManagedLink(link, cacheRoot) {
   if (!lstatSync(link, { throwIfNoEntry: false })?.isSymbolicLink()) return false;
   const target = path.resolve(path.dirname(link), readlinkSync(link));
-  const relative = path.relative(realpathSync(cacheRoot), target);
-  return /^[a-f0-9]{40}\/skills\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(relative) &&
-    path.basename(target) === path.basename(link);
+  return path.basename(target) === path.basename(link) &&
+    [path.resolve(cacheRoot), realpathSync(cacheRoot)].some((root) =>
+      /^[a-f0-9]{40}\/skills\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(path.relative(root, target)),
+    );
 }
 
 export function linkAgentSkills(skills, roots, cacheRoot) {
@@ -67,7 +68,10 @@ export function linkAgentSkills(skills, roots, cacheRoot) {
   }
   for (const root of Object.values(roots)) mkdirSync(root, { recursive: true });
   for (const { link, source } of links) {
-    if (lstatSync(link, { throwIfNoEntry: false })) unlinkSync(link);
+    if (lstatSync(link, { throwIfNoEntry: false })) {
+      if (path.resolve(path.dirname(link), readlinkSync(link)) === source) continue;
+      unlinkSync(link);
+    }
     symlinkSync(source, link, "dir");
   }
   const names = new Set(skills.map(({ name }) => name));

@@ -284,8 +284,8 @@ or chose reference screens, make matching that design your first task:
 > Read the app's README and UI.md, if present. Use my design references to shape the generated scaffold. Reuse its
 > shared components and theme, preserve its Rails forms and navigation, and check the affected screens in the browser.
 
-The app's UI guidance and source own its component choices. The installed `extend-app-ui` and
-`review-ui-consistency` Skills can help when available; an older workspace can follow its app guidance directly.
+The app's UI guidance and source own its component choices. When available, the `extend-app-ui` and
+`review-ui-consistency` Skills can help; you can also follow the app's guidance directly.
 You can also begin with one small change:
 
 > Change the heading on the plant list to “My indoor jungle.” Update the application source, run the relevant test,
