@@ -107,9 +107,9 @@ and symlinks, and removes obsolete links only when they point into the managed F
 in model-visible context. The optional npm plugin remains a separate installation path owned by the Skills repo.
 
 The offline check covers one-Skill and three-Skill manifests without changing distribution pins. Linking changes
-alone do not make unreleased Skills available. Before qualifying the UI migration, the reviewed pin must declare
-`create-full-stack-app`, `extend-app-ui`, and `review-ui-consistency`; prove that exact inventory in a fresh container
-and both authenticated continuation workflows. Keep the current pins until that release is qualified.
+alone do not make unreleased Skills available. The UI infrastructure release distributes `create-full-stack-app`
+only; selection and packaging of application UI Skills remain deferred. Qualify the exact declared inventory in
+the built container and both agent adapters before changing its pin.
 
 The current template consumes a public development image by immutable manifest digest. A credential-free manifest
 request reproduced that exact multi-platform index, so ordinary template-derived Codespaces can pull it without
