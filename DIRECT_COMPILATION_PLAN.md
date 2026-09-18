@@ -374,8 +374,9 @@ It never creates a Git repository, starts Publication, deploys, or substitutes f
 
 Drawing Board now selects root adoption for the internal-alpha handoff so the same conversation can move from Plan
 to inspectable source and an ordinary feature commit in one repository. The older nested path retains its separate
-initializer/smoke workflow. Root mode instead uses generated `bin/setup` and `bin/ci` at the root, with
-`design/script/selenium` for browser checks in the original running container; see the current README.
+initializer/smoke workflow. Root mode instead uses generated `bin/setup` and `bin/ci` at the root, starting Selenium
+through the generated `.devcontainer/compose.yaml` in the original running container's Compose project. Compose
+waits for Selenium's supplied health check; see the [current browser-testing instructions](README.md#7-open-your-app).
 
 ### Observed current-root qualification on 2026-09-02
 
@@ -441,8 +442,8 @@ that time:
 The comparison supports the existing mode split. Current-root adoption preserves one Git history and lets one agent
 carry the reviewed design directly into ordinary Rails work without a nested repository or second workspace. It also
 replaces the workspace layout in place, moves First Draft commands under `design/`, requires an immediate inspection
-and commit, and currently needs the relocated Selenium helper when qualification continues inside the container that
-predated the move. `./application` has a dedicated nested repository initializer followed by one-command smoke
+and commit, and uses the generated `.devcontainer/compose.yaml` in the current running container's Compose project
+for browser qualification. `./application` has a dedicated nested repository initializer followed by one-command smoke
 orchestration. The internal-alpha guide now favors `--output .` for its one-repository handoff and teaches the
 structural transition explicitly; no new CLI transaction or orchestration layer is implied by that choice.
 
