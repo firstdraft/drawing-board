@@ -11,7 +11,6 @@
     "CLAUDE_CONFIG_DIR": "/home/vscode/.claude",
     "CODEX_HOME": "/home/vscode/.codex",
     "DB_HOST": "postgres",
-    "DISABLE_AUTOUPDATER": "1",
     "NPM_CONFIG_CACHE": "/home/vscode/.cache/npm",
     "SELENIUM_HOST": "selenium"
   },

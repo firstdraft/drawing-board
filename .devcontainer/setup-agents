@@ -69,9 +69,12 @@ if [[ "$firstdraft_environment_mode" != "600" ]]; then
 fi
 
 npm install --global --prefix "$HOME/.local" \
-  "@anthropic-ai/claude-code@$CLAUDE_CODE_VERSION" \
-  "@firstdraft.com/cli@$FIRSTDRAFT_CLI_VERSION" \
-  "@openai/codex@$CODEX_VERSION"
+  "@firstdraft.com/cli@$FIRSTDRAFT_CLI_VERSION"
+
+# Omitting a channel preserves user settings; a fresh installation defaults to latest.
+curl -fsSL https://claude.ai/install.sh | bash
+curl -fsSL https://chatgpt.com/codex/install.sh | \
+  CODEX_NON_INTERACTIVE=1 sh -s -- --release "$CODEX_VERSION"
 
 skills_checkout="$skills_cache_root/$FIRSTDRAFT_SKILLS_REVISION"
 

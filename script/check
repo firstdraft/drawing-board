@@ -69,7 +69,7 @@ node script/check-image-receipt.mjs
 # shellcheck disable=SC1091
 source .devcontainer/agent-versions.env
 
-for script in .devcontainer/setup-agents bin/agent-doctor bin/review-plan-with-claude bin/review-plan-with-codex script/application-smoke script/check script/check-depth-one script/devcontainer-image-smoke script/devcontainer-smoke script/initialize-application script/selenium; do
+for script in script/agent-smoke .devcontainer/setup-agents bin/agent-doctor bin/review-plan-with-claude bin/review-plan-with-codex script/application-smoke script/check script/check-depth-one script/devcontainer-image-smoke script/devcontainer-smoke script/initialize-application script/selenium; do
   bash -n "$script"
   if [[ ! -x "$script" ]]; then
     echo "$script must be executable." >&2
@@ -85,6 +85,8 @@ for javascript in \
   script/check-image-receipt.mjs \
   script/check-firstdraft-wrapper.mjs \
   script/check-agent-skills.mjs \
+  script/check-agent-setup.mjs \
+  script/check-claude-discovery.mjs \
   script/check-initialize-application.mjs; do
   node --check "$javascript"
 done
@@ -94,6 +96,7 @@ if [[ ! -x bin/firstdraft ]]; then
 fi
 node script/check-firstdraft-wrapper.mjs
 node script/check-agent-skills.mjs
+node script/check-agent-setup.mjs
 node script/check-initialize-application.mjs
 
 expected_bin_entries=$'bin/agent-doctor\nbin/firstdraft\nbin/review-plan-with-claude\nbin/review-plan-with-codex'

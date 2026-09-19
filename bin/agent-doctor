@@ -34,7 +34,7 @@ check_version() {
   if output="$("$@" 2>&1)"; then
     local normalized_output
     normalized_output="$(printf '%s' "$output" | tr '[:space:]' ' ' | tr -s ' ')"
-    if [[ " $normalized_output " == *" $expected "* ]]; then
+    if [[ -n "$normalized_output" && ( "$expected" == "latest" || " $normalized_output " == *" $expected "* ) ]]; then
       printf '%-24s %s\n' "$label" "$output"
     else
       printf '%-24s version mismatch: expected %s, found %s\n' "$label" "$expected" "$output"
@@ -98,7 +98,7 @@ check_shared_environment() {
 }
 
 
-check_version "Claude Code" "$CLAUDE_CODE_VERSION" claude --version
+check_version "Claude Code" latest claude --version
 check_version "Codex" "$CODEX_VERSION" codex --version
 check_version "First Draft CLI" "$FIRSTDRAFT_CLI_VERSION" \
   "$HOME/.local/bin/firstdraft" --version
@@ -115,7 +115,9 @@ fi
 
 if [[ "$installation_only" == "true" ]]; then
   if claude auth status --help >/dev/null 2>&1 &&
+    claude update --help >/dev/null 2>&1 &&
     codex login status --help >/dev/null 2>&1 &&
+    codex update --help >/dev/null 2>&1 &&
     codex login --device-auth --help >/dev/null 2>&1 &&
     codex resume --help >/dev/null 2>&1; then
     printf '%-24s available\n' "Agent command contract"

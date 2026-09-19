@@ -70,7 +70,7 @@ try {
         .filter((item) => item.type === "input_text")
         .map((item) => item.text.match(/<permissions instructions>[\s\S]*?<\/permissions instructions>/)?.[0])
         .find(Boolean);
-      assert.ok(permissions, "Pinned Codex must expose its effective permission instructions");
+      assert.ok(permissions, "Codex must expose its effective permission instructions");
       return permissions;
     };
     const permissions = readPermissions();
