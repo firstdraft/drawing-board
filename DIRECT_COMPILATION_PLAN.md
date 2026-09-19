@@ -19,7 +19,14 @@ the earlier nested-first delivery sequence; they are not instructions to initial
 
 ## Current Skills source pin
 
-Drawing Board selects Skills source
+Drawing Board selects Skills source `54294d6cf4d1a45f5a21c7d1036b9fddab9d911a`, the source of shared plugin `0.2.5`,
+with CLI `0.2.2`. The [September 15 release receipt](https://github.com/firstdraft/firstdraft/blob/c4ac120903d100622b6d625d650a8b26bd597eb8/docs/solutions/2026-09-15-account-settings-release.md)
+records registry/package proof, Drawing Board `aed9635a` container CI, and prebuild success. It did not exercise a
+fresh Codespace on that tuple. This agent-policy change leaves those First Draft distribution pins unchanged.
+
+### Earlier Skills 0.2.2 qualification (2026-09-10)
+
+That update selected Skills source
 [`7920d06717d0f70a1d7afe1405a8754109f7d388`](https://github.com/firstdraft/skills/commit/7920d06717d0f70a1d7afe1405a8754109f7d388),
 tree `8cf3c0a78ba3b5392aea588ba84430db961d7d77`, the source of shared plugin `0.2.2`.
 The canonical helper selects `./bin/firstdraft` before a bundled or PATH CLI. Before Compilation this is Drawing
@@ -27,7 +34,7 @@ Board's root wrapper. After root adoption, the Skill directs later First Draft c
 `./bin/firstdraft` resolves to the moved wrapper and retains its credential setup. Ordinary Rails work stays at the
 generated root; the Skill forbids the moved nested-only initializer and smoke helpers. **Create GitHub repository**
 saves the current workspace; **Compile and publish through First Draft** creates a separate compiled repository.
-CLI `0.2.2`, both agent versions, and language/runtime pins are unchanged by this Skill update.
+CLI `0.2.2`, both agent versions, and language/runtime pins were unchanged by that Skill update.
 
 The [0.2.2 release receipt](https://github.com/firstdraft/skills/blob/fb6c8e63105f1f139e6ae59f3958f9c98b44cd69/evidence/2026-09-10-shared-plugin-0.2.2-release.md)
 records exact-package tests against the real local service with Claude and a synthetic HTTP fixture with Codex.
@@ -37,12 +44,109 @@ wrapper and installed CLI; package tests do not establish that environment's com
 The [new-pin hosted container contract](https://github.com/firstdraft/drawing-board/actions/runs/34563183070)
 passed at Drawing Board `26caab0e4cefd05236dedea1f9332307c43bef97`, running `script/devcontainer-smoke` twice against
 this pin. It verifies exact versions and Skill discovery without sign-in or Compilation. The dated records below
-retain the earlier Skills revisions they exercised. No fresh authenticated Codespace journey has run at this Skill
-revision with either agent; a Codex hosted journey remains unproved.
+retain the earlier Skills revisions they exercised. No fresh authenticated Codespace journey at this Skill
+revision with either agent was part of that checkpoint; it did not establish a Codex hosted journey.
 
-## Codex qualification boundary (2026-09-10)
+## Agent release policy and qualification (2026-09-18)
 
-The active Codex package is [`@openai/codex@0.154.0`](https://github.com/openai/codex/releases/tag/rust-v0.154.0).
+New Codespaces select the vendors' latest public agents through their official native installers. Claude's
+no-argument bootstrap defaults to `latest` while preserving an existing user's chosen channel on setup reruns;
+Codex explicitly selects `latest`. Agent versions are observations in test receipts, not permanent compatibility
+pins. The [maintainer policy](CONTRIBUTING.md#agent-installation-and-updates) owns update behavior and the independent
+First Draft/runtime pins. A normal attach or resume does not run setup or a custom updater.
+
+Primary-source inspection used [Claude's native bootstrap](https://claude.ai/install.sh), its public `2.1.278`
+installer and shipped install/update code, and Codex
+[`rust-v0.155.1`](https://github.com/openai/codex/tree/be2951ea34f0d295ed0becf97079f92fa5f6950e), including its
+[native installer](https://github.com/openai/codex/blob/be2951ea34f0d295ed0becf97079f92fa5f6950e/scripts/install/install.sh).
+Both installers own launchers in `~/.local/bin`; their ordinary vendor update commands use the same installation.
+Claude's explicit `latest` install argument writes the user's channel setting, so setup deliberately omits it.
+First Draft's pinned CLI alone retains a per-command npm prefix.
+
+The first npm-based candidate, `5c0f9e355445fec7238e8e08f6a3fa22c18fc7c3` / tree
+`ec9cdaa555a6eb222972708d47ba5ccd6466356f`, passed local agent checks,
+[hosted CI](https://github.com/firstdraft/drawing-board/actions/runs/35419895381), and two full smokes in the fresh
+repository/branch Codespace `fd-board39-20260919-4xx75x45p3wwx`. That fixture was created at `2026-09-19T03:59:28Z`
+on East US `basicLinux32gb`, with normal post-create setup installing Claude `2.1.278`, Codex `0.155.1`, CLI `0.2.2`,
+and Skills `54294d6c`. Prebuild status was not reported, so no prebuild or timing comparison is inferred.
+**That candidate was rejected:** a subsequent interactive shell reproduced nvm's refusal of `NPM_CONFIG_PREFIX`,
+leaving Node/npm unavailable. Its green noninteractive checks do not qualify the corrected native installation.
+The retained smoke now runs noninteractive, interactive non-login, and interactive login shells. A negative control
+with the bad prefix reproduced missing Node in the non-login shell and exited `127` at the first command; the
+login shell alone retained Node despite the nvm warning. That observation motivated retaining all three modes.
+
+Native installer checks used the existing immutable workspace image on **linux/arm64**, task-private containers,
+no Docker socket, no database, and no real authentication files:
+
+- Claude's no-target bootstrap installed latest `2.1.278` for a fresh profile and retained it on rerun. An existing
+  user-selected `stable` channel stayed unchanged and selected `2.1.267`; explicitly passing `latest` overwrote
+  that setting, confirming why setup omits the argument.
+- Native `claude update` advanced `2.1.277` to `2.1.278` at the same launcher. Credentials, history, conversation,
+  and settings fixtures retained exact bytes; custom global/project configuration keys survived vendor bookkeeping.
+- The existing npm `2.1.226` installation migrated to native `2.1.278` without force or preliminary removal.
+  Its old npm package directory remained inert; `~/.local/bin/claude` selected the native binary. An unrelated
+  package sentinel and synthetic user state survived.
+
+- Combined setup installed Claude `2.1.278`, Codex `0.155.1`, pinned CLI `0.2.2`, and Skills `54294d6c`.
+  Both vendor update commands, complete setup rerun, and repeated `script/agent-smoke` passed. Noninteractive and
+  interactive login shells both retained Node `24.18.0`, npm `11.16.0`, and both agents. Eight synthetic state files
+  remained byte-identical and a custom global Claude setting survived vendor bookkeeping.
+- The combined smoke retained executable/PATH, login/update/resume and review commands, effective Codex permissions,
+  exact First Draft CLI help/compatibility, and both shared Skill catalog probes. Claude's isolated `--init-only`
+  probe disabled hooks and MCP; Codex's prompt-input probe found the namespaced Skill.
+- `script/check` passed under Ruby `4.0.5` and Node `24.18.0`; ShellCheck passed. The offline fixture exercises actual
+  setup with simulated native installers, enforces the approved selectors, and preserves an existing user's channel.
+
+The corrected source checkpoint is `6e6b34c5ffdc22678c09c0bf2bd9a191a7f05f2f`, tree
+`fa16e0b654ee615d67b7aa48a0cd2ea86e241ee4`:
+
+- A separate full migration fixture started with npm Claude `2.1.226` and Codex `0.154.0`, then ran that exact setup
+  and unmodified agent smoke twice. Both launchers remained native at `2.1.278` / `0.155.1`. Seven synthetic
+  credentials/history/conversation/Codex-config files retained exact bytes. Every original Claude setting and global
+  configuration value survived; the vendor formatted settings and copied the existing global `theme: light`
+  preference into settings. Settings bytes then stayed identical across all four setup/smoke snapshots.
+- Native `codex update` advanced `0.154.0` to `0.155.1`, preserving the synthetic state and passing agent smoke.
+- [Hosted container CI](https://github.com/firstdraft/drawing-board/actions/runs/35420709793) passed on that exact
+  checkpoint, including source/depth-one contracts and both full container smokes on linux/amd64 with the same
+  native agent versions.
+- The one retained Codespace was updated to that checkpoint and normally rebuilt. Docker reported a new container
+  created at `2026-09-19T04:14:49Z` from the unchanged `06602be5` image, with the same three named state volumes.
+  SSH timed out during banner exchange after the rebuild; one stop/start restored access at `04:19:25Z` without
+  configuration changes. The exported creation log records that resume; it replaced the earlier rebuild log.
+- From `04:20:05Z` to `04:20:41Z`, the rebuilt linux/amd64 fixture passed full `script/devcontainer-smoke` twice,
+  both vendor updates, explicit setup rerun, and agent smoke. The normal environment had no global npm prefix;
+  both shell modes retained Node `24.18.0`, npm `11.16.0`, and both native clients. Claude doctor reported
+  auto-updates enabled on `latest`. All eight pre-rebuild synthetic/configuration/blank-env files stayed
+  byte-identical; vendor-owned global installation bookkeeping was excluded from that byte comparison.
+
+A final fresh local run at `a12ddae7d2f8a19bb5d6f9a59d64871fe47a33c8` / tree
+`9d9f539bc9b772009580271dbe1b5c2cea905feb` used empty agent/cache volumes and `CODESPACES=true`. Real native setup
+installed the same client/CLI versions and created the mode-0600 Codex config with the then-current
+`danger-full-access` / `on-request` defaults. The loaded permission check and full agent smoke passed all three
+shell modes. This exercises first-install configuration composition locally; it is not a GitHub Codespace creation.
+
+The initial fresh fixture and its corrected rebuild are distinct observations. Fresh native setup passed locally
+and in hosted container CI; a fresh Codespace creation at the corrected source checkpoint has not been exercised.
+[Drawing Board #39](https://github.com/firstdraft/drawing-board/issues/39) owns the remaining fresh-Codespace
+observation: use an assigned disposable fixture at the frozen candidate; retain its post-create log, actual installed
+versions, source head/tree, and mount configuration. With the initial blank `.env`, run `script/devcontainer-smoke`
+twice. Then seed only synthetic agent state, rerun setup, and verify preservation, distinguishing vendor-owned
+configuration migration from byte-preserved credentials and conversations. Do not reuse or alter a signed-in
+Codespace without its assigned lease. This receipt does not replace that separate observation.
+
+These checks concern installation, update commands, shell availability, and Skill catalogs. They do not prove
+direct-template creation/publication, credential validity or signed-in conversation restoration, an authenticated
+Skill/model turn, first-session instruction loading, or a Plan-to-Compilation journey. No agent signed in, and no
+First Draft service, Compilation, repository publication, or release operation ran. Requalify affected commands and
+discovery when a future vendor release changes them; record actual versions instead of retaining observations as pins.
+
+The minimal `CLAUDE.md` import stays. [Anthropic's native AGENTS discovery](https://code.claude.com/docs/en/memory#agents-md)
+has first-session and feature-availability limits; neither latest installation nor catalog diagnostics prove it can
+replace the import. [Service #712](https://github.com/firstdraft/firstdraft/issues/712) owns that remaining qualification.
+
+## Earlier Codex qualification boundary (2026-09-10)
+
+That update selected [`@openai/codex@0.154.0`](https://github.com/openai/codex/releases/tag/rust-v0.154.0).
 An actual local `gpt-6-astra` model turn with `0.147.0` returned HTTP 400 saying that the model required a newer
 Codex version, before any Skill or First Draft service use. The same model starts successfully with `0.154.0`.
 This compatibility failure, rather than a new First Draft CLI or Skill requirement, motivates the pin change.
@@ -53,7 +157,7 @@ published CLI `0.2.2`, and authentication/approval continuity against a local HT
 package identities and boundaries. The fixture tests do not prove real First Draft Analysis or Compilation.
 The separate real-service package tests linked above used Claude; they do not establish a Codex Compiler journey.
 `bin/agent-doctor --installation-only` checks login and resume command availability. Hosted
-`script/devcontainer-smoke` additionally checks the pinned version and exact Skill inventory; neither check signs
+`script/devcontainer-smoke` additionally checked the pinned version and exact Skill inventory; neither check signs
 in or proves the complete agent journey.
 
 The earlier [hosted container contract](https://github.com/firstdraft/drawing-board/actions/runs/34561285350) passed at
@@ -64,9 +168,9 @@ OpenAI's [Skill instructions](https://learn.chatgpt.com/docs/build-skills#how-ch
 `/skills` selection and `$` mentions; local discovery supplies the `firstdraft:create-full-stack-app` name. The
 README uses those supported interfaces, without claiming an observed interactive picker or message-entry smoke.
 
-The retained hosted full-journey receipts exercised **Claude**, with Codex `0.147.0` installed. Fresh browser device
+At that checkpoint, the retained hosted full-journey receipts exercised **Claude**, with Codex `0.147.0` installed. Fresh browser device
 sign-in, Codex's Codespace permission prompts, a Codex-driven Plan-to-root-Compile journey, and resuming that
-conversation after a Codespace stop/start remain unproved. Local model/CLI results and a green container contract
+conversation after a Codespace stop/start were still unproved. Local model/CLI results and a green container contract
 must not be reported as that hosted Codex journey.
 
 ## Packet 1: direct artifact output in the CLI

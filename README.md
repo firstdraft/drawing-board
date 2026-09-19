@@ -43,8 +43,9 @@ existing repository.
 If VS Code asks, select **Trust Folder & Continue** for this Drawing Board. Leave the browser tab open until the
 terminal says `Drawing Board setup complete.`
 
-Setup installs the pinned agents, First Draft CLI, and the Skills from the reviewed release, and prepares your local
-configuration.
+Setup installs the latest public Claude Code and Codex releases, the reviewed First Draft CLI and Skills, and
+prepares your local configuration. Claude can update automatically; Codex offers updates through its normal update
+flow. You can also run `claude update` or `codex update` in the terminal.
 GitHub can reuse the template's prebuilt environment to shorten startup. If a prebuild is unavailable, the first
 start may take a few minutes.
 The workspace starts its database automatically. Browser tests start their browser service only when they need it,

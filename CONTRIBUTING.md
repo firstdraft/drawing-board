@@ -9,7 +9,7 @@ Agents changing the template should also read [AGENTS.md](AGENTS.md).
 
 A repository created from this template must provide one ready-to-use workspace for Claude or Codex:
 
-- the Dev Container installs exact reviewed versions of both agents and the First Draft CLI;
+- the Dev Container installs the latest public Claude Code and Codex releases and the exact reviewed First Draft CLI;
 - every Skill declared by one exact source revision is linked into both agents;
 - `.env` supplies the shared staging origin and token without entering Git;
 - bare `firstdraft` on the Codespace PATH resolves to `bin/firstdraft`, and AGENTS.md routes Skill-issued commands
@@ -44,7 +44,7 @@ The accepted cross-repository sequence and its safety boundaries live in
 | `.devcontainer/image/` | Image-only Features, lockfile, and exact published-image receipt |
 | `.devcontainer/compose.yaml` | Drawing Board, default PostgreSQL, and on-demand Selenium lifecycle |
 | `.devcontainer/devcontainer.json` | Codespace services, lifecycle, volumes, ports, and workspace environment |
-| `.devcontainer/agent-versions.env` | Exact Claude, Codex, CLI, and Skills pins |
+| `.devcontainer/agent-versions.env` | Agent release selectors and exact First Draft/toolchain pins |
 | `.devcontainer/setup-agents` | Idempotent installation, Skill linking, and Codespaces defaults |
 | `.devcontainer/configure-codex.mjs` | Codespaces-only initialization of a missing user config |
 | `.devcontainer/agent-skills.mjs` | Pinned-manifest Skill inventory, shared linking, and discovery verification |
@@ -54,10 +54,13 @@ The accepted cross-repository sequence and its safety boundaries live in
 | `bin/review-plan-with-*` | Optional read-only review by the other installed agent |
 | `script/check` | Fast source, pin, wrapper, and credential contracts |
 | `script/check-agent-skills.mjs` | Offline one/multiple-Skill installation, upgrade/rollback, and discovery cases |
+| `script/check-agent-setup.mjs` | Offline first-setup/rerun selectors and user-state preservation |
+| `script/check-claude-discovery.mjs` | Unauthenticated Claude Skill catalog check in an isolated home |
 | `script/check-depth-one` | Receipt validation in a real one-commit checkout without image-source history |
 | `script/check-image-receipt.mjs` | Exact source, publication, platform, and rejected-package receipt contract |
 | `script/devcontainer-image-smoke` | Default command, locked Feature-ID, maintained SSH lifecycle, and PostgreSQL checks |
 | `script/devcontainer-smoke` | Runtime smoke executed inside the built Dev Container |
+| `script/agent-smoke` | Agent versions, PATH, commands, configuration, and shared Skill installation/discovery |
 | `script/refresh-codespaces-private-port` | Safe post-attach refresh for the private Rails forwarded-port registration |
 | `script/initialize-application` | Parentless nested Git initialization for direct-download output |
 | `script/selenium` | On-demand Selenium start, status, and stop inside the Dev Container |
@@ -99,12 +102,45 @@ runs the template-root runtime smoke twice for every pull request. The generated
 a separate qualification input because `./application` is absent from the template checkout. A change to an exact
 pin should name the compatible upstream revision or package and preserve the same version in every checked consumer.
 
+### Agent installation and updates
+
+New Codespaces install the vendors' latest public agents using their native installers. Claude's no-argument
+installer defaults to `latest` and preserves an existing user's channel choice on explicit setup reruns. Codex
+selects `latest` explicitly. Temporary exact agent pins need a demonstrated regression or an explicitly frozen
+experiment with its reason recorded; update the setup policy check and qualification receipt with that exception.
+First Draft CLI/Skills/service compatibility and the language, database, and image pins follow separate policies.
+
+Native installers and vendor updates share the user-owned `~/.local/bin` launchers. A container-wide npm prefix
+breaks the image's interactive nvm initialization, so only the pinned First Draft CLI uses a per-command npm prefix.
+Claude's normal updater is enabled; users can also run `claude update`. Codex offers updates through its normal
+update prompt or `codex update`. These are different vendor mechanisms; Drawing Board does not run an updater or
+reinstall agents on attach/resume. See
+[Anthropic's installation and updates](https://code.claude.com/docs/en/setup),
+[OpenAI's native installation instructions](https://learn.chatgpt.com/docs/codex/cli#getting-started), and
+[Codex's update command](https://learn.chatgpt.com/docs/developer-commands#codex-update).
+
+The existing named volumes retain `/home/vscode/.claude`, `/home/vscode/.codex`, and `/home/vscode/.cache` across
+container rebuilds. `CLAUDE_CONFIG_DIR` and `CODEX_HOME` select those config/conversation homes. Setup recreates
+executables under `~/.local` and the shared Skill links, preserves unrelated Skills and user settings, and only
+seeds Codex defaults when its config is absent. It never resets authentication or conversation directories.
+Historical qualification receipts retain the versions they actually tested; current smoke output records the
+installed versions instead of requiring a historical client number. `script/agent-smoke` can run without Rails or
+PostgreSQL, and is also called by `script/devcontainer-smoke`.
+
+Keep `CLAUDE.md` as the minimal `@AGENTS.md` import. Claude's native discovery still has first-session and
+feature-availability restrictions; upgrading alone does not qualify import removal. The shared instruction source
+remains `AGENTS.md`. See [Anthropic's discovery limits](https://code.claude.com/docs/en/memory#agents-md) and the
+[installation qualification boundary](DIRECT_COMPILATION_PLAN.md#agent-release-policy-and-qualification-2026-09-18).
+
 Skill linking reads the pinned checkout's `.claude-plugin/plugin.json` and links all declared canonical Skill
 folders into Claude's configured `skills/` and Codex's `~/.agents/skills/`. Both clients therefore read the same
 reference files as well as the same entrypoints. The installer preflights collisions, preserves unrelated files
 and symlinks, and removes obsolete links only when they point into the managed First Draft revision cache.
-`bin/agent-doctor` checks the complete inventory; the container smoke also verifies every namespaced Codex Skill
-in model-visible context. The optional npm plugin remains a separate installation path owned by the Skills repo.
+`bin/agent-doctor` checks the complete inventory. The agent smoke verifies every namespaced Codex Skill in
+model-visible context and Claude's catalog loading of the same installed sources in an isolated home. Claude's
+`--init-only` probe disables hooks and MCP configuration and reads discovery diagnostics without a model turn.
+Neither probe proves authenticated invocation. The optional npm plugin remains a separate installation path owned
+by the Skills repo.
 
 The offline check covers one-Skill and three-Skill manifests without changing distribution pins. Linking changes
 alone do not make unreleased Skills available. The UI infrastructure release distributes `create-full-stack-app`
@@ -214,7 +250,7 @@ settings can explicitly choose the same policy for a session with
 `codex --sandbox danger-full-access --ask-for-approval on-request resume` inside their Codespace.
 
 `script/check-codex-configuration.mjs` checks fresh volumes, repeated setup, local exclusion, and preservation of
-existing settings. The runtime smoke checks the pinned Codex binary's loaded sandbox and permission-request
+existing settings. The agent smoke checks the installed Codex binary's loaded sandbox and permission-request
 instructions, including a `never` control that must disable requests, without sign-in or a model request.
 
 The primary template launch can reuse the prebuild on `firstdraft/drawing-board`; a new repository created with
