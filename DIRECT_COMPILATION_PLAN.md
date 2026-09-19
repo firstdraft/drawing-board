@@ -125,14 +125,57 @@ installed the same client/CLI versions and created the mode-0600 Codex config wi
 `danger-full-access` / `on-request` defaults. The loaded permission check and full agent smoke passed all three
 shell modes. This exercises first-install configuration composition locally; it is not a GitHub Codespace creation.
 
-The initial fresh fixture and its corrected rebuild are distinct observations. Fresh native setup passed locally
-and in hosted container CI; a fresh Codespace creation at the corrected source checkpoint has not been exercised.
-[Drawing Board #39](https://github.com/firstdraft/drawing-board/issues/39) owns the remaining fresh-Codespace
-observation: use an assigned disposable fixture at the frozen candidate; retain its post-create log, actual installed
-versions, source head/tree, and mount configuration. With the initial blank `.env`, run `script/devcontainer-smoke`
-twice. Then seed only synthetic agent state, rerun setup, and verify preservation, distinguishing vendor-owned
-configuration migration from byte-preserved credentials and conversations. Do not reuse or alter a signed-in
-Codespace without its assigned lease. This receipt does not replace that separate observation.
+A fresh Codespace attempt on `2026-09-19` did not reach that corrected source. The assigned fixture,
+created at `15:02:07Z` for `main`, reported `prebuild: true` and opened the clean pre-update checkout
+`aed9635a4dc191eb1f384e500c10648a5cec2215`, tree `47cae4a0f88fd5503260d994a0bb5a4545cc1c0f`.
+Its initial post-create log installed Claude `2.1.226` and Codex `0.154.0`, even though remote `main` was already
+`d2f488f783dd98167c4ba65fb6a7937ddea92e53` / tree `d94c7e80aecefd549719ee70709475c191ffc62e`.
+The source, provider log, unchanged image digest, and mounted volumes were retained; no setup rerun, smoke, or
+synthetic-state mutation was performed on the mismatched checkout. The fixture was confirmed stopped by `15:09Z`.
+The log completed setup without recording a source update phase or its failure; it does not establish why the
+provider selected the old checkout. This repeats the [prebuild freshness boundary](CONTRIBUTING.md#codespaces-prebuilds)
+and does not qualify or falsify the corrected native implementation.
+
+Read-only review of existing configuration `151299` found **Every push** for `main` and
+`.devcontainer/devcontainer.json`, all five regions, two retained versions, and prebuild optimization enabled.
+During the `15:02–15:09Z` attempt, its latest [prebuild run](https://github.com/firstdraft/drawing-board/actions/runs/35027951438)
+was the successful September 15 run at `aed9635`; workflow history contained no newer run before the fixture stopped.
+A failed-latest-run fallback was therefore not established. GitHub's
+[older-prebuild fallback documentation](https://docs.github.com/en/codespaces/troubleshooting/troubleshooting-prebuilds#preventing-out-of-date-prebuilds-being-used)
+explains the possibility of an older checkout, not why an automatic successor run was absent in this attempt.
+
+A manual refresh of unchanged configuration `151299` then produced a successful
+[prebuild at merged `main`](https://github.com/firstdraft/drawing-board/actions/runs/35451319086). A new disposable
+Codespace created at `15:38:08Z` reported `prebuild: true` and actually opened
+`d2f488f783dd98167c4ba65fb6a7937ddea92e53` / tree `d94c7e80aecefd549719ee70709475c191ffc62e`.
+Its initial post-create setup ran from `15:38:32.789Z` to `15:39:09.634Z`, installing native Claude `2.1.278`,
+Codex `0.155.1`, CLI `0.2.2`, and Skills `54294d6c`. The source was clean and unchanged before and after qualification;
+the image remained `06602be5`, with the three configured agent/cache volume mounts.
+
+- Before any synthetic seeding, `.env` matched the blank-token template and had mode `0600`. The checked agent
+  credential files and authentication environment variables were absent; neither standard conversation directory
+  contained files.
+  Codex's initial mode-`0600` config selected the then-current `danger-full-access` / `on-request` defaults.
+- From `15:43:15Z` to `15:43:33Z`, two full `script/devcontainer-smoke` runs passed in that fresh linux/amd64
+  Codespace. All three Bash modes (`-c`, `-ic`, `-lic`) retained Node `24.18.0`, npm `11.16.0`, and both agents.
+  Effective Codex permissions, required commands, pinned CLI/Skill compatibility, and both Skill catalogs passed.
+  Claude doctor reported native installation, auto-updates enabled, and the `latest` channel.
+- Six synthetic files represented credentials, conversations, and unrelated Skills for both agents. Supported setup
+  rerun and all three modes of agent smoke passed by `15:46:42Z`. Those six files plus the initial Codex config and
+  blank `.env` retained bytes, modes, and ownership after setup and again after smoke. Existing settings were not
+  edited; no Claude `settings.json` existed before or after. Vendor global bookkeeping was recorded separately
+  from those eight files. The native client versions and Claude doctor's channel/update status stayed the same.
+
+The initial provider log, runtime logs, source/image/mount metadata, and hash receipts were exported before the
+fixture was stopped; `Shutdown` was confirmed at `15:49:35Z`, before its `16:23:08Z` deadline. This completes the
+fresh corrected-source installation observation for [Drawing Board #39](https://github.com/firstdraft/drawing-board/issues/39).
+The successful manual prebuild refresh does not explain the earlier missing automatic successor run.
+
+For future qualification, use an assigned disposable fixture and verify its actual source head/tree matches the
+frozen candidate before running checks. Retain its post-create log, installed versions, and mount configuration.
+With the initial blank `.env`, run `script/devcontainer-smoke` twice. Then seed only synthetic agent state, rerun
+setup, and verify preservation, distinguishing vendor-owned configuration migration from byte-preserved credentials
+and conversations. Do not reuse or alter a signed-in Codespace without its assigned lease.
 
 These checks concern installation, update commands, shell availability, and Skill catalogs. They do not prove
 direct-template creation/publication, credential validity or signed-in conversation restoration, an authenticated
