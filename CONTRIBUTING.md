@@ -231,13 +231,23 @@ future generated target revision.
 
 ## Release handoff and periodic tool refresh
 
-Drawing Board is a required consumer in the
+Drawing Board is a post-publication consumer in the
 [coordinated release process](https://github.com/firstdraft/firstdraft/blob/main/RELEASE_COORDINATION.md#drawing-board-release-handoff).
-For each release, update `FIRSTDRAFT_CLI_VERSION` and `FIRSTDRAFT_SKILLS_REVISION` in
-`.devcontainer/agent-versions.env` to the published compatible CLI and the released plugin's exact source revision.
-Reconcile the wrapper, setup messages, guide, root-adoption paths, and affected fixtures. Run `script/check`, require
-the pull request's built-container CI, and verify the merged revision's prebuild before declaring the template ready.
-Record the selected pins and observed checks; installation and discovery do not prove authenticated Compilation.
+Publish the selected service, CLI, and Skills first. Drawing Board's pull request, CI, and prebuild refresh do not
+block their publication or the local release.
+
+When released CLI or Skill compatibility or behavior changes, update `FIRSTDRAFT_CLI_VERSION` and
+`FIRSTDRAFT_SKILLS_REVISION` in `.devcontainer/agent-versions.env` to the available compatible CLI and the released
+plugin's exact source revision. Update affected commands, wrapper expectations, setup messages, and guide alongside
+the pins. A service-only change with unchanged consumer requirements needs no Drawing Board update. If generated
+application runtime requirements change, reconcile the template's toolchain and setup; rebuild the workspace image
+only when its image inputs change. A CLI or Skill pin update alone needs no new image.
+
+Run `script/check` for the template change and reuse the pull request's relevant built-container CI. Do not repeat
+unchanged checks or a complete Compile journey merely to update distribution pins. After merging the template
+update, refresh its prebuild and verify the intended revision before announcing the updated Codespaces fallback
+ready. This is post-publication follow-up, not another release gate. Record the selected pins and observed checks;
+installation and discovery do not prove authenticated Compilation.
 
 Review tools weekly as well as during releases. Fresh setup already selects the vendors' latest public Claude and
 Codex releases; verify those installers still work with the template. Review the pinned First Draft CLI/Skills,
@@ -294,8 +304,9 @@ pairs. The shared image already contains the slower-changing Rails/system toolch
 
 Setup reads pins from the **checked-out source**, which can itself come from an older prebuild. In the experiment,
 requesting the branch after a push restored the previous commit while its new prebuild was unavailable. Keep
-**Every push**, wait for a successful prebuild of the intended revision before qualifying a new pin, and verify the
-Codespace's actual tree. Direct-template creation starts a new Git history, so compare its tree rather than expecting
+**Every push** and verify a successful prebuild of the intended revision before announcing the updated Codespaces
+fallback ready. This follows component publication. For a live Codespace check, verify its actual tree.
+Direct-template creation starts a new Git history, so compare its tree rather than expecting
 the template commit SHA. Post-create installation does not by itself guarantee the latest remote pins.
 
 To investigate a slow launch, record the exact template commit, region, machine, creation time, editor-ready time,
