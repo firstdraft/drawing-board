@@ -25,7 +25,7 @@ See the [follow-up startup measurements](STARTUP_FOLLOWUP.md).
 
 The template itself does not contain generated application source. For the internal alpha, Drawing Board's
 `AGENTS.md` selects explicit `--output .` approval: the application replaces the workspace layout, original material
-moves under `design/`, and the same Git repository holds both. The primary **Use this template → Open in a
+moves under `.firstdraft/design/`, and the same Git repository holds both. The primary **Use this template → Open in a
 codespace** route starts without a remote. Inspect and commit the staged baseline, then publish it from VS Code or
 the [Codespaces publication API](#publish-from-the-codespace-terminal) to the user's own private repository before
 setup or edits. Preserve and use an existing remote when the user chooses
@@ -212,15 +212,15 @@ the current CLI's visibility command is the supported control surface. This is a
 provider registration defect, not a custom tunnel or application workaround.
 
 The `postAttachCommand` resolves that same helper at `script/refresh-codespaces-private-port` before root adoption
-and `design/script/refresh-codespaces-private-port` afterward. This uses the standard
+and `.firstdraft/design/script/refresh-codespaces-private-port` afterward. This uses the standard
 [Dev Container shell lifecycle](https://containers.dev/implementors/json_reference/#lifecycle-scripts), not a new
 service: the [reference implementation](https://github.com/devcontainers/cli/blob/main/src/spec-common/injectHeadless.ts)
 runs a string command in `/bin/sh` with the workspace as its working directory. An inline path selection survives
 the move even when the already-running container retains its original lifecycle configuration. Helper errors still
 propagate, including its active-listener refusal; no port policy changes with the path. The focused
 `script/check-codespaces-private-port.mjs` exercises the configured command before and after a fixture's `script/`
-directory moves under `design/`, alongside the existing private-port and listener cases. That local proof is not a
-new Codespaces observation.
+directory moves under `.firstdraft/design/`, alongside the existing private-port and listener cases. That local proof
+is not a new Codespaces observation.
 
 The repaired tunnel exposed the already-recorded generated Rails HostAuthorization boundary. Do not copy the
 student template's broad `config.hosts.clear` or disabled origin check into Drawing Board. Generated-app host and
@@ -228,6 +228,26 @@ Origin handling remain target-owned. The [successor qualification](DIRECT_COMPIL
 subsequently proved a private forwarded browser GET, valid-CSRF state-changing POST, missing-CSRF rejection, and
 unrelated-Host rejection on its exact generated artifact. Preserve that dated proof; it is not a claim about every
 future generated target revision.
+
+## Release handoff and periodic tool refresh
+
+Drawing Board is a required consumer in the
+[coordinated release process](https://github.com/firstdraft/firstdraft/blob/main/RELEASE_COORDINATION.md#drawing-board-release-handoff).
+For each release, update `FIRSTDRAFT_CLI_VERSION` and `FIRSTDRAFT_SKILLS_REVISION` in
+`.devcontainer/agent-versions.env` to the published compatible CLI and the released plugin's exact source revision.
+Reconcile the wrapper, setup messages, guide, root-adoption paths, and affected fixtures. Run `script/check`, require
+the pull request's built-container CI, and verify the merged revision's prebuild before declaring the template ready.
+Record the selected pins and observed checks; installation and discovery do not prove authenticated Compilation.
+
+Review tools weekly as well as during releases. Fresh setup already selects the vendors' latest public Claude and
+Codex releases; verify those installers still work with the template. Review the pinned First Draft CLI/Skills,
+Ruby, Node, PostgreSQL, Dev Container Features, GitHub CLI, and Selenium/image dependencies against their official
+releases. Prepare small compatible updates and run the checks for the affected surface. A runtime pin must continue
+to match generated Foundations; record a concrete compatibility reason when retaining an older version.
+
+Use the existing vendor updaters for running workspaces, as described above. Do not reinstall tools on every attach,
+change a user's selected channel, or reset authentication and conversation state. Image changes follow the existing
+image publication and qualification procedure; an agent or First Draft package update alone needs no new image.
 
 ## Codespaces prebuilds
 
@@ -242,7 +262,8 @@ Drawing Board's separate Compile and publication instructions still apply.
 
 The config is created during `postCreateCommand`, after the per-Codespace home volume is mounted. It survives root
 adoption and container restarts intentionally, supporting normal application work in the same Codespace. After
-Compile, the generated root `AGENTS.md` governs application work; Drawing Board's instructions move into `design/`.
+Compile, the generated root `AGENTS.md` governs application work; Drawing Board's instructions move into
+`.firstdraft/design/`.
 This home setting is not scoped to those instructions or to First Draft commands. Setup never overwrites an existing
 config or dotfile symlink and makes no change
 in local devcontainers, where the mounted Docker socket can reach the developer's host. A user preserving older
@@ -316,8 +337,8 @@ Git root, use the returned repository URL:
 git remote add origin https://github.com/OWNER/REPO.git && git push -u origin HEAD
 ```
 
-Verify the remote baseline commit and retained `design/` files before continuing. Later saves use ordinary commits
-and `git push`. If creation succeeds but the push fails, keep the repository and repair the reported push failure;
+Verify the remote baseline commit and retained `.firstdraft/design/` files before continuing. Later saves use
+ordinary commits and `git push`. If creation succeeds but the push fails, keep the repository and repair the reported push failure;
 do not create another repository. After an ambiguous API result, inspect the Codespace's repository association and
 the approved repository read-only before any retry. The [live receipt](STARTUP_INVESTIGATION.md#publication-credentials)
 proves private creation and two pushes using only the built-in token, with a small Git fixture.

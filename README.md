@@ -2,8 +2,8 @@
 
 This repository is a workspace for building an app with Claude or Codex. Describe your idea, review the plan with
 your agent, and First Draft generates a Rails starting point at this repository's root. The original Drawing Board
-files move into `design/`; your Git history and any existing remote stay in place. Save the generated baseline to
-your own private GitHub repository, then keep working with the same agent to make it your own.
+files move into `.firstdraft/design/`; your Git history and any existing remote stay in place. Save the generated
+baseline to your own private GitHub repository, then keep working with the same agent to make it your own.
 
 You do not need to install programming tools on your computer. The GitHub Codespace created from this template
 contains everything the agent needs.
@@ -148,20 +148,20 @@ important choices, and show you anything the generated application will leave fo
 When the Plan looks right, explicitly approve the root transition:
 
 > I approve this Plan and the gaps you showed me. Compile with --output . from this Drawing Board root. I approve
-> moving the existing Drawing Board material into design/ while preserving this repository's Git history and any
-> existing remote. Inspect the staged result for credentials and commit the generated baseline before setup or source
+> moving the existing Drawing Board material into .firstdraft/design/ while preserving this repository's Git history
+> and any existing remote. Inspect the staged result for credentials and commit the generated baseline before setup or source
 > edits. Then help me save it to my own private GitHub repository using step 6 below. Do not deploy.
 
-The agent runs `bin/firstdraft plan compile --output .`. Tracked Git changes must be clean, and `design/` and the
-root-output recovery directory must not already exist. If the CLI refuses, preserve the workspace and ask the agent
+The agent runs `bin/firstdraft plan compile --output .`. Tracked Git changes must be clean, and
+`.firstdraft/design/` and the root-output recovery directory must not already exist. If the CLI refuses, preserve the workspace and ask the agent
 to explain the exact reason; do not delete files to force it through.
 
-Root Compile moves the original planning files, including private CLI state and `.env`, into `design/`. It stages
-the tracked moves and generated source in the **existing Git repository**; it does not create a second repository.
+Root Compile moves the original planning files, including private CLI state and `.env`, into `.firstdraft/design/`.
+It stages the tracked moves and generated source in the **existing Git repository**; it does not create a second repository.
 After inspecting that staged result for credentials, the agent commits it as the untouched generated baseline.
 An `origin` remote is not required for this Compile; any existing remote is preserved.
 The root `bin/` now belongs to the generated app, so bare `firstdraft` no longer runs the wrapper that loads `.env`
-and requires staging. For later First Draft authoring commands, change into `design/` and use `bin/firstdraft`.
+and requires staging. For later First Draft authoring commands, change into `.firstdraft/design/` and use `bin/firstdraft`.
 
 If you want First Draft to compile and create a separate private GitHub repository, say **Compile and publish
 through First Draft** before approving the Compile. The agent will use that distinct mode and give you the
@@ -176,14 +176,14 @@ Codespace is your only copy. Stopping preserves its files; deleting it, includin
 [automatic expiry](https://docs.github.com/en/codespaces/setting-your-user-preferences/configuring-automatic-deletion-of-your-codespaces),
 removes them even if you made local commits.
 
-1. Have the agent confirm that the generated baseline is committed and contains no credentials. Keep `design/.env`
-   and the private planning state ignored.
+1. Have the agent confirm that the generated baseline is committed and contains no credentials. Keep
+   `.firstdraft/design/.env` and the private planning state ignored.
 2. In VS Code, open **Source Control** in the left sidebar. Select **Publish to GitHub**; depending on the editor,
    this button may say **Publish Branch**.
 3. Enter your app's repository name and select **Publish to GitHub private repository**. The new repository belongs
    to the personal GitHub account that created the Codespace.
 4. Select **Open on GitHub**. Verify that the repository is **Private** and that the generated-baseline commit,
-   application source, and retained `design/` material arrived before continuing.
+   application source, and retained `.firstdraft/design/` material arrived before continuing.
 
 Publish **inside VS Code** so it adds the new remote and pushes your commits. Publishing through the separate
 “Your codespaces” page leaves the existing Codespace unlinked. See
@@ -213,7 +213,7 @@ bin/setup --skip-server
 ```
 
 Do **not** run `script/initialize-application` or `script/application-smoke` after root Compile, including their
-copies under `design/`. They are only for the optional nested application. You can ask:
+copies under `.firstdraft/design/`. They are only for the optional nested application. You can ask:
 
 > Set up and check the generated application, then start it and help me open its preview.
 
@@ -246,9 +246,9 @@ Run the broader checks against the committed baseline. In the still-running Draw
 existing browser-test service through the relocated helper:
 
 ```sh
-design/script/selenium start
+.firstdraft/design/script/selenium start
 CI=1 bin/ci
-design/script/selenium stop
+.firstdraft/design/script/selenium stop
 ```
 
 Stop Selenium after the run, including after a failure. Its first image download can take a few minutes. This is
@@ -305,7 +305,7 @@ to make an edit.
 If you close the Codespace, reopen the existing one from [Your codespaces](https://github.com/codespaces), rather
 than creating another. Start the app again with `bin/dev` in one terminal. In another terminal at the application
 root, resume your original agent conversation; for Codex, run `codex resume` and select it. Keep ordinary source
-edits at the application root after Compile; `design/` is only for later First Draft authoring work. See
+edits at the application root after Compile; `.firstdraft/design/` is only for later First Draft authoring work. See
 [Codex's resume command](https://learn.chatgpt.com/docs/developer-commands#codex-resume).
 Stopping a Codespace preserves its files; deleting it does not.
 
@@ -383,9 +383,9 @@ The doctor reports whether the token is present without showing it. If it report
 run `chmod 600 .env` and try again.
 
 After root Compile, use the generated application's README and the exact Rails error instead of rerunning Drawing
-Board setup or its doctor. The old tooling is under `design/`, and the existing container's PATH still reflects its
-pre-Compile layout. If a reconnect says the private-port refresh found an active listener, stop `bin/dev` before
-rerunning `design/script/refresh-codespaces-private-port`; do not weaken its listener guard.
+Board setup or its doctor. The old tooling is under `.firstdraft/design/`, and the existing container's PATH still
+reflects its pre-Compile layout. If a reconnect says the private-port refresh found an active listener, stop `bin/dev` before
+rerunning `.firstdraft/design/script/refresh-codespaces-private-port`; do not weaken its listener guard.
 
 If a Codespaces forwarded-port URL reaches Rails' **Blocked hosts** page, stop and tell your agent. Do not disable
 Rails host checks; the generated target must own that correction.

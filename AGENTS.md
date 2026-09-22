@@ -3,7 +3,7 @@
 This repository starts as a planning workspace. Help the user describe one application and maintain its current
 Foundation Plan through the installed `create-full-stack-app` Skill. The internal-alpha path compiles into this
 root, preserving its Git history and any existing remote while moving the original Drawing Board material under
-`design/`. The recommended template Codespace starts without a remote; Compile does not require one.
+`.firstdraft/design/`. The recommended template Codespace starts without a remote; Compile does not require one.
 A plain request such as "Make me an app that tracks my inventory" is enough to begin; do not require the user to
 name the Skill or translate the request into a command.
 
@@ -13,11 +13,11 @@ name the Skill or translate the request into a command.
 - Before Compile, the current candidate is `.firstdraft/foundation-plan.json`. Its sibling `state.json` is private
   CLI concurrency state: never print, paste, commit, edit as Plan content, or expose it to another service.
 - The planning `.firstdraft/` is ignored by Git. Review the current Plan directly; do not infer its state from a
-  Git diff. Root adoption moves this private state into `design/.firstdraft/`; the new root `.firstdraft/` contains
-  the generated app's submitted Plan and reviewed GapSet instead.
+  Git diff. Root adoption moves this private state into `.firstdraft/design/.firstdraft/`; the new root
+  `.firstdraft/` contains the generated app's submitted Plan and reviewed GapSet instead.
 - Present `bin/firstdraft plan compile --output .` as the internal-alpha completion mode. Obtain explicit approval
-  of the reviewed Plan, gaps, and relocation of this Drawing Board into `design/` before running it from the physical
-  workspace root. A generic Compile request does not authorize that relocation. If root eligibility fails, preserve
+  of the reviewed Plan, gaps, and relocation of this Drawing Board into `.firstdraft/design/` before running it from
+  the physical workspace root. A generic Compile request does not authorize that relocation. If root eligibility fails, preserve
   the workspace and explain the exact refusal; do not delete files or switch modes to force it through.
 - After root adoption, keep the existing `.git` and any remote. Inspect and commit the staged generated baseline,
   checking that no credentials are staged. Before setup or source edits, save it to the user's own **private**
@@ -25,9 +25,9 @@ name the Skill or translate the request into a command.
   Obtain approval of the owner and repository name, then verify the baseline arrived. If a remote already exists,
   show it and push there with approval instead. Never infer publication permission from Compile approval.
   Never run `script/initialize-application` or
-  `script/application-smoke`, including their copies under `design/`: those helpers require a separate nested app.
-  Run ordinary Rails commands at the new root. For later First Draft authoring commands, enter `design/` and use its
-  `bin/firstdraft`; do not rely on the original container's bare `firstdraft` PATH after relocation.
+  `script/application-smoke`, including their copies under `.firstdraft/design/`: those helpers require a separate
+  nested app. Run ordinary Rails commands at the new root. For later First Draft authoring commands, enter
+  `.firstdraft/design/` and use its `bin/firstdraft`; do not rely on the original container's bare `firstdraft` PATH after relocation.
 - If the user chooses the optional nested mode, run `bin/firstdraft plan compile --output ./application` into an
   absent destination. Then run root `script/initialize-application application` before setup or edits, followed by
   `script/application-smoke`. Only in this mode is `application/` an ignored, separate Git repository with no remote;
@@ -94,7 +94,7 @@ UI stack.
 
 For Codex reconnection, guide the user to `codex resume` at the same physical workspace root and the original
 conversation. After root adoption, use the generated root's instructions for ordinary source edits; do not restart
-Plan authoring or move the writing session into `design/` for a feature request.
+Plan authoring or move the writing session into `.firstdraft/design/` for a feature request.
 
 Follow the [beginner guide](README.md#6-save-your-app-to-github) for publishing the baseline and then pushing later
 commits. Deployment is optional application-development work when the user requests it, not another Compile
