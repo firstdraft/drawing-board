@@ -284,8 +284,8 @@ esac
     assert.equal(fs.readFileSync(statePath, "utf8"), "private");
   }
 
-  fs.mkdirSync(path.join(workspaceRoot, "design"));
-  fs.renameSync(path.join(workspaceRoot, "script"), path.join(workspaceRoot, "design", "script"));
+  fs.mkdirSync(path.join(workspaceRoot, ".firstdraft", "design"), {recursive: true});
+  fs.renameSync(path.join(workspaceRoot, "script"), path.join(workspaceRoot, ".firstdraft", "design", "script"));
   for (let attach = 0; attach < 2; attach += 1) {
     fs.writeFileSync(statePath, "private");
     fs.writeFileSync(logPath, "");
@@ -300,7 +300,7 @@ esac
   const adoptedListener = run({MOCK_LISTENER: "true"});
   assert.notEqual(adoptedListener.status, 0);
   assert.match(adoptedListener.stderr, /Refusing to re-register port 3000 while a listener is active/);
-  assert.match(adoptedListener.stderr, /rerun .*design\/script\/refresh-codespaces-private-port/);
+  assert.match(adoptedListener.stderr, /rerun .*\.firstdraft\/design\/script\/refresh-codespaces-private-port/);
   assert.equal(logLines().some((line) => line.includes(" visibility ")), false);
   assert.equal(fs.readFileSync(statePath, "utf8"), "private");
 
@@ -308,11 +308,11 @@ esac
   assert.equal(adoptedOutside.status, 0, adoptedOutside.stderr);
   assert.match(adoptedOutside.stdout, /skipped outside GitHub Codespaces/);
 
-  fs.renameSync(path.join(workspaceRoot, "design", "script"), path.join(workspaceRoot, "design", "missing-script"));
+  fs.renameSync(path.join(workspaceRoot, ".firstdraft", "design", "script"), path.join(workspaceRoot, ".firstdraft", "design", "missing-script"));
   fs.writeFileSync(logPath, "");
   const missingHelper = run();
   assert.notEqual(missingHelper.status, 0);
-  assert.match(missingHelper.stderr, /design\/script\/refresh-codespaces-private-port/);
+  assert.match(missingHelper.stderr, /\.firstdraft\/design\/script\/refresh-codespaces-private-port/);
   assert.deepEqual(logLines(), []);
   console.log("Codespaces post-attach contracts passed before and after root adoption, including listener guards.");
 } finally {
