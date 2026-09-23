@@ -322,9 +322,10 @@ An agent can publish an unpublished direct-template Codespace using its built-in
 the general `gh repo create` and `POST /user/repos` routes rejected that token in the live test. No additional login,
 PAT, or First Draft API command is needed for this route.
 
-First inspect and commit the baseline without credentials, confirm that no remote exists, and obtain approval of
-the personal owner, repository name, and private publication. If a remote already exists, use that approved remote
-instead. Run this from the Codespace's integrated terminal, substituting the approved name:
+First inspect and commit the baseline without real credentials or private CLI state, retaining reviewed public
+demo logins. Confirm that no remote exists and obtain approval of the personal owner, repository name, and private
+publication. If a remote already exists, use that approved remote instead. Run this from the Codespace's integrated
+terminal, substituting the approved name:
 
 ```sh
 gh api --method POST "/user/codespaces/$CODESPACE_NAME/publish" \
