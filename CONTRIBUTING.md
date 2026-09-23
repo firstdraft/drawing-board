@@ -15,7 +15,7 @@ A repository created from this template must provide one ready-to-use workspace 
 - bare `firstdraft` on the Codespace PATH resolves to `bin/firstdraft`, and AGENTS.md routes Skill-issued commands
   through that wrapper; and
 - the same container carries the current generated Foundation's Ruby and Node toolchain plus healthy PostgreSQL;
-  generated browser tests start the pinned Selenium service on demand, so the generated application can be
+  generated browser tests start Selenium on demand, so the generated application can be
   developed without a second Codespace.
 
 PostgreSQL health checks use TCP so the entrypoint's temporary Unix-socket-only initialization server cannot
@@ -63,7 +63,7 @@ The accepted cross-repository sequence and its safety boundaries live in
 | `script/agent-smoke` | Agent versions, PATH, commands, configuration, and shared Skill installation/discovery |
 | `script/refresh-codespaces-private-port` | Safe post-attach refresh for the private Rails forwarded-port registration |
 | `script/initialize-application` | Parentless nested Git initialization for direct-download output |
-| `script/selenium` | On-demand Selenium start, status, and stop inside the Dev Container |
+| `script/selenium` | Selenium lifecycle for template and optional nested-application qualification |
 | `script/application-smoke` | Setup, PostgreSQL, readiness, and full CI proof for a generated `./application` |
 
 The nested initializer follows the generated application's own ignore rules. The only artifact-owned paths allowed to
@@ -172,10 +172,15 @@ The candidate workflow does not move a stable or `latest` tag. The image receipt
 tree, workflow run, platforms, and manifest digest consumed by the template. The current receipt records both
 anonymous access and the retained comparison Codespace as passed. That exact Codespace also proved that
 `script/selenium` resolves the Compose project from its runtime container identity; no speculative fallback was
-needed. The Docker-outside-of-Docker Feature reaches the host daemon: that host is a disposable VM in Codespaces,
-but it is the developer's own machine on the supported local path. Do not run an untrusted workspace or agent with
-that socket mounted. The workspace starts only its exact Compose-owned Selenium service when
-`script/application-smoke` or `script/selenium start` requests browser proof.
+needed. The helper remains in use by `script/application-smoke` for the optional nested application and by
+`script/devcontainer-smoke` to verify that workspace setup has not started Selenium. Root-adopted applications use
+their generated `.devcontainer/compose.yaml` and the running container's Compose project, as shown in the
+[browser-testing instructions](README.md#7-open-your-app). The generated health check uses Selenium's supplied
+`/opt/bin/check-grid.sh`; Compose owns readiness for that command and fresh generated Dev Container startup.
+
+The Docker-outside-of-Docker Feature reaches the host daemon: that host is a disposable VM in Codespaces, but it is
+the developer's own machine on the supported local path. Do not run an untrusted workspace or agent with that socket
+mounted. The planning workspace starts Selenium only when browser proof requests it.
 
 The runtime Dev Container opts the remote extension host into Node's supported `navigator` global through
 `extensions.supportNodeGlobalNavigator`. A 2026-09-01 browser-Codespaces observation found VS Code 1.133.0 and the
