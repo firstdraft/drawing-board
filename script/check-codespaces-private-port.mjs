@@ -284,8 +284,22 @@ esac
     assert.equal(fs.readFileSync(statePath, "utf8"), "private");
   }
 
-  fs.mkdirSync(path.join(workspaceRoot, ".firstdraft", "design"), {recursive: true});
-  fs.renameSync(path.join(workspaceRoot, "script"), path.join(workspaceRoot, ".firstdraft", "design", "script"));
+  const archiveRoot = path.join(workspaceRoot, ".firstdraft", "design");
+  const archivedScriptRoot = path.join(archiveRoot, "script");
+  const archivedRefresher = path.join(archivedScriptRoot, "refresh-codespaces-private-port");
+  fs.mkdirSync(archivedScriptRoot, {recursive: true});
+  fs.writeFileSync(archivedRefresher, "#!/bin/sh\nexit 99\n", {mode: 0o755});
+  fs.writeFileSync(statePath, "private");
+  fs.writeFileSync(logPath, "");
+  const preferredRoot = run();
+  assert.equal(preferredRoot.status, 0, preferredRoot.stderr);
+  assert.match(preferredRoot.stdout, /private visibility confirmed/);
+
+  const rootFailure = run({MOCK_PUBLIC_FAILURE: "true"});
+  assert.equal(rootFailure.status, 42, rootFailure.stderr);
+
+  fs.rmSync(archivedScriptRoot, {recursive: true});
+  fs.renameSync(path.join(workspaceRoot, "script"), archivedScriptRoot);
   for (let attach = 0; attach < 2; attach += 1) {
     fs.writeFileSync(statePath, "private");
     fs.writeFileSync(logPath, "");
@@ -308,13 +322,23 @@ esac
   assert.equal(adoptedOutside.status, 0, adoptedOutside.stderr);
   assert.match(adoptedOutside.stdout, /skipped outside GitHub Codespaces/);
 
-  fs.renameSync(path.join(workspaceRoot, ".firstdraft", "design", "script"), path.join(workspaceRoot, ".firstdraft", "design", "missing-script"));
-  fs.writeFileSync(logPath, "");
-  const missingHelper = run();
-  assert.notEqual(missingHelper.status, 0);
-  assert.match(missingHelper.stderr, /\.firstdraft\/design\/script\/refresh-codespaces-private-port/);
-  assert.deepEqual(logLines(), []);
-  console.log("Codespaces post-attach contracts passed before and after root adoption, including listener guards.");
+  const archivedFailure = run({MOCK_PUBLIC_FAILURE: "true"});
+  assert.equal(archivedFailure.status, 42, archivedFailure.stderr);
+
+  fs.chmodSync(archivedRefresher, 0o644);
+  for (const archivePresent of [true, false]) {
+    if (!archivePresent) fs.rmSync(archiveRoot, {recursive: true});
+    for (const listener of ["false", "true"]) {
+      fs.writeFileSync(logPath, "");
+      const noExecutableHelper = run({MOCK_LISTENER: listener});
+      assert.equal(noExecutableHelper.status, 0, noExecutableHelper.stderr);
+      assert.equal(noExecutableHelper.stdout, "");
+      assert.equal(noExecutableHelper.stderr, "");
+      assert.deepEqual(logLines(), []);
+      assert.equal(fs.readFileSync(statePath, "utf8"), "private");
+    }
+  }
+  console.log("Codespaces post-attach contracts passed with root, archived, and absent helpers, preserving helper failures.");
 } finally {
   fs.rmSync(temporaryRoot, {recursive: true, force: true});
 }

@@ -439,7 +439,10 @@ run `chmod 600 .env` and try again.
 After root Compile, use the generated application's README and the exact Rails error instead of rerunning Drawing
 Board setup or its doctor. The old tooling is under `.firstdraft/design/`, and the existing container's PATH still
 reflects its pre-Compile layout. If a reconnect says the private-port refresh found an active listener, stop `bin/dev` before
-rerunning `.firstdraft/design/script/refresh-codespaces-private-port`; do not weaken its listener guard.
+rerunning `.firstdraft/design/script/refresh-codespaces-private-port` if you retained that helper; do not weaken its
+listener guard. The current template skips this refresh when neither the original nor archived helper is executable,
+so removing the optional planning archive does not require recreating its tools. An older Codespace can retain its
+earlier attach command; see the [lifecycle details](CONTRIBUTING.md#work-on-the-template).
 
 If a Codespaces forwarded-port URL reaches Rails' **Blocked hosts** page, stop and tell your agent. Do not disable
 Rails host checks; the generated target must own that correction.
