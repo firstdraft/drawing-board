@@ -7,7 +7,7 @@ developing and testing the generated Rails Foundation in that same Codespace and
 remains the authentication provider, and the existing GitHub Publication flow remains available for callers that
 want a separate repository.
 
-The internal-alpha guide now selects CLI 0.3.0's `--output .` mode after explicit approval of the Plan, gaps, and
+The internal-alpha guide selects `--output .` mode after explicit approval of the Plan, gaps, and
 move of existing Drawing Board files into `.firstdraft/design/`. Git history and any existing remote remain in place.
 The recommended direct-template Codespace starts without a remote; inspect and commit the staged baseline, then use
 VS Code's **Publish to GitHub** or the [Codespaces publication API](CONTRIBUTING.md#publish-from-the-codespace-terminal)
@@ -19,16 +19,21 @@ the earlier nested-first delivery sequence; they are not instructions to initial
 
 ## Current Skills source pin
 
-Drawing Board selects Skills source `384fb9422a0cdd2a4bd08b86d6ca677e20048225`, the source of published plugin
-`0.3.0`, with published CLI `0.3.0`. Both npm packages were observed on `latest` on September 22, 2026. This pair
-uses API `0.4` and Foundation Plan `sketch/0.20`. The runtime pins remain Ruby `4.0.5`, Node `24.18.0`, and
-PostgreSQL `18`, matching the generated Foundation. The agent selectors remain the vendors' latest public releases.
+The exact released CLI, Skills source, and runtime pins live in
+[`.devcontainer/agent-versions.env`](.devcontainer/agent-versions.env). The September 22 local release selected
+Skills `5f544bff149173a249899d2b5dfd403057cc5a30` (plugin `0.4.0`) and CLI `0.4.0`, both observed on npm `latest`.
+That pair uses API `0.4` and Foundation Plan `sketch/0.20`. Its
+[container CI](https://github.com/firstdraft/drawing-board/actions/runs/35808456552) and merged
+[prebuild](https://github.com/firstdraft/drawing-board/actions/runs/35808770746) passed at release tree `b173010a`.
+The image and runtime pins did not change. No fresh Codespace consumed the prebuild in this release.
 
-CLI `0.3.0` retains planning material at `.firstdraft/design/`; current guides and the post-attach hook use that
-path. The earlier receipts below retain the versions and paths they exercised. Registry availability and local
-contracts do not establish a fresh authenticated Codespace Compile; record the updated container CI and prebuild
-separately when they complete. Follow the [release handoff](CONTRIBUTING.md#release-handoff-and-periodic-tool-refresh)
-when updating these pins.
+CLI `0.4.0` defaults to local `--output .`, preserving planning material at `.firstdraft/design/`. GitHub Publication
+requires `--github`. The earlier receipts below retain the versions and paths they exercised. Follow the
+[release handoff](CONTRIBUTING.md#release-handoff-and-periodic-tool-refresh) when updating the pins.
+
+Earlier on September 22, Drawing Board `b4899909` selected Skills `384fb9422a0cdd2a4bd08b86d6ca677e20048225`
+(plugin `0.3.0`) with CLI `0.3.0`. That earlier tuple also used `.firstdraft/design/`, but its zero-flag Compilation
+selected GitHub Publication.
 
 The [September 15 release receipt](https://github.com/firstdraft/firstdraft/blob/c4ac120903d100622b6d625d650a8b26bd597eb8/docs/solutions/2026-09-15-account-settings-release.md)
 records the preceding Skills `0.2.5` / CLI `0.2.2` tuple, Drawing Board `aed9635a` container CI, and prebuild success.
