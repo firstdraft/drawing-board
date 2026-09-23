@@ -216,16 +216,21 @@ as the runtime discriminator and
 the current CLI's visibility command is the supported control surface. This is a containment for an observed
 provider registration defect, not a custom tunnel or application workaround.
 
-The `postAttachCommand` resolves that same helper at `script/refresh-codespaces-private-port` before root adoption
-and `.firstdraft/design/script/refresh-codespaces-private-port` afterward. This uses the standard
+The `postAttachCommand` runs the executable helper at `script/refresh-codespaces-private-port` first, or at
+`.firstdraft/design/script/refresh-codespaces-private-port` when only the archived helper remains. If neither is
+executable, it succeeds without changing port registration. Retained planning context is optional for application
+work; no helper is copied into generated application source to replace it. This uses the standard
 [Dev Container shell lifecycle](https://containers.dev/implementors/json_reference/#lifecycle-scripts), not a new
 service: the [reference implementation](https://github.com/devcontainers/cli/blob/main/src/spec-common/injectHeadless.ts)
 runs a string command in `/bin/sh` with the workspace as its working directory. An inline path selection survives
 the move even when the already-running container retains its original lifecycle configuration. Helper errors still
 propagate, including its active-listener refusal; no port policy changes with the path. The focused
-`script/check-codespaces-private-port.mjs` exercises the configured command before and after a fixture's `script/`
-directory moves under `.firstdraft/design/`, alongside the existing private-port and listener cases. That local proof
-is not a new Codespaces observation.
+`script/check-codespaces-private-port.mjs` exercises root precedence, archived execution, non-executable or removed
+helpers, and the existing private-port and listener cases. Both helper locations preserve actual failures; the
+guard does not turn a failed refresh into success. Existing containers can retain the lifecycle command recorded
+when they were created; this source change does not rewrite their provider metadata. These shell checks do not
+qualify fresh-template attachment or private preview after reattachment and stop/start. Those provider observations
+remain under [Service #730](https://github.com/firstdraft/firstdraft/issues/730).
 
 The repaired tunnel exposed the already-recorded generated Rails HostAuthorization boundary. Do not copy the
 student template's broad `config.hosts.clear` or disabled origin check into Drawing Board. Generated-app host and
