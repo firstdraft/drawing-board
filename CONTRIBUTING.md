@@ -32,7 +32,7 @@ setup or edits. Preserve and use an existing remote when the user chooses
 repository-first creation. Do not run the nested initializer or application smoke after root adoption, including their
 relocated copies. The optional `--output ./application` mode keeps an ignored, separate nested application; only that
 mode uses the initializer and application smoke. **Compile and publish through First Draft** selects the separate
-zero-flag Publication mode; **Create GitHub repository** saves the existing workspace and does not Compile again.
+`--github` Publication mode; **Create GitHub repository** saves the existing workspace and does not Compile again.
 The accepted cross-repository sequence and its safety boundaries live in
 [DIRECT_COMPILATION_PLAN.md](DIRECT_COMPILATION_PLAN.md).
 
@@ -231,13 +231,16 @@ future generated target revision.
 
 ## Release handoff and periodic tool refresh
 
-Drawing Board is a required consumer in the
+Drawing Board is a post-publication follow-up in the
 [coordinated release process](https://github.com/firstdraft/firstdraft/blob/main/RELEASE_COORDINATION.md#drawing-board-release-handoff).
-For each release, update `FIRSTDRAFT_CLI_VERSION` and `FIRSTDRAFT_SKILLS_REVISION` in
+After the service and packages are released, update `FIRSTDRAFT_CLI_VERSION` and `FIRSTDRAFT_SKILLS_REVISION` in
 `.devcontainer/agent-versions.env` to the published compatible CLI and the released plugin's exact source revision.
 Reconcile the wrapper, setup messages, guide, root-adoption paths, and affected fixtures. Run `script/check`, require
 the pull request's built-container CI, and verify the merged revision's prebuild before declaring the template ready.
 Record the selected pins and observed checks; installation and discovery do not prove authenticated Compilation.
+This update and its prebuild do not block package publication. Pins install during workspace setup, so changing
+them alone requires no workspace-image rebuild. Local development starts in an empty folder; this template serves
+the Codespaces fallback.
 
 Review tools weekly as well as during releases. Fresh setup already selects the vendors' latest public Claude and
 Codex releases; verify those installers still work with the template. Review the pinned First Draft CLI/Skills,
