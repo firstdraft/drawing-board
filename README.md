@@ -150,12 +150,22 @@ Both agents should use the installed First Draft Skill for this request. To sele
 Answer the agent's follow-up questions. It will turn your answers into a Foundation Plan, ask you to review the
 important choices, and show you anything the generated application will leave for later work.
 
+Expect the agent to propose a small set of fictional records for the first flow you want to try, using the features
+already in your Plan. If it includes locations or loans, the samples can show those relationships and states.
+Review the proposal with the Plan, including a disposable development login if supported and useful. You can
+choose to start empty instead; say so before Compile. An app without Accounts does not need a login.
+
+Reviewed public demo logins belong in the generated README, development seeds, and submitted Plan. Keep those
+values in the generated baseline; real owner/provider credentials, First Draft tokens, and private CLI state stay
+out of Git.
+
 When the Plan looks right, explicitly approve the root transition:
 
 > I approve this Plan and the gaps you showed me. Compile with --output . from this Drawing Board root. I approve
 > moving the existing Drawing Board material into .firstdraft/design/ while preserving this repository's Git history
-> and any existing remote. Inspect the staged result for credentials and commit the generated baseline before setup or source
-> edits. Then help me save it to my own private GitHub repository using step 6 below. Do not deploy.
+> and any existing remote. Check that no real credentials or private CLI state are staged; retain our reviewed
+> public demo logins. Commit the generated baseline before setup or source edits. Then help me save it to my own
+> private GitHub repository using step 6 below. Do not deploy.
 
 The agent runs `bin/firstdraft plan compile --output .`. Tracked Git changes must be clean, and
 `.firstdraft/design/` and the root-output recovery directory must not already exist. If the CLI refuses, preserve the workspace and ask the agent
@@ -163,7 +173,8 @@ to explain the exact reason; do not delete files to force it through.
 
 Root Compile moves the original planning files, including private CLI state and `.env`, into `.firstdraft/design/`.
 It stages the tracked moves and generated source in the **existing Git repository**; it does not create a second repository.
-After inspecting that staged result for credentials, the agent commits it as the untouched generated baseline.
+After checking that no real credentials or private CLI state are staged, the agent commits the untouched generated
+baseline, including its reviewed public demo values.
 An `origin` remote is not required for this Compile; any existing remote is preserved.
 The root `bin/` now belongs to the generated app, so bare `firstdraft` no longer runs the wrapper that loads `.env`
 and requires staging. For later First Draft authoring commands, change into `.firstdraft/design/` and use `bin/firstdraft`.
@@ -181,8 +192,9 @@ Codespace is your only copy. Stopping preserves its files; deleting it, includin
 [automatic expiry](https://docs.github.com/en/codespaces/setting-your-user-preferences/configuring-automatic-deletion-of-your-codespaces),
 removes them even if you made local commits.
 
-1. Have the agent confirm that the generated baseline is committed and contains no credentials. Keep
-   `.firstdraft/design/.env` and the private planning state ignored.
+1. Have the agent confirm that the baseline is committed and contains no real credentials or private CLI state.
+   Reviewed public demo logins in the README, development seeds, and submitted Plan are expected. Keep
+   `.firstdraft/design/.env` and private planning state ignored.
 2. In VS Code, open **Source Control** in the left sidebar. Select **Publish to GitHub**; depending on the editor,
    this button may say **Publish Branch**.
 3. Enter your app's repository name and select **Publish to GitHub private repository**. The new repository belongs
@@ -201,8 +213,9 @@ workspace privately; this uses the Codespace's existing GitHub credential and do
 
 If you created a repository before opening the Codespace, use its existing remote instead of creating another:
 
-> Show me the intended GitHub repository for this workspace. Confirm the generated baseline contains no
-> credentials, push that commit to the existing remote, and verify it arrived.
+> Show me the intended GitHub repository for this workspace. Confirm the generated baseline contains no real
+> credentials or private CLI state and retains our reviewed public demo values. Push that commit to the existing
+> remote and verify it arrived.
 
 Root Compile keeps **one Git history**. Publishing adds its first remote, or an existing remote stays in place.
 Continue committing and pushing from the application root as you work. If GitHub requests authorization, use its
@@ -211,16 +224,32 @@ Draft's optional Publication mode.
 
 ## 7. Open your app
 
-After the generated baseline is saved on GitHub, run the generated application's setup from the repository root:
+After the generated baseline is saved on GitHub, read its README and run setup from the repository root:
 
 ```sh
 bin/setup --skip-server
 ```
 
+Setup loads the emitted development samples when it initializes the database. Before opening the preview, ask the
+agent to compare the reviewed data with `db/seeds/development.rb` and the existing development records. If samples
+are present in that file but have not been loaded into an already prepared database, follow the generated README
+and run:
+
+```sh
+RAILS_ENV=development bin/rails db:seed
+```
+
+An explicit empty start needs no sample-loading step. Report data omitted by reviewed gaps instead of silently
+inventing replacements. Do not reset the database to fill the preview. Reseeding uses the generated lookup values;
+after you edit a sample, it can recreate the original record instead of updating your edit.
+
 Do **not** run `script/initialize-application` or `script/application-smoke` after root Compile, including their
 copies under `.firstdraft/design/`. They are only for the optional nested application. You can ask:
 
-> Set up and check the generated application, then start it and help me open its preview.
+> Follow the generated README to set up the app. Load our reviewed samples only if needed, then show me their
+> related records and states in the browser. If we chose an empty start, show me that empty state instead. If an
+> intended demo login was generated, sign in and check the first flow. Tell me what you actually verified and what
+> remains unavailable, then help me use the preview.
 
 To start it yourself, open a **new terminal** in the Codespace and run:
 
@@ -232,6 +261,15 @@ bin/dev
 Leave that terminal running. Open the Codespace's **Ports** tab, find port **3000**, and select **Open in Browser**
 (the globe icon). Keep the port **Private**. This is your development preview, available while the Codespace and app
 are running; it is not a deployed website.
+
+Check that the intended records, relationships, and states are visible. For an empty start, check the empty screen
+and its create action where available. For a generated demo Account, use the README's initial disposable login
+and exercise the intended signed-in flow. An omitted or unsupported Account is not a working login; keep that
+limitation visible. Successful setup alone does not prove the preview or sign-in works.
+
+Initial demo credentials are deliberately public development values, separate from your First Draft token and
+real owner, provider, or production credentials. If you changed the local demo password, use your chosen password;
+reseeding preserves it. Do not reset it just to match the README, or reuse a real password for a demo Account.
 
 Try a simple action, such as adding a plant. It is normal for parts of your idea to be missing: the agent should
 explain what was generated and what remains. You do not need to finish every feature before beginning to use and
@@ -302,6 +340,11 @@ works directly in the application at the root, using its README and normal Rails
 the feature in a **separate commit**. Run its focused tests and the broader checks above from that clean checkpoint;
 record baseline and feature results separately. Push the tested feature commit to the same repository and verify
 that it arrived. You can keep editing, testing, and refreshing the preview this way.
+
+When a UI change needs more examples, normally extend `db/seeds/development.rb`, then load and check the added
+records in development. Keep disposable samples and demo Accounts development-only, separate from reference data
+the app needs in every environment. Preserve existing passwords and inspect repeat-seed behavior after editing
+sample values; do not move demo records into all-environment seeds to make a preview look populated.
 
 You do **not** need another Compile for ordinary development. Compile creates a new starting point; it does not
 merge changes into the app you have been editing. Keep the planning files, but do not overwrite your application

@@ -21,8 +21,10 @@ name the Skill or translate the request into a command.
   the physical workspace root. A generic Compile request does not authorize that relocation. If root eligibility fails, preserve
   the workspace and explain the exact refusal; do not delete files or switch modes to force it through.
 - After root adoption, keep the existing `.git` and any remote. Inspect and commit the staged generated baseline,
-  checking that no credentials are staged. Before setup or source edits, save it to the user's own **private**
-  repository through VS Code's **Publish to GitHub** or the [Codespaces publication API](CONTRIBUTING.md#publish-from-the-codespace-terminal).
+  checking that no real credentials or private CLI state are staged. Reviewed public demo logins in the generated
+  README, development seeds, and submitted Plan are expected; preserve them. Before setup or source edits, save it
+  to the user's own **private** repository through VS Code's **Publish to GitHub** or the
+  [Codespaces publication API](CONTRIBUTING.md#publish-from-the-codespace-terminal).
   Obtain approval of the owner and repository name, then verify the baseline arrived. If a remote already exists,
   show it and push there with approval instead. Never infer publication permission from Compile approval.
   Never run `script/initialize-application` or
