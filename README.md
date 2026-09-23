@@ -285,17 +285,23 @@ Before changing anything, open those JSON files and read the generated models, c
 migrations, and tests. Ask which Rails APIs and established gems the app uses, and whether you would write it this
 way by hand. You do not need a separate First Draft web editor.
 
-Run the broader checks against the committed baseline. In the still-running Drawing Board container, start its
-existing browser-test service through the relocated helper:
+Run the broader checks against the committed baseline. From the application root in the still-running Drawing
+Board container, use the generated application's Compose file to start Selenium in the current container's project:
 
 ```sh
-.firstdraft/design/script/selenium start
+project="$(docker inspect --format '{{ index .Config.Labels "com.docker.compose.project" }}' "$HOSTNAME")"
+docker compose --project-name "$project" --file .devcontainer/compose.yaml up --detach --wait selenium
 CI=1 bin/ci
-.firstdraft/design/script/selenium stop
+docker compose --project-name "$project" --file .devcontainer/compose.yaml stop selenium
 ```
 
-Stop Selenium after the run, including after a failure. Its first image download can take a few minutes. This is
-the observed current-container path; do not rebuild the container or add a custom browser service to use it.
+Run the stop command even if CI fails; do not join it to the CI command with `&&`. Stopping only Selenium leaves
+Rails and PostgreSQL running. Its first image download can take a few minutes, then Compose waits for Selenium's
+health check. Selecting the current project puts the browser on the existing workspace's network.
+
+These commands use the Docker tooling already in the running Drawing Board container. A fresh Dev Container opened
+from the generated application starts Selenium through its normal Compose dependencies and waits for the same
+health check; follow that application's README for testing.
 
 If you explicitly chose Publication, open the private repository from the URL the agent provides. Create a
 Codespace there and follow its README instead; the original Drawing Board remains a separate planning workspace.

@@ -515,7 +515,11 @@ Codespace after proof or a recorded abort. Do not treat a local Docker rehearsal
 
 ## Compile into an existing root
 
-CLI 0.2.2 implements POSIX current-root adoption in any eligible real directory rather than recognizing Drawing
+For current root eligibility, archive paths, and later authoring commands, use the
+[root-Compile instructions](README.md#5-describe-your-app). The CLI owns the transaction details. The following
+contract records CLI 0.2.2 for the dated qualification below; it is historical.
+
+CLI 0.2.2 implemented POSIX current-root adoption in any eligible real directory rather than recognizing Drawing
 Board specially:
 
 ```sh
@@ -536,8 +540,12 @@ It never creates a Git repository, starts Publication, deploys, or substitutes f
 
 Drawing Board now selects root adoption for the internal-alpha handoff so the same conversation can move from Plan
 to inspectable source and an ordinary feature commit in one repository. The older nested path retains its separate
-initializer/smoke workflow. Root mode instead uses generated `bin/setup` and `bin/ci` at the root, with
-`design/script/selenium` for browser checks in the original running container; see the current README.
+initializer/smoke workflow. Root mode uses generated `bin/setup` and `bin/ci` at the root, starting Selenium through
+the generated `.devcontainer/compose.yaml` in the running container's Compose project. Compose waits for Selenium's
+health check; see the [current browser-testing instructions](README.md#7-open-your-app). The dated observations
+below retain the helpers and source they exercised. Current fallback qualification remains under
+[Service #729](https://github.com/firstdraft/firstdraft/issues/729) and
+[#730](https://github.com/firstdraft/firstdraft/issues/730), including private preview and fresh-template attachment.
 
 ### Observed current-root qualification on 2026-09-02
 
@@ -600,13 +608,12 @@ that time:
   private; and the exact Codespace reached `Shutdown` after one stop request. No Publication, package release,
   deployment, or application-repository push occurred.
 
-The comparison supports the existing mode split. Current-root adoption preserves one Git history and lets one agent
-carry the reviewed design directly into ordinary Rails work without a nested repository or second workspace. It also
-replaces the workspace layout in place, moves First Draft commands under `design/`, requires an immediate inspection
-and commit, and currently needs the relocated Selenium helper when qualification continues inside the container that
-predated the move. `./application` has a dedicated nested repository initializer followed by one-command smoke
-orchestration. The internal-alpha guide now favors `--output .` for its one-repository handoff and teaches the
-structural transition explicitly; no new CLI transaction or orchestration layer is implied by that choice.
+The comparison supported the mode split. At that checkpoint, root adoption preserved one Git history and let one
+agent carry the reviewed design into ordinary Rails work without a nested repository or second workspace. It moved
+First Draft commands under `design/`, required an immediate inspection and commit, and used the relocated Selenium
+helper inside the container that predated the move. The nested path used its dedicated initializer and smoke.
+Those observed paths remain historical. Use the current [root-Compile instructions](README.md#5-describe-your-app)
+and [browser-testing instructions](README.md#7-open-your-app).
 
 ## Ownership and sequencing
 
