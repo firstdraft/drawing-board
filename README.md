@@ -1,4 +1,9 @@
-# Build an app with First Draft
+# Build an app in Codespaces with First Draft
+
+For the primary local workflow, start with the
+[local development guide](https://gist.github.com/raghubetina/3d424a97a1eaa6de8c406e67f32a237e).
+It starts in an empty folder and does not require cloning this repository. Drawing Board provides the Codespaces
+fallback when you prefer a prepared cloud workspace.
 
 This repository is a workspace for building an app with Claude or Codex. Describe your idea, review the plan with
 your agent, and First Draft generates a Rails starting point at this repository's root. The original Drawing Board

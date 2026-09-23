@@ -15,7 +15,8 @@ name the Skill or translate the request into a command.
 - The planning `.firstdraft/` is ignored by Git. Review the current Plan directly; do not infer its state from a
   Git diff. Root adoption moves this private state into `.firstdraft/design/.firstdraft/`; the new root
   `.firstdraft/` contains the generated app's submitted Plan and reviewed GapSet instead.
-- Present `bin/firstdraft plan compile --output .` as the internal-alpha completion mode. Obtain explicit approval
+- Present `bin/firstdraft plan compile --output .` as the internal-alpha completion mode; CLI 0.4 also selects it
+  with `bin/firstdraft plan compile`. Obtain explicit approval
   of the reviewed Plan, gaps, and relocation of this Drawing Board into `.firstdraft/design/` before running it from
   the physical workspace root. A generic Compile request does not authorize that relocation. If root eligibility fails, preserve
   the workspace and explain the exact refusal; do not delete files or switch modes to force it through.
@@ -41,8 +42,8 @@ name the Skill or translate the request into a command.
   report the observed response, and stop. Do not edit or clear `config.hosts`, or add host-admission environment
   variables to the Drawing Board or the generated application.
 - **Create GitHub repository** means save the existing workspace privately, add `origin`, and push its commits;
-  it does not request another Compile. **Compile and publish through First Draft** explicitly selects zero-flag
-  `bin/firstdraft plan compile`, which compiles and creates a separate private artifact repository through the service.
+  it does not request another Compile. **Compile and publish through First Draft** selects
+  `bin/firstdraft plan compile --github`, which creates a separate private artifact repository through the service.
   Use VS Code's actual **Publish to GitHub** label for its UI. Never switch modes to recover from an ambiguous start.
   No Compile mode deploys the application.
 - Use `bin/firstdraft` for every First Draft command. When the installed Skill shows `firstdraft ...`, pass those
