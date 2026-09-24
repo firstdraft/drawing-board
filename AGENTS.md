@@ -59,10 +59,13 @@ name the Skill or translate the request into a command.
   have reached the service, follow the Skill's mode-specific recovery to choose the next command; confirmation
   alone is not a retry instruction.
 - Drawing Board setup creates `.env` from `.env.example` without overwriting it. The user pastes the staging token
-  there once. Never read, print, edit, or commit `.env`; do not ask for `/plugin` configuration, Codespaces secrets,
-  shell exports, or a GitHub PAT. Use `bin/agent-doctor --installation-only` for installation diagnostics and the
-  full `bin/agent-doctor` to add validation of the shared wrapper and `.env` without printing the token. These are
-  pre-Compile diagnostics; after root adoption, use the generated README and the exact Rails error.
+  into its `FIRSTDRAFT_API_TOKEN` entry; the wrapper passes it to the CLI as `FIRSTDRAFT_STAGING_API_TOKEN`. If the
+  CLI or Skill names that staging variable, keep `.env`'s key unchanged. If authentication is rejected, have the
+  user replace its value with a fresh staging token. Never read, print, edit, or commit `.env`; do not ask for
+  `/plugin` configuration, Codespaces secrets, shell exports, or a GitHub PAT. Use
+  `bin/agent-doctor --installation-only` for installation diagnostics and the full `bin/agent-doctor` to validate the
+  shared wrapper and `.env` without printing the token. These are pre-Compile diagnostics; after root adoption,
+  use the generated README and the exact Rails error.
 
 ## Collaboration and credentials
 

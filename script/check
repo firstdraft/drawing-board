@@ -235,7 +235,7 @@ if [[ ! "$FIRSTDRAFT_CLI_VERSION" =~ ^0\.[0-9]+\.[0-9]+$ ]]; then
 fi
 
 set +e
-git grep --untracked -IEn '(fd_[A-Za-z0-9_-]{20,}|FIRSTDRAFT_API_TOKEN=.+|gh[opsu]_[A-Za-z0-9]{20,})' \
+git grep --untracked -IEn '(fd_[A-Za-z0-9_-]{20,}|FIRSTDRAFT_(STAGING_)?API_TOKEN=.+|gh[opsu]_[A-Za-z0-9]{20,})' \
   -- . ':(exclude)script/check'
 credential_status=$?
 set -e

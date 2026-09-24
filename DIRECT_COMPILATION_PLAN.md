@@ -17,7 +17,7 @@ hosted Compile-to-publication journey. Never run the nested initializer or appli
 The optional `./application` and Publication paths remain available. The packets and dated receipts below preserve
 the earlier nested-first delivery sequence; they are not instructions to initialize a nested app after root Compile.
 
-## Current Skills source pin
+## Package pins and prior release observations
 
 The exact released CLI, Skills source, and runtime pins live in
 [`.devcontainer/agent-versions.env`](.devcontainer/agent-versions.env). The September 22 local release selected

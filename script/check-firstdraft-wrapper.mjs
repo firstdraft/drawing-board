@@ -17,6 +17,7 @@ try {
   const devcontainerDirectory = path.join(testRepository, ".devcontainer");
   const fakeCli = path.join(temporaryRoot, "firstdraft");
   const probeOutput = path.join(temporaryRoot, "probe.json");
+  const versionProbeOutput = path.join(temporaryRoot, "version-probe.json");
   fs.mkdirSync(devcontainerDirectory, {recursive: true});
   fs.copyFileSync(
     path.join(repositoryRoot, ".devcontainer", "agent-versions.env"),
@@ -25,26 +26,30 @@ try {
   fs.writeFileSync(fakeCli, `#!/usr/bin/env node
 const fs = require("node:fs");
 const arguments_ = process.argv.slice(2);
-if (arguments_.length === 1 && arguments_[0] === "--version") {
-  process.stdout.write("firstdraft " +
-    (process.env.FIRSTDRAFT_TEST_CLI_VERSION ?? "0.6.0") + "\\n");
-  if (process.env.FIRSTDRAFT_TEST_CLI_NOTICE) {
-    process.stderr.write("A benign version notice.\\n");
-  }
-  process.exit(0);
-}
-fs.writeFileSync(process.env.FIRSTDRAFT_TEST_OUTPUT, JSON.stringify({
+const probe = {
   apiUrl: process.env.FIRSTDRAFT_API_URL,
   arguments_,
-  tokenIsExpected: process.env.FIRSTDRAFT_API_TOKEN === "test-token",
-  tokenPresent: Boolean(process.env.FIRSTDRAFT_API_TOKEN),
+  stagingTokenIsExpected: process.env.FIRSTDRAFT_STAGING_API_TOKEN === "test-token",
+  stagingTokenPresent: Boolean(process.env.FIRSTDRAFT_STAGING_API_TOKEN),
+  productionTokenPresent: Object.prototype.hasOwnProperty.call(process.env, "FIRSTDRAFT_API_TOKEN"),
+  legacyUrlPresent: Object.prototype.hasOwnProperty.call(process.env, "FIRSTDRAFT_BASE_URL"),
   pluginOptionsPresent: [
     "CLAUDE_PLUGIN_OPTION_API_TOKEN",
     "CLAUDE_PLUGIN_OPTION_API_URL",
     "CLAUDE_PLUGIN_OPTION_api_token",
     "CLAUDE_PLUGIN_OPTION_api_url",
   ].some((key) => Object.prototype.hasOwnProperty.call(process.env, key)),
-}));
+};
+if (arguments_.length === 1 && arguments_[0] === "--version") {
+  fs.writeFileSync(process.env.FIRSTDRAFT_TEST_VERSION_OUTPUT, JSON.stringify(probe));
+  process.stdout.write("firstdraft " +
+    (process.env.FIRSTDRAFT_TEST_CLI_VERSION ?? "0.7.0") + "\\n");
+  if (process.env.FIRSTDRAFT_TEST_CLI_NOTICE) {
+    process.stderr.write("A benign version notice.\\n");
+  }
+  process.exit(0);
+}
+fs.writeFileSync(process.env.FIRSTDRAFT_TEST_OUTPUT, JSON.stringify(probe));
 `);
   fs.chmodSync(fakeCli, 0o755);
 
@@ -63,7 +68,8 @@ fs.writeFileSync(process.env.FIRSTDRAFT_TEST_OUTPUT, JSON.stringify({
   };
   const testEnvironment = {
     ...process.env,
-    FIRSTDRAFT_API_TOKEN: "ambient-token",
+    FIRSTDRAFT_API_TOKEN: "ambient-production-token",
+    FIRSTDRAFT_STAGING_API_TOKEN: "ambient-staging-token",
     FIRSTDRAFT_API_URL: "https://wrong.example.com",
     FIRSTDRAFT_BASE_URL: "https://legacy.example.com",
     CLAUDE_PLUGIN_OPTION_API_TOKEN: "uppercase-token",
@@ -71,6 +77,7 @@ fs.writeFileSync(process.env.FIRSTDRAFT_TEST_OUTPUT, JSON.stringify({
     CLAUDE_PLUGIN_OPTION_api_token: "lowercase-token",
     CLAUDE_PLUGIN_OPTION_api_url: "https://lowercase.example.com",
     FIRSTDRAFT_TEST_OUTPUT: probeOutput,
+    FIRSTDRAFT_TEST_VERSION_OUTPUT: versionProbeOutput,
   };
 
   assert.throws(
@@ -103,6 +110,10 @@ fs.writeFileSync(process.env.FIRSTDRAFT_TEST_OUTPUT, JSON.stringify({
   assert.equal(requiresApiToken(["generate", "uuid"]), false);
   assert.equal(requiresApiToken(["future", "network-command"]), true);
   assert.equal(requiresApiToken(["--version"]), false);
+  assert.equal(requiresApiToken(["--staging", "--version"]), false);
+  assert.equal(requiresApiToken(["--staging", "plan", "init", "--name", "Test"]), false);
+  assert.equal(requiresApiToken(["--staging", "generate", "uuid"]), false);
+  assert.equal(requiresApiToken(["--staging", "plan", "push"]), true);
   await assert.rejects(
     run({
       arguments_: ["plan", "push"],
@@ -127,9 +138,48 @@ fs.writeFileSync(process.env.FIRSTDRAFT_TEST_OUTPUT, JSON.stringify({
   assert.deepEqual(JSON.parse(fs.readFileSync(probeOutput, "utf8")), {
     apiUrl: "https://staging.firstdraft.com",
     arguments_: ["plan", "push"],
+    legacyUrlPresent: false,
     pluginOptionsPresent: false,
-    tokenIsExpected: true,
-    tokenPresent: true,
+    productionTokenPresent: false,
+    stagingTokenIsExpected: true,
+    stagingTokenPresent: true,
+  });
+  assert.deepEqual(JSON.parse(fs.readFileSync(versionProbeOutput, "utf8")), {
+    apiUrl: "https://staging.firstdraft.com",
+    arguments_: ["--version"],
+    legacyUrlPresent: false,
+    pluginOptionsPresent: false,
+    productionTokenPresent: false,
+    stagingTokenIsExpected: true,
+    stagingTokenPresent: true,
+  });
+
+  writeEnvironment();
+  const localResult = await run({
+    arguments_: ["--staging", "plan", "init", "--name", "Test"],
+    downstreamCli: fakeCli,
+    environment: testEnvironment,
+    root: testRepository,
+    stdio: "ignore",
+  });
+  assert.deepEqual(localResult, {signal: null, status: 0});
+  assert.deepEqual(JSON.parse(fs.readFileSync(probeOutput, "utf8")), {
+    apiUrl: "https://staging.firstdraft.com",
+    arguments_: ["--staging", "plan", "init", "--name", "Test"],
+    legacyUrlPresent: false,
+    pluginOptionsPresent: false,
+    productionTokenPresent: false,
+    stagingTokenIsExpected: false,
+    stagingTokenPresent: false,
+  });
+  assert.deepEqual(JSON.parse(fs.readFileSync(versionProbeOutput, "utf8")), {
+    apiUrl: "https://staging.firstdraft.com",
+    arguments_: ["--version"],
+    legacyUrlPresent: false,
+    pluginOptionsPresent: false,
+    productionTokenPresent: false,
+    stagingTokenIsExpected: false,
+    stagingTokenPresent: false,
   });
 
   const injectionMarker = path.join(temporaryRoot, "injected");
@@ -164,7 +214,7 @@ fs.writeFileSync(process.env.FIRSTDRAFT_TEST_OUTPUT, JSON.stringify({
       root: testRepository,
       stdio: "ignore",
     }),
-    /standalone First Draft CLI must be exactly 0\.6\.0/,
+    /standalone First Draft CLI must be exactly 0\.7\.0/,
   );
 } finally {
   fs.rmSync(temporaryRoot, {force: true, recursive: true});
