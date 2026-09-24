@@ -49,6 +49,7 @@ function readConfiguration(root = repositoryRoot) {
 }
 
 function requiresApiToken(arguments_) {
+  arguments_ = arguments_.filter((argument) => argument !== "--staging");
   if (arguments_.some((argument) => argument === "--help" || argument === "-h") ||
       arguments_.length === 0 || arguments_[0] === "--version") {
     return false;
@@ -91,9 +92,21 @@ async function run({
     throw new Error("the pinned standalone First Draft CLI is missing; rerun .devcontainer/setup-agents.");
   }
 
+  const childEnvironment = {
+    ...environment,
+    FIRSTDRAFT_STAGING_API_TOKEN: configuration.apiToken,
+    FIRSTDRAFT_API_URL: configuration.apiUrl,
+  };
+  delete childEnvironment.FIRSTDRAFT_API_TOKEN;
+  delete childEnvironment.FIRSTDRAFT_BASE_URL;
+  delete childEnvironment.CLAUDE_PLUGIN_OPTION_API_TOKEN;
+  delete childEnvironment.CLAUDE_PLUGIN_OPTION_API_URL;
+  delete childEnvironment.CLAUDE_PLUGIN_OPTION_api_token;
+  delete childEnvironment.CLAUDE_PLUGIN_OPTION_api_url;
+
   const version = spawnSync(downstreamCli, ["--version"], {
     encoding: "utf8",
-    env: environment,
+    env: childEnvironment,
   });
   const versionTokens = (version.stdout ?? "").trim().split(/\s+/);
   if (version.status !== 0 || version.signal || !versionTokens.includes(expected.cliVersion)) {
@@ -105,17 +118,6 @@ async function run({
       throw new Error("FIRSTDRAFT_API_TOKEN is blank; paste the staging token into .env.");
     }
   }
-
-  const childEnvironment = {
-    ...environment,
-    FIRSTDRAFT_API_TOKEN: configuration.apiToken,
-    FIRSTDRAFT_API_URL: configuration.apiUrl,
-  };
-  delete childEnvironment.FIRSTDRAFT_BASE_URL;
-  delete childEnvironment.CLAUDE_PLUGIN_OPTION_API_TOKEN;
-  delete childEnvironment.CLAUDE_PLUGIN_OPTION_API_URL;
-  delete childEnvironment.CLAUDE_PLUGIN_OPTION_api_token;
-  delete childEnvironment.CLAUDE_PLUGIN_OPTION_api_url;
 
   return await new Promise((resolve, reject) => {
     const child = spawn(downstreamCli, arguments_, {

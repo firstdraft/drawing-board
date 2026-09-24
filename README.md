@@ -26,6 +26,8 @@ You will need:
 - a Claude account with Claude Code access, or a ChatGPT account with Codex access.
 
 Use the same personal GitHub account to create the Codespace and sign in to First Draft.
+Drawing Board uses staging. The standalone CLI and Skill use production by default, so a token from
+`firstdraft.com` will not work in this workspace; create its token on `staging.firstdraft.com` instead.
 
 ## 1. Create your Drawing Board
 
@@ -435,6 +437,10 @@ bin/agent-doctor
 
 The doctor reports whether the token is present without showing it. If it reports an `.env` permissions problem,
 run `chmod 600 .env` and try again.
+
+If a present token is rejected, create a replacement at <https://staging.firstdraft.com/api-tokens> and replace the
+value on `.env`'s `FIRSTDRAFT_API_TOKEN` line. Keep that key name even when a CLI message says
+`FIRSTDRAFT_STAGING_API_TOKEN`; the Drawing Board wrapper translates it for you.
 
 After root Compile, use the generated application's README and the exact Rails error instead of rerunning Drawing
 Board setup or its doctor. The old tooling is under `.firstdraft/design/`, and the existing container's PATH still

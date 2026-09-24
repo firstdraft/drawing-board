@@ -368,7 +368,12 @@ Never commit a First Draft API token, GitHub token, agent credential, or generat
 repository for common credential shapes and verifies that `.env` remains ignored.
 
 The shared ignored `.env` is the credential path for both agents; do not add agent-specific token configuration.
-The template wrapper intentionally selects staging. Production defaults, GitHub Publication, and Service deployment
+The template wrapper intentionally selects staging. Its existing `.env` format keeps the staging token under
+`FIRSTDRAFT_API_TOKEN`; the wrapper maps it to the CLI's `FIRSTDRAFT_STAGING_API_TOKEN`, removes the production token
+and legacy plugin settings from the child environment, and overrides any inherited staging token. This applies to
+the version probe as well as the requested command. A blank `.env` token never falls back to shell credentials.
+The standalone CLI defaults to production and selects staging with `--staging`; Drawing Board's wrapper continues
+to select staging through its required URL. Production defaults, GitHub Publication, and Service deployment
 are owned by [firstdraft/firstdraft](https://github.com/firstdraft/firstdraft); Skill and plugin delivery are owned by
 [firstdraft/skills](https://github.com/firstdraft/skills).
 
