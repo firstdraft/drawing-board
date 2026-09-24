@@ -178,6 +178,11 @@ their generated `.devcontainer/compose.yaml` and the running container's Compose
 [browser-testing instructions](README.md#7-open-your-app). The generated health check uses Selenium's supplied
 `/opt/bin/check-grid.sh`; Compose owns readiness for that command and fresh generated Dev Container startup.
 
+Selenium uses its upstream session-request queue deadline, currently 300 seconds. The generated app's Ruby client
+retains its separate 60-second HTTP read timeout, so an unanswered session request can still fail sooner.
+The former 30-second override rejected a slow first browser start in Codespaces; the observation and remaining
+qualification are tracked in [Service #729](https://github.com/firstdraft/firstdraft/issues/729).
+
 The Docker-outside-of-Docker Feature reaches the host daemon: that host is a disposable VM in Codespaces, but it is
 the developer's own machine on the supported local path. Do not run an untrusted workspace or agent with that socket
 mounted. The planning workspace starts Selenium only when browser proof requests it.
