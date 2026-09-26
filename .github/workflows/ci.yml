@@ -21,7 +21,4 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: devcontainers/ci@513af61f4de4f75d37e4438f184ba4358f0fc1ca # v0.3.1900000450
-        with:
-          push: never
-          runCmd: FIRSTDRAFT_REQUIRE_IMAGE_SOURCE_COMMIT=1 script/check && script/check-depth-one && script/devcontainer-smoke && script/devcontainer-smoke
+      - uses: firstdraft/dockerfiles/drawing-board@1f3efee9456c201c9ae221dc01a7adef9fd2638b
