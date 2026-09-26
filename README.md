@@ -209,7 +209,7 @@ Publish **inside VS Code** so it adds the new remote and pushes your commits. Pu
 [VS Code's publishing guide](https://code.visualstudio.com/docs/sourcecontrol/repos-remotes#publish-to-github) and
 [GitHub's template publishing instructions](https://docs.github.com/en/codespaces/developing-in-a-codespace/creating-a-codespace-from-a-template#publishing-to-a-repository-on-github).
 
-Your agent can also [publish from the Codespace terminal](CONTRIBUTING.md#publish-from-the-codespace-terminal)
+Your agent can also [publish from the Codespace terminal](#publish-from-the-codespace-terminal)
 after you approve the private repository's name. Ask it to **Create GitHub repository** to save the existing
 workspace privately; this uses the Codespace's existing GitHub credential and does not Compile again.
 
@@ -245,8 +245,8 @@ An explicit empty start needs no sample-loading step. Report data omitted by rev
 inventing replacements. Do not reset the database to fill the preview. Reseeding uses the generated lookup values;
 after you edit a sample, it can recreate the original record instead of updating your edit.
 
-Do **not** run `script/initialize-application` or `script/application-smoke` after root Compile, including their
-copies under `.firstdraft/design/`. They are only for the optional nested application. You can ask:
+Do **not** run `script/initialize-application` after root Compile, including its copy under `.firstdraft/design/`.
+It is only for the optional nested application. You can ask:
 
 > Follow the generated README to set up the app. Load our reviewed samples only if needed, then show me their
 > related records and states in the browser. If we chose an empty start, show me that empty state instead. If an
@@ -367,6 +367,38 @@ Stopping a Codespace preserves its files; deleting it does not.
 
 Your source is yours to work on with another editor, agent, or developer.
 
+## Publish from the Codespace terminal
+
+An agent can publish an unpublished direct-template Codespace using its built-in `GITHUB_TOKEN`. Use GitHub's
+[Codespaces publication endpoint](https://docs.github.com/en/rest/codespaces/codespaces#create-a-repository-from-an-unpublished-codespace);
+the general `gh repo create` and `POST /user/repos` routes rejected that token in the live test. No additional login,
+PAT, or First Draft API command is needed for this route.
+
+First inspect and commit the baseline without real credentials or private CLI state, retaining reviewed public
+demo logins. Confirm that no remote exists and obtain approval of the personal owner, repository name, and private
+publication. If a remote already exists, use that approved remote instead. Run this from the Codespace's integrated
+terminal, substituting the approved name:
+
+```sh
+gh api --method POST "/user/codespaces/$CODESPACE_NAME/publish" \
+  -f name="my-app" -F private=true \
+  --jq '.repository | {full_name, private, html_url}'
+```
+
+Verify the returned owner/name and `private: true`. This creates the repository, associates the Codespace with it,
+and grants its token write access. It does not add local `origin` or push commits. From the generated application's
+Git root, use the returned repository URL:
+
+```sh
+git remote add origin https://github.com/OWNER/REPO.git && git push -u origin HEAD
+```
+
+Verify the remote baseline commit and retained `.firstdraft/design/` files before continuing. Later saves use
+ordinary commits and `git push`. If creation succeeds but the push fails, keep the repository and repair the reported push failure;
+do not create another repository. After an ambiguous API result, inspect the Codespace's repository association and
+the approved repository read-only before any retry. The [live receipt](https://github.com/firstdraft/dockerfiles/blob/main/drawing-board/docs/STARTUP_INVESTIGATION.md#publication-credentials)
+records private creation and two pushes using only the built-in token, with a small Git fixture.
+
 ## Optional: keep the app in `application/`
 
 Choose this mode **before** Compile if you want the Drawing Board to remain at the root. Approve
@@ -375,14 +407,16 @@ from the Drawing Board root before setup or source edits:
 
 ```sh
 script/initialize-application application
-script/application-smoke
+cd application
+bin/setup --skip-server
 ```
 
 The initializer gives `application/` its own initial Git commit. Continue inside that directory with `bin/dev` and
 normal Rails commands. The parent Drawing Board ignores it, so pushing the Drawing Board does **not** save the app.
 Ask the agent to create and push an approved private application repository before deleting the Codespace.
 If `application/` already exists, preserve it and ask the agent how to continue; do not overwrite or delete it to
-make room for another Compile. Do not run these nested helpers after root adoption.
+make room for another Compile. Do not run the nested initializer after root adoption. Run this app's ordinary tests using its README and the
+[generated Compose browser-testing recipe](#7-open-your-app).
 
 ## Optional: deploy later
 
@@ -448,9 +482,9 @@ reflects its pre-Compile layout. If a reconnect says the private-port refresh fo
 rerunning `.firstdraft/design/script/refresh-codespaces-private-port` if you retained that helper; do not weaken its
 listener guard. The current template skips this refresh when neither the original nor archived helper is executable,
 so removing the optional planning archive does not require recreating its tools. An older Codespace can retain its
-earlier attach command; see the [lifecycle details](CONTRIBUTING.md#work-on-the-template).
+earlier attach command; see the [lifecycle details](https://github.com/firstdraft/dockerfiles/blob/main/drawing-board/README.md#work-on-the-template).
 
 If a Codespaces forwarded-port URL reaches Rails' **Blocked hosts** page, stop and tell your agent. Do not disable
 Rails host checks; the generated target must own that correction.
 
-Maintaining this template? Read [CONTRIBUTING.md](CONTRIBUTING.md).
+Maintaining this template? Read the [maintainer guide](https://github.com/firstdraft/dockerfiles/blob/main/drawing-board/README.md).
