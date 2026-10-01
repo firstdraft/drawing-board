@@ -107,7 +107,7 @@ codex --version
 firstdraft --version
 
 printf '\nDrawing Board setup complete.\n'
-printf 'Next: paste your staging First Draft token into the `FIRSTDRAFT_API_TOKEN` entry in `.env`.\n'
+printf 'Next: create a token at https://firstdraft.com/api-tokens and paste it into the `FIRSTDRAFT_API_TOKEN` entry in `.env`.\n'
 printf 'Then run `claude` or `codex` and describe the app you want.\n'
 printf 'The internal-alpha path is `--output .`: approve moving this Drawing Board into `.firstdraft/design/`, then continue in the app at the root.\n'
 printf 'Keep the same Git repository; never run the nested application initializer after root adoption.\n'

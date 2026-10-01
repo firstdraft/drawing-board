@@ -22,12 +22,10 @@ finished product. Sharing code is enough for this test; deployment is optional.
 You will need:
 
 - a personal GitHub account;
-- access to <https://staging.firstdraft.com>; and
+- access to <https://firstdraft.com>; and
 - a Claude account with Claude Code access, or a ChatGPT account with Codex access.
 
 Use the same personal GitHub account to create the Codespace and sign in to First Draft.
-Drawing Board uses staging. The standalone CLI and Skill use production by default, so a token from
-`firstdraft.com` will not work in this workspace; create its token on `staging.firstdraft.com` instead.
 
 ## 1. Create your Drawing Board
 
@@ -60,7 +58,7 @@ so the first browser-test run may take a little longer while that service downlo
 
 ## 3. Sign in to First Draft
 
-1. Open <https://staging.firstdraft.com> in another browser tab.
+1. Open <https://firstdraft.com> in another browser tab.
 2. Select **Sign in with GitHub**.
 3. Leave that browser tab open so you can create the token in the next step.
 
@@ -75,7 +73,7 @@ existing repositories.
 
 ## 4. Add your First Draft token
 
-1. In First Draft, open <https://staging.firstdraft.com/api-tokens>.
+1. In First Draft, open <https://firstdraft.com/api-tokens>.
 2. Create a token and copy it.
 3. Return to the Codespace.
 4. In the file list, open `.env`.
@@ -178,8 +176,8 @@ It stages the tracked moves and generated source in the **existing Git repositor
 After checking that no real credentials or private CLI state are staged, the agent commits the untouched generated
 baseline, including its reviewed public demo values.
 An `origin` remote is not required for this Compile; any existing remote is preserved.
-The root `bin/` now belongs to the generated app, so bare `firstdraft` no longer runs the wrapper that loads `.env`
-and requires staging. For later First Draft authoring commands, change into `.firstdraft/design/` and use `bin/firstdraft`.
+The root `bin/` now belongs to the generated app, so bare `firstdraft` no longer runs the wrapper that loads `.env`.
+For later First Draft authoring commands, change into `.firstdraft/design/` and use `bin/firstdraft`.
 
 If you want First Draft to compile and create a separate private GitHub repository, say **Compile and publish
 through First Draft** before approving the Compile. The agent will use that distinct mode and give you the
@@ -472,9 +470,9 @@ bin/agent-doctor
 The doctor reports whether the token is present without showing it. If it reports an `.env` permissions problem,
 run `chmod 600 .env` and try again.
 
-If a present token is rejected, create a replacement at <https://staging.firstdraft.com/api-tokens> and replace the
-value on `.env`'s `FIRSTDRAFT_API_TOKEN` line. Keep that key name even when a CLI message says
-`FIRSTDRAFT_STAGING_API_TOKEN`; the Drawing Board wrapper translates it for you.
+If a present token is rejected, create a replacement at <https://firstdraft.com/api-tokens> and replace the value
+on `.env`'s `FIRSTDRAFT_API_TOKEN` line. Drawing Board uses this token, so do this even when a CLI message suggests
+`firstdraft login`.
 
 After root Compile, use the generated application's README and the exact Rails error instead of rerunning Drawing
 Board setup or its doctor. The old tooling is under `.firstdraft/design/`, and the existing container's PATH still
