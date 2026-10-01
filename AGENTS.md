@@ -50,7 +50,7 @@ name the Skill or translate the request into a command.
   Use VS Code's actual **Publish to GitHub** label for its UI. Never switch modes to recover from an ambiguous start.
   No Compile mode deploys the application.
 - Use `bin/firstdraft` for every First Draft command. When the installed Skill shows `firstdraft ...`, pass those
-  same arguments to this repository wrapper. It loads the ignored `.env`, requires staging, and launches the exact
+  same arguments to this repository wrapper. It loads the ignored `.env`, requires production, and launches the exact
   pinned standalone CLI for both Claude and Codex. Do not bypass it, call the service with improvised HTTP, or
   install another CLI version. Fresh Codespaces use the container as Codex's sandbox with on-request approvals;
   this does not authorize Compile, repository publication, or deployment. Preserve any user-selected sandbox
@@ -59,11 +59,11 @@ name the Skill or translate the request into a command.
   operation with the existing Plan and identities. Do not request the same approval again. If a request may already
   have reached the service, follow the Skill's mode-specific recovery to choose the next command; confirmation
   alone is not a retry instruction.
-- Drawing Board setup creates `.env` from `.env.example` without overwriting it. The user pastes the staging token
-  into its `FIRSTDRAFT_API_TOKEN` entry; the wrapper passes it to the CLI as `FIRSTDRAFT_STAGING_API_TOKEN`. If the
-  CLI or Skill names that staging variable, keep `.env`'s key unchanged. If authentication is rejected, have the
-  user replace its value with a fresh staging token. Never read, print, edit, or commit `.env`; do not ask for
-  `/plugin` configuration, Codespaces secrets, shell exports, or a GitHub PAT. Use
+- Drawing Board setup creates `.env` from `.env.example` without overwriting it. The user pastes a token from
+  `https://firstdraft.com/api-tokens` into its `FIRSTDRAFT_API_TOKEN` entry, and the wrapper passes it to the CLI.
+  Drawing Board uses that token instead of `firstdraft login`: if the CLI or Skill suggests logging in, or
+  authentication is rejected, have the user replace its value with a fresh token. Never read, print, edit, or commit
+  `.env`; do not ask for `/plugin` configuration, Codespaces secrets, shell exports, or a GitHub PAT. Use
   `bin/agent-doctor --installation-only` for installation diagnostics and the full `bin/agent-doctor` to validate the
   shared wrapper and `.env` without printing the token. These are pre-Compile diagnostics; after root adoption,
   use the generated README and the exact Rails error.

@@ -21,4 +21,4 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: firstdraft/dockerfiles/drawing-board@4e0ac33f4af3405c205eea04671beb918b5a0c76
+      - uses: firstdraft/dockerfiles/drawing-board@a28327a0f8900928592320bacf12ed6e1e2d42ec

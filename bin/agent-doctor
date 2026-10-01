@@ -82,17 +82,17 @@ check_shared_environment() {
 
   local api_url token_present
   IFS=$'\t' read -r api_url token_present <<<"$environment_record"
-  if [[ "$api_url" == "$FIRSTDRAFT_STAGING_API_URL" ]]; then
+  if [[ "$api_url" == "$FIRSTDRAFT_CLI_DEFAULT_API_URL" ]]; then
     printf '%-24s %s\n' "First Draft API URL" "$api_url"
   else
     printf '%-24s must be %s\n' \
-      "First Draft API URL" "$FIRSTDRAFT_STAGING_API_URL"
+      "First Draft API URL" "$FIRSTDRAFT_CLI_DEFAULT_API_URL"
     status=1
   fi
   if [[ "$token_present" == "true" ]]; then
     printf '%-24s present (value not shown)\n' "First Draft API token"
   else
-    printf '%-24s blank; paste the staging token into .env\n' "First Draft API token"
+    printf '%-24s blank; paste your First Draft token into .env\n' "First Draft API token"
     status=1
   fi
 }
