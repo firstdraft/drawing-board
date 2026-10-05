@@ -25,8 +25,11 @@ You need a personal GitHub account and a Claude account that includes Claude Cod
 
    ![The Codespace in your browser. Click Terminal at the bottom, type claude at the $ prompt, then press Enter.](images/codespace-type-claude.png)
 
-   Sign in with your Claude account. Claude shows a long link in the terminal: select all of it, copy it, and paste
-   it into a new browser tab.
+   Claude first asks you to choose a theme (dark or light), not to sign in. Press **Return** to accept the
+   default. If it asks anything else before showing a link, press **Return** again.
+
+   Then sign in with your Claude account. Claude shows a long link in the terminal: select all of it, copy it, and
+   paste it into a new browser tab.
 
    ![In the terminal, select the whole sign-in link that starts with https://claude.com, copy it, and paste it into a new browser tab.](images/claude-sign-in-link.png)
 
