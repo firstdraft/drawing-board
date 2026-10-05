@@ -20,10 +20,10 @@ You need a personal GitHub account and a Claude account that includes Claude Cod
    ![On the repo page, click Use this template, then Open in a codespace.](images/use-this-template.png)
 2. If VS Code asks, choose **Trust Folder & Continue**. Wait until the terminal at the bottom says
    `Drawing Board setup complete.`
-
-   ![The Codespace in your browser: files on the left, and the terminal at the bottom showing Drawing Board setup complete.](images/codespace-setup-complete.png)
 3. Click in the terminal, type `claude` and press Enter. If the terminal shows no `$` prompt, first open a new one
    from the &#9776; menu: **Terminal** &rarr; **New Terminal**.
+
+   ![The Codespace in your browser. Click Terminal at the bottom, type claude at the $ prompt, then press Enter.](images/codespace-type-claude.png)
 
    Sign in with your Claude account: open the link it shows, approve, and if the browser shows a code, paste it into
    the terminal. If pasting does nothing, press `Ctrl+C`, run `claude auth login`, and then `claude` again.
