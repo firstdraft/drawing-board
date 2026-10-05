@@ -99,7 +99,9 @@ is the quickest).
 1. **Workspace (`render-workspace`).** Run `bash ~/.workshop/render-workspace.sh`. It keeps a
    workspace that is already set, or sets the account's only one. If it prints `ASK:`, the account
    has several: show them the names, ask which one to use, and run it again with that workspace's
-   ID.
+   ID. Any one will do: it only makes the Render CLI work. Before each app's first deploy, the
+   deploy step has them create that app's own workspace and sets it, so they need not choose one
+   for their apps now.
 2. **Render on GitHub** (no check). Render needs permission to read the code they will put on
    GitHub later. Run `bash ~/.workshop/open.sh https://github.com/apps/render/installations/new`.
    On that GitHub page they choose their own account, choose **All repositories** (their app's
