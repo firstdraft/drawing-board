@@ -19,7 +19,7 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: firstdraft/dockerfiles/drawing-board/image@a28327a0f8900928592320bacf12ed6e1e2d42ec
+      - uses: firstdraft/dockerfiles/drawing-board/image@b3c4eb3570e67f2868ba5d1880dd561689c41210
 
   verify:
     needs: build
@@ -31,4 +31,4 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: firstdraft/dockerfiles/drawing-board/image/verify@a28327a0f8900928592320bacf12ed6e1e2d42ec
+      - uses: firstdraft/dockerfiles/drawing-board/image/verify@b3c4eb3570e67f2868ba5d1880dd561689c41210
