@@ -15,6 +15,8 @@ You need a personal GitHub account and a Claude account that includes Claude Cod
 
 1. Sign in to GitHub, open [firstdraft/drawing-board](https://github.com/firstdraft/drawing-board), and choose
    **Use this template** &rarr; **Open in a codespace**.
+
+   ![On the repo page, click Use this template, then Open in a codespace.](images/use-this-template.png)
 2. If VS Code asks, choose **Trust Folder & Continue**. Wait until the terminal at the bottom says
    `Drawing Board setup complete.`
 3. Click in the terminal (if it shows no `$` prompt, open a new one from the &#9776; menu: **Terminal** &rarr; **New
@@ -29,8 +31,10 @@ Have your workshop handout ready: First Draft asks for the workshop username and
 4. Type `/workshop-signin` and press Enter. Claude opens each sign-in page in a new browser tab and shows you any
    code. If VS Code asks whether to open the website, choose **Open**. Approve each one and tell Claude when you are
    done, until every account is signed in. GitHub is already signed in.
-   - For Cloudinary, which stores your app's photos, Claude opens a private file in the editor. You copy three
-     values from Cloudinary's website into it and save it; Claude saves them without showing them.
+   - For Cloudinary, which stores your app's photos, Claude opens a private file in the editor. You copy the three
+     values shown below from Cloudinary's website into it and save it; Claude saves them without showing them.
+
+     ![Cloudinary's API Keys page. Copy 1, the cloud name; 2, the API Key; 3, the API Secret, after clicking the eye to show it.](images/cloudinary-api-keys.png)
    - For Neon, if the page after you approve says "This site can't be reached", tell Claude. You then make a Neon
      API key and paste it into a private file the same way.
 
@@ -64,6 +68,8 @@ Have your workshop handout ready: First Draft asks for the workshop username and
     The first deploy takes a few minutes. Your live app starts with no data: the sample data is only in your
     Codespace. Sign up on the live app to try it: you are signed in right away. "Forgot password" emails are not
     sent until an email provider is set up.
+
+    ![In Render, click the workspace name at the top left, then New Workspace. Choose the free Hobby plan and name it after your app.](images/render-new-workspace.png)
 11. Try your app on a phone, in your browser:
     ```text
     Show me the Android app in Revyl.
