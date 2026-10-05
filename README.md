@@ -76,9 +76,6 @@ Have your workshop handout ready: First Draft asks for the workshop username and
     web app is public so the phone can reach it; Claude makes it private again when you are done.
 12. Make it yours. Ask for one change at a time, then try it in your Codespace. Some ideas:
     ```text
-    Limit posts to 280 characters.
-    ```
-    ```text
     Limit how many people someone can follow to 50.
     ```
     ```text
