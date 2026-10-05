@@ -2,6 +2,7 @@
 
 Use this if you cannot install programs on your laptop. Everything happens in a GitHub Codespace: VS Code in your
 browser, with every tool already installed. You type a request to Claude in its terminal, and Claude does the work.
+
 Plan on:
 
 - **Setting up your Codespace:** about 5 minutes.
@@ -19,10 +20,29 @@ You need a personal GitHub account and a Claude account that includes Claude Cod
    ![On the repo page, click Use this template, then Open in a codespace.](images/use-this-template.png)
 2. If VS Code asks, choose **Trust Folder & Continue**. Wait until the terminal at the bottom says
    `Drawing Board setup complete.`
-3. Click in the terminal (if it shows no `$` prompt, open a new one from the &#9776; menu: **Terminal** &rarr; **New
-   Terminal**), type `claude` and press Enter. Sign in with your Claude account: open the link it shows, approve,
-   and if the browser shows a code, paste it into the terminal. If pasting does nothing, press `Ctrl+C`, run
-   `claude auth login`, and then `claude` again.
+3. Click in the terminal, type `claude` and press Enter. If the terminal shows no `$` prompt, first open a new one
+   from the &#9776; menu: **Terminal** &rarr; **New Terminal**.
+
+   ![The Codespace in your browser. Click Terminal at the bottom, type claude at the $ prompt, then press Enter.](images/codespace-type-claude.png)
+
+   Sign in with your Claude account. Claude shows a long link in the terminal: select all of it, copy it, and paste
+   it into a new browser tab.
+
+   ![In the terminal, select the whole sign-in link that starts with https://claude.com, copy it, and paste it into a new browser tab.](images/claude-sign-in-link.png)
+
+   Click **Authorize**.
+
+   ![Claude's page asking to connect Claude Code to your Claude account. Click Authorize.](images/claude-authorize.png)
+
+   Click **Copy code**.
+
+   ![The Authentication code page. Click Copy code below the code.](images/claude-copy-code.png)
+
+   Go back to the Codespace tab, paste the code into the terminal after `Paste code here if prompted >`, and press
+   Enter. The code shows as stars. If pasting does nothing, press `Ctrl+C`, run `claude auth login`, and then
+   `claude` again.
+
+   ![Back in the terminal, paste the code after Paste code here if prompted. It shows as stars. Then press Enter.](images/claude-paste-code.png)
 
 ## Part 2: Sign in to your accounts
 
@@ -32,7 +52,9 @@ When you first try to sign in to First Draft, you'll hit a username/password wal
    code. If VS Code asks whether to open the website, choose **Open**. Approve each one and tell Claude when you are
    done, until every account is signed in. GitHub is already signed in.
    - For Cloudinary, which stores your app's photos, Claude opens a private file in the editor. You copy the three
-     values shown below from Cloudinary's website into it and save it; Claude saves them without showing them.
+     values shown below from Cloudinary's website into it, one after each `=`, and save it (`Ctrl+S`, or `Cmd+S` on
+     a Mac); Claude saves them without showing them. Before it shows the API Secret, Cloudinary may ask for your
+     password or a code it emails you.
 
      ![Cloudinary's API Keys page. Copy 1, the cloud name; 2, the API Key; 3, the API Secret, after clicking the eye to show it.](images/cloudinary-api-keys.png)
    - For Neon, if the page after you approve says "This site can't be reached", tell Claude. You then make a Neon
