@@ -77,6 +77,9 @@ Have your workshop handout ready: First Draft asks for the workshop username and
     web app is public so the phone can reach it; Claude makes it private again when you are done.
 12. Make it yours. Ask for one change at a time, then try it in your Codespace. Some ideas:
     ```text
+    Style it similar to Instagram.
+    ```
+    ```text
     Limit how many people someone can follow to 50.
     ```
     ```text
@@ -91,10 +94,14 @@ Each Codespace holds one app and saves it to one GitHub repository, so your own 
 13. Repeat Part 1 to open a new Codespace from [firstdraft/drawing-board](https://github.com/firstdraft/drawing-board).
 14. Type `/workshop-signin` again. Your accounts already exist, so each sign-in only needs your approval. Paste your
     Cloudinary values (and Neon key, if you made one) again: each Codespace keeps its own copy.
-15. Describe your idea:
+15. Have sketches, notes, design documents or spreadsheets for your idea? Drag them from your computer onto the
+    Explorer on the left side of VS Code, into the top folder. If you designed your app in Claude Design, choose
+    **Export** &rarr; **Hand off to Claude Code** there and copy what it gives you.
+16. Describe your idea:
     ```text
     /create-full-stack-app A place for my book club to pick the next book and vote on meeting dates.
     ```
+    Mention any files you added, and paste your Claude Design handoff after your idea.
 
 ## If something goes wrong
 
