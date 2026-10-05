@@ -62,37 +62,37 @@ check_workspace_cli() {
   fi
 }
 
-check_shared_environment() {
-  local environment_record
-  if ! environment_record="$(node -e '
-    const {readConfiguration} = require(process.argv[1]);
-    try {
-      const configuration = readConfiguration(process.argv[2]);
-      process.stdout.write(`${configuration.apiUrl}\t${configuration.apiToken.length > 0}`);
-    } catch (error) {
-      process.stderr.write(`${error.message}\n`);
-      process.exit(1);
-    }
-  ' "$repository_root/bin/firstdraft" "$repository_root")"; then
-    printf '%-24s invalid; restore from .env.example and keep mode 0600\n' \
-      "First Draft .env"
+check_firstdraft_login() {
+  local login_state
+  if ! login_state="$(node -e '
+    const {hasSavedLogin} = require(process.argv[1]);
+    process.stdout.write(String(hasSavedLogin(process.argv[2])));
+  ' "$repository_root/bin/firstdraft" "$FIRSTDRAFT_CLI_DEFAULT_API_URL" 2>/dev/null)"; then
+    printf '%-24s unreadable; run /workshop-signin again\n' "First Draft login"
     status=1
     return
   fi
-
-  local api_url token_present
-  IFS=$'\t' read -r api_url token_present <<<"$environment_record"
-  if [[ "$api_url" == "$FIRSTDRAFT_CLI_DEFAULT_API_URL" ]]; then
-    printf '%-24s %s\n' "First Draft API URL" "$api_url"
+  if [[ "$login_state" == "true" ]]; then
+    printf '%-24s saved for %s (token not shown)\n' "First Draft login" "$FIRSTDRAFT_CLI_DEFAULT_API_URL"
   else
-    printf '%-24s must be %s\n' \
-      "First Draft API URL" "$FIRSTDRAFT_CLI_DEFAULT_API_URL"
+    printf '%-24s missing; run /workshop-signin, or: firstdraft login --device\n' "First Draft login"
     status=1
   fi
-  if [[ "$token_present" == "true" ]]; then
-    printf '%-24s present (value not shown)\n' "First Draft API token"
+}
+
+check_workshop_helpers() {
+  local helper skill missing=""
+  for helper in auth.sh cloudinary.sh git-identity.sh login.sh neon-key.sh open.sh render-workspace.sh; do
+    [[ -x "$HOME/.workshop/$helper" ]] || missing="$missing $helper"
+  done
+  for skill in "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/skills/workshop-signin/SKILL.md" \
+    "$HOME/.agents/skills/workshop-signin/SKILL.md"; do
+    [[ -f "$skill" ]] || missing="$missing $skill"
+  done
+  if [[ -z "$missing" ]]; then
+    printf '%-24s ~/.workshop and /workshop-signin\n' "Workshop sign-in"
   else
-    printf '%-24s blank; paste your First Draft token into .env\n' "First Draft API token"
+    printf '%-24s missing:%s\n' "Workshop sign-in" "$missing"
     status=1
   fi
 }
@@ -102,7 +102,11 @@ check_version "Claude Code" latest claude --version
 check_version "Codex" "$CODEX_VERSION" codex --version
 check_version "First Draft CLI" "$FIRSTDRAFT_CLI_VERSION" \
   "$HOME/.local/bin/firstdraft" --version
+check_version "Render CLI" "v$RENDER_CLI_VERSION" render --version
+check_version "Neon CLI" "$NEONCTL_VERSION" neonctl --version
+check_version "Revyl CLI" "v$REVYL_CLI_VERSION" revyl --version
 check_workspace_cli
+check_workshop_helpers
 if ! node "$repository_root/.devcontainer/agent-skills.mjs" check \
   --checkout "$HOME/.cache/firstdraft/skills/$FIRSTDRAFT_SKILLS_REVISION" \
   --revision "$FIRSTDRAFT_SKILLS_REVISION" \
@@ -128,6 +132,6 @@ if [[ "$installation_only" == "true" ]]; then
   exit "$status"
 fi
 
-check_shared_environment
+check_firstdraft_login
 
 exit "$status"

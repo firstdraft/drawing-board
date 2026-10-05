@@ -1,11 +1,15 @@
 # AGENTS.md — First Draft Drawing Board
 
-This repository starts as a planning workspace. Help the user describe one application and maintain its current
-Foundation Plan through the installed `create-full-stack-app` Skill. The internal-alpha path compiles into this
-root, preserving its Git history and any existing remote while moving the original Drawing Board material under
-`.firstdraft/design/`. The recommended template Codespace starts without a remote; Compile does not require one.
-A plain request such as "Make me an app that tracks my inventory" is enough to begin; do not require the user to
-name the Skill or translate the request into a command.
+This repository starts as a planning workspace in a GitHub Codespace, the Codespaces version of the First Draft
+workshop's laptop kit. Help the user describe one application and maintain its current Foundation Plan through the
+installed `create-full-stack-app` Skill. Compile writes the app into this root, preserving its Git history and any
+existing remote while moving the original Drawing Board material under `.firstdraft/design/`. A plain request such as
+"Make me an app that tracks my inventory" is enough to begin; do not require the user to name the Skill or translate
+the request into a command.
+
+Setup also installs the workshop's app-session notes into the user-level `~/.claude/CLAUDE.md` and
+`~/.codex/AGENTS.md`, between `drawing-board-workshop` markers, because this file moves away at root Compile. Those
+notes own starting the web app, Cloudinary, Revyl previews, and the Render deploy; follow them.
 
 ## Working boundary
 
@@ -15,77 +19,90 @@ name the Skill or translate the request into a command.
 - The planning `.firstdraft/` is ignored by Git. Review the current Plan directly; do not infer its state from a
   Git diff. Root adoption moves this private state into `.firstdraft/design/.firstdraft/`; the new root
   `.firstdraft/` contains the generated app's submitted Plan and reviewed GapSet instead.
-- Present `bin/firstdraft plan compile --output .` as the internal-alpha completion mode; CLI 0.4 also selects it
-  with `bin/firstdraft plan compile`. Obtain explicit approval
-  of the reviewed Plan, gaps, and relocation of this Drawing Board into `.firstdraft/design/` before running it from
-  the physical workspace root. A generic Compile request does not authorize that relocation. If root eligibility fails, preserve
-  the workspace and explain the exact refusal; do not delete files or switch modes to force it through.
+- Run `bin/firstdraft plan compile --output .` from the physical workspace root. Obtain explicit approval of the
+  reviewed Plan, its gaps, and the move of this Drawing Board into `.firstdraft/design/` first; a generic Compile
+  request does not authorize that move. If root eligibility fails, preserve the workspace and explain the exact
+  refusal; do not delete files or switch modes to force it through.
 - After root adoption, keep the existing `.git` and any remote. Inspect and commit the staged generated baseline,
   checking that no real credentials or private CLI state are staged. Reviewed public demo logins in the generated
-  README, development seeds, and submitted Plan are expected; preserve them. Before setup or source edits, save it
-  to the user's own **private** repository through VS Code's **Publish to GitHub** or the
-  [Codespaces publication API](README.md#publish-from-the-codespace-terminal).
-  Obtain approval of the owner and repository name, then verify the baseline arrived. If a remote already exists,
-  show it and push there with approval instead. Never infer publication permission from Compile approval.
-  Never run `script/initialize-application`, including its copy under `.firstdraft/design/`: it requires a separate
-  nested app. Run ordinary Rails commands at the new root. For later First Draft authoring commands, enter
-  `.firstdraft/design/` and use its `bin/firstdraft`; do not rely on the original container's bare `firstdraft` PATH after relocation.
+  README, development seeds, and submitted Plan are expected; preserve them. When the user asks to save the app to
+  GitHub, [publish this Codespace](#save-the-app-to-github) to their own private repository, then verify the baseline
+  arrived. If a remote already exists, show it and push there instead. Never infer publication permission from
+  Compile approval. Never run `script/initialize-application`, including its copy under `.firstdraft/design/`: it
+  requires a separate nested app. Run ordinary Rails commands at the new root.
+- After root adoption, the bare `firstdraft` command runs the pinned CLI directly with the same saved login. For
+  later First Draft authoring commands, enter `.firstdraft/design/` and use its `bin/firstdraft`.
 - If the user chooses the optional nested mode, run `bin/firstdraft plan compile --output ./application` into an
-  absent destination. Then run root `script/initialize-application application` before setup or edits. Continue with the generated
-  README, `bin/setup --skip-server`, and ordinary application tests. For browser tests, start Selenium with the
-  [Compose recipe](README.md#7-open-your-app) from `application/` and stop it afterward.
-  Only in this mode is `application/` an ignored, separate Git repository with no remote;
-  continue with Rails commands inside it. Do not manufacture Git metadata or repair generated bytes by hand.
+  absent destination. Then run root `script/initialize-application application` before setup or edits, and continue
+  inside `application/` with its README and `bin/setup --skip-server`. Only in this mode is `application/` an
+  ignored, separate Git repository with no remote. Do not manufacture Git metadata or repair generated bytes by hand.
 - If `application/` already exists, preserve it. Never delete, overwrite, or move it merely to satisfy the absent-path
   precondition. Stop and ask the user whether to continue in the existing application, push its nested `main` to an
-  approved remote when that repository exists, or preserve it under the Drawing Board's ignored, bind-mounted `tmp/`
-  before starting a different Compile. Do not use `/tmp`, the container home, or another path that a Codespace
-  rebuild discards.
+  approved remote, or preserve it under the Drawing Board's ignored, bind-mounted `tmp/` before starting a different
+  Compile. Do not use `/tmp`, the container home, or another path that a Codespace rebuild discards.
 - If a Codespaces forwarded-port URL reaches Rails' **Blocked hosts** page, preserve the exact generated revision,
   report the observed response, and stop. Do not edit or clear `config.hosts`, or add host-admission environment
   variables to the Drawing Board or the generated application.
-- **Create GitHub repository** means save the existing workspace privately, add `origin`, and push its commits;
-  it does not request another Compile. **Compile and publish through First Draft** selects
-  `bin/firstdraft plan compile --github`, which creates a separate private artifact repository through the service.
-  Use VS Code's actual **Publish to GitHub** label for its UI. Never switch modes to recover from an ambiguous start.
-  No Compile mode deploys the application.
+- Do not use `plan compile --github`: the workshop saves this Codespace's own repository instead. No Compile mode
+  deploys the application.
 - Use `bin/firstdraft` for every First Draft command. When the installed Skill shows `firstdraft ...`, pass those
-  same arguments to this repository wrapper. It loads the ignored `.env`, requires production, and launches the exact
-  pinned standalone CLI for both Claude and Codex. Do not bypass it, call the service with improvised HTTP, or
-  install another CLI version. Fresh Codespaces use the container as Codex's sandbox with on-request approvals;
-  this does not authorize Compile, repository publication, or deployment. Preserve any user-selected sandbox
-  policy. If that policy blocks a command, request approval for the exact command rather than changing the policy.
-  After the user confirms authentication is configured or approves that command, resume the already authorized
-  operation with the existing Plan and identities. Do not request the same approval again. If a request may already
-  have reached the service, follow the Skill's mode-specific recovery to choose the next command; confirmation
-  alone is not a retry instruction.
-- Drawing Board setup creates `.env` from `.env.example` without overwriting it. The user pastes a token from
-  `https://firstdraft.com/api-tokens` into its `FIRSTDRAFT_API_TOKEN` entry, and the wrapper passes it to the CLI.
-  Drawing Board uses that token instead of `firstdraft login`: if the CLI or Skill suggests logging in, or
-  authentication is rejected, have the user replace its value with a fresh token. Never read, print, edit, or commit
-  `.env`; do not ask for `/plugin` configuration, Codespaces secrets, shell exports, or a GitHub PAT. Use
-  `bin/agent-doctor --installation-only` for installation diagnostics and the full `bin/agent-doctor` to validate the
-  shared wrapper and `.env` without printing the token. These are pre-Compile diagnostics; after root adoption,
-  use the generated README and the exact Rails error.
+  same arguments to this repository wrapper. It selects production, runs the exact pinned standalone CLI for both
+  Claude and Codex, and drops any inherited `FIRSTDRAFT_API_TOKEN`, so the CLI uses the login that
+  `firstdraft login --device` saved. Do not bypass it, call the service with improvised HTTP, or install another CLI
+  version. Fresh Codespaces use the container as Codex's sandbox with on-request approvals; this does not authorize
+  Compile, repository publication, or deployment. Preserve any user-selected sandbox policy. If that policy blocks a
+  command, request approval for the exact command rather than changing the policy. After the user confirms
+  authentication is configured or approves that command, resume the already authorized operation with the existing
+  Plan and identities. Do not request the same approval again. If a request may already have reached the service,
+  follow the Skill's mode-specific recovery to choose the next command; confirmation alone is not a retry
+  instruction.
+- Sign-in belongs to the user-invoked `/workshop-signin` Skill (`$workshop-signin` in Codex). If a First Draft
+  command reports `authentication_required`, or a Render, Neon, Revyl, or Cloudinary step needs a sign-in, ask the
+  user to run it; it redoes only what is missing. Use `bin/agent-doctor --installation-only` for installation
+  diagnostics and the full `bin/agent-doctor` to check the saved First Draft login without printing it. These are
+  pre-Compile diagnostics; after root adoption, use the generated README and the exact Rails error.
 
 ## Collaboration and credentials
 
 - Keep one agent as the Plan writer at a time. The other agent may perform a read-only review with
   `bin/review-plan-with-claude` or `bin/review-plan-with-codex`.
-- Never print, log, commit, or request a First Draft token in chat. The local `.env` is agent-readable development
-  credential delivery, not isolation from either agent; `bin/agent-doctor` reports presence only.
-- Never request a GitHub personal access token. Direct output creates no Publication or repository. If the user
-  explicitly selects **Compile and publish through First Draft**, it uses the GitHub account already connected to
-  First Draft and creates a fresh private repository, not a branch or pull request in this Drawing Board. Route an
-  installation-readiness failure back to First Draft's **Connect GitHub App** flow; do not improvise credentials.
+- Never print, log, commit, or request a credential in chat. Never read or print
+  `~/.config/firstdraft/credentials.json`, `~/.config/neon/`, `~/.render/`, `~/.revyl/`, or the files in
+  `~/.workshop/` that hold keys; the workshop helpers check them without showing them. Never request a GitHub
+  personal access token: the Codespace's built-in GitHub sign-in is enough.
 - Do not publish or release packages from this repository.
 - After root Compile succeeds, report the generated-baseline commit, remote or unpublished state, and root
-  `.firstdraft/submitted-foundation-plan.json` and `.firstdraft/gaps.json`. Make the private-repository checkpoint
-  visible immediately; afterward save later edits in separate commits and push to that repository when authorized.
-  In nested mode, report the nested initial commit and no-remote
-  boundary; before the Codespace is deleted, offer to create and push a remote only with the user's approval.
-  After explicit Publication succeeds, report the validated private GitHub URL and continue only in a separate
-  checkout when the user asks.
+  `.firstdraft/submitted-foundation-plan.json` and `.firstdraft/gaps.json`. In nested mode, report the nested
+  initial commit and no-remote boundary; before the Codespace is deleted, offer to create and push a remote only
+  with the user's approval.
+
+## Save the app to GitHub
+
+The Codespace's built-in `GITHUB_TOKEN` cannot run `gh repo create` or `POST /user/repos`. It can publish an
+unpublished template Codespace through GitHub's
+[Codespaces publication endpoint](https://docs.github.com/en/rest/codespaces/codespaces#create-a-repository-from-an-unpublished-codespace).
+First commit the baseline without real credentials or private CLI state, confirm that no remote exists, and agree
+the repository name with the user (for "a new private repository on my GitHub account", propose the app's name).
+From the Codespace's integrated terminal:
+
+```sh
+gh api --method POST "/user/codespaces/$CODESPACE_NAME/publish" \
+  -f name="my-app" -F private=true \
+  --jq '.repository | {full_name, private, html_url}'
+```
+
+Verify the returned owner/name and `private: true`. This creates the repository, associates the Codespace with it,
+and grants its token write access. It does not add `origin` or push. From the application's Git root:
+
+```sh
+git remote add origin https://github.com/OWNER/REPO.git && git push -u origin HEAD
+```
+
+Verify the remote baseline commit and retained `.firstdraft/design/` files, then give the user the link. Later saves
+use ordinary commits and `git push`. If creation succeeds but the push fails, keep the repository and repair the
+reported push failure; do not create another repository. After an ambiguous API result, inspect the Codespace's
+repository association and the approved repository read-only before any retry. A Codespace publishes only once;
+the README's Part 4 starts a new Codespace for another app.
 
 ## Continue after Compile
 
@@ -99,14 +116,24 @@ for continuation and `review-ui-consistency` for a requested review when availab
 directly. Carry forward the user's design references; an ordinary feature does not authorize replacing the app's
 UI stack.
 
-For Codex reconnection, guide the user to `codex resume` at the same physical workspace root and the original
-conversation. After root adoption, use the generated root's instructions for ordinary source edits; do not restart
-Plan authoring or move the writing session into `.firstdraft/design/` for a feature request.
+For browser tests from the application root in this still-running Drawing Board container, start Selenium from the
+generated application's Compose file in the current container's Compose project, and stop it afterward even if CI
+fails:
 
-Follow the [beginner guide](README.md#6-save-your-app-to-github) for publishing the baseline and then pushing later
-commits. Deployment is optional application-development work when the user requests it, not another Compile
-or a prerequisite for the internal-alpha test. Inspect that application's production configuration and current provider
-guides; prefer Rails conventions over new First Draft deployment machinery. Never infer permission to spend money,
-publish source, or expose private data from an earlier Compile approval.
+```sh
+project="$(docker inspect --format '{{ index .Config.Labels "com.docker.compose.project" }}' "$HOSTNAME")"
+docker compose --project-name "$project" --file .devcontainer/compose.yaml up --detach --wait selenium
+CI=1 bin/ci
+docker compose --project-name "$project" --file .devcontainer/compose.yaml stop selenium
+```
+
+Deploy with the generated `DEPLOY.md` and the workshop notes when the user asks. Use Render's free plan and a free
+Neon project; ask before anything billable, and never infer permission to spend money, publish source, or expose
+private data from an earlier Compile approval.
+
+For reconnection, the user reopens the same Codespace and resumes the original conversation at the same physical
+workspace root (`claude --continue`, or `codex resume`). After root adoption, use the generated root's instructions
+for ordinary source edits; do not restart Plan authoring or move the writing session into `.firstdraft/design/` for
+a feature request.
 
 Template maintenance lives in [firstdraft/dockerfiles](https://github.com/firstdraft/dockerfiles/tree/main/drawing-board).

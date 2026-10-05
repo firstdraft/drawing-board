@@ -45,31 +45,56 @@ mkdir -p \
   "$NPM_CONFIG_CACHE" \
   "$HOME/.local"
 
-firstdraft_environment="$repository_root/.env"
-if [[ ! -e "$firstdraft_environment" && ! -L "$firstdraft_environment" ]]; then
-  install -m 600 "$repository_root/.env.example" "$firstdraft_environment"
-fi
-if [[ -L "$firstdraft_environment" || ! -f "$firstdraft_environment" || \
-  ! -O "$firstdraft_environment" ]]; then
-  echo ".env must be a regular file owned by the devcontainer user." >&2
-  exit 1
-fi
-
-if firstdraft_environment_mode="$(stat -c '%a' "$firstdraft_environment" 2>/dev/null)"; then
-  :
-elif firstdraft_environment_mode="$(stat -f '%Lp' "$firstdraft_environment" 2>/dev/null)"; then
-  :
-else
-  echo "Could not inspect .env permissions." >&2
-  exit 1
-fi
-if [[ "$firstdraft_environment_mode" != "600" ]]; then
-  echo ".env must have mode 0600; run: chmod 600 .env" >&2
-  exit 1
-fi
-
 npm install --global --prefix "$HOME/.local" \
   "@firstdraft.com/cli@$FIRSTDRAFT_CLI_VERSION"
+npm install --global --prefix "$HOME/.local" "neonctl@$NEONCTL_VERSION"
+
+case "$(uname -m)" in
+  x86_64 | amd64)
+    release_architecture=amd64
+    render_cli_sha256="$RENDER_CLI_SHA256_AMD64"
+    revyl_cli_sha256="$REVYL_CLI_SHA256_AMD64"
+    ;;
+  aarch64 | arm64)
+    release_architecture=arm64
+    render_cli_sha256="$RENDER_CLI_SHA256_ARM64"
+    revyl_cli_sha256="$REVYL_CLI_SHA256_ARM64"
+    ;;
+  *)
+    echo "No pinned Render and Revyl CLIs for the $(uname -m) architecture." >&2
+    exit 1
+    ;;
+esac
+
+# Downloads one pinned release asset and stops unless it matches its pinned SHA-256.
+download_verified() {
+  local url="$1" expected="$2" destination="$3"
+  curl -fsSL -o "$destination" "$url"
+  node -e '
+    const [file, expected] = process.argv.slice(1);
+    const actual = require("node:crypto").createHash("sha256")
+      .update(require("node:fs").readFileSync(file)).digest("hex");
+    if (actual !== expected) {
+      console.error(`${file} has SHA-256 ${actual}, not the pinned ${expected}.`);
+      process.exit(1);
+    }
+  ' "$destination" "$expected"
+}
+
+workshop_downloads="$(mktemp -d)"
+download_verified \
+  "https://github.com/render-oss/cli/releases/download/v$RENDER_CLI_VERSION/cli_${RENDER_CLI_VERSION}_linux_${release_architecture}.zip" \
+  "$render_cli_sha256" "$workshop_downloads/render.zip"
+unzip -q -o "$workshop_downloads/render.zip" "cli_v$RENDER_CLI_VERSION" -d "$workshop_downloads"
+install -m 0755 "$workshop_downloads/cli_v$RENDER_CLI_VERSION" "$HOME/.local/bin/render"
+# Revyl's own installer uses ~/.revyl/bin; the PATH link lets every shell and agent find it.
+download_verified \
+  "https://github.com/RevylAI/revyl-cli/releases/download/v$REVYL_CLI_VERSION/revyl-linux-$release_architecture" \
+  "$revyl_cli_sha256" "$workshop_downloads/revyl"
+mkdir -p "$HOME/.revyl/bin"
+install -m 0755 "$workshop_downloads/revyl" "$HOME/.revyl/bin/revyl"
+ln -sfn "$HOME/.revyl/bin/revyl" "$HOME/.local/bin/revyl"
+rm -rf "$workshop_downloads"
 
 # Omitting a channel preserves user settings; a fresh installation defaults to latest.
 curl -fsSL https://claude.ai/install.sh | bash
@@ -102,14 +127,30 @@ node "$devcontainer_dir/agent-skills.mjs" link \
 
 node "$devcontainer_dir/configure-codex.mjs"
 
+# The laptop kit's sign-in helpers, sign-in Skill and app-session notes. Helpers and notes are
+# copied, not linked: root Compile moves this Drawing Board under .firstdraft/design/.
+workshop_source="$devcontainer_dir/workshop"
+install -d -m 0700 "$HOME/.workshop"
+for helper in auth.sh cloudinary.sh git-identity.sh login.sh neon-key.sh open.sh render-workspace.sh; do
+  install -m 0755 "$workshop_source/$helper" "$HOME/.workshop/$helper"
+done
+for skills_root in "$claude_skills_root" "$codex_skills_root"; do
+  mkdir -p "$skills_root/workshop-signin"
+  install -m 0644 "$workshop_source/skills/workshop-signin/SKILL.md" \
+    "$skills_root/workshop-signin/SKILL.md"
+done
+# Every Claude and Codex session loads these user-level files, before and after root Compile.
+node "$devcontainer_dir/workshop-notes.mjs" "$workshop_source/app-instructions.md" \
+  "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/CLAUDE.md" \
+  "${CODEX_HOME:-$HOME/.codex}/AGENTS.md"
+
 claude --version
 codex --version
 firstdraft --version
+render --version
+neonctl --version
+revyl --version
 
 printf '\nDrawing Board setup complete.\n'
-printf 'Next: create a token at https://firstdraft.com/api-tokens and paste it into the `FIRSTDRAFT_API_TOKEN` entry in `.env`.\n'
-printf 'Then run `claude` or `codex` and describe the app you want.\n'
-printf 'The internal-alpha path is `--output .`: approve moving this Drawing Board into `.firstdraft/design/`, then continue in the app at the root.\n'
-printf 'Keep the same Git repository; never run the nested application initializer after root adoption.\n'
-printf 'After root Compile, ask to "Create GitHub repository" to save this workspace privately (README step 6).\n'
-printf 'Choose "Compile and publish through First Draft" only for the separate Publication mode.\n'
+printf 'Next: run `claude` (or `codex`) and sign in, then type /workshop-signin (README Part 2).\n'
+printf 'Then start building with README Part 3.\n'
