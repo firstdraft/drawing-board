@@ -25,10 +25,24 @@ You need a personal GitHub account and a Claude account that includes Claude Cod
 
    ![The Codespace in your browser. Click Terminal at the bottom, type claude at the $ prompt, then press Enter.](images/codespace-type-claude.png)
 
-   Sign in with your Claude account: open the link it shows, approve, and if the browser shows a code, paste it into
-   the terminal. If pasting does nothing, press `Ctrl+C`, run `claude auth login`, and then `claude` again.
+   Sign in with your Claude account. Claude shows a long link in the terminal: select all of it, copy it, and paste
+   it into a new browser tab.
 
-   ![In the terminal, Claude shows a sign-in link. Open it, approve, and paste the code from the browser back into the terminal.](images/claude-sign-in.png)
+   ![In the terminal, select the whole sign-in link that starts with https://claude.com, copy it, and paste it into a new browser tab.](images/claude-sign-in-link.png)
+
+   Click **Authorize**.
+
+   ![Claude's page asking to connect Claude Code to your Claude account. Click Authorize.](images/claude-authorize.png)
+
+   Click **Copy code**.
+
+   ![The Authentication code page. Click Copy code below the code.](images/claude-copy-code.png)
+
+   Go back to the Codespace tab, paste the code into the terminal after `Paste code here if prompted >`, and press
+   Enter. The code shows as stars. If pasting does nothing, press `Ctrl+C`, run `claude auth login`, and then
+   `claude` again.
+
+   ![Back in the terminal, paste the code after Paste code here if prompted. It shows as stars. Then press Enter.](images/claude-paste-code.png)
 
 ## Part 2: Sign in to your accounts
 
