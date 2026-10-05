@@ -26,7 +26,7 @@ You need a personal GitHub account and a Claude account that includes Claude Cod
 
 ## Part 2: Sign in to your accounts
 
-Have your workshop handout ready: First Draft asks for the workshop username and password from it.
+When you first try to sign in to First Draft, you'll hit a username/password wall. Ask your instructor for that.
 
 4. Type `/workshop-signin` and press Enter. Claude opens each sign-in page in a new browser tab and shows you any
    code. If VS Code asks whether to open the website, choose **Open**. Approve each one and tell Claude when you are
