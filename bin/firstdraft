@@ -1,66 +1,12 @@
 #!/usr/bin/env node
 
 const fs = require("node:fs");
+const os = require("node:os");
 const path = require("node:path");
 const {spawn, spawnSync} = require("node:child_process");
 const {parseEnv} = require("node:util");
 
 const repositoryRoot = path.resolve(__dirname, "..");
-
-function readConfiguration(root = repositoryRoot) {
-  const environmentPath = path.join(root, ".env");
-  let metadata;
-
-  try {
-    metadata = fs.lstatSync(environmentPath);
-  } catch (error) {
-    if (error.code === "ENOENT") {
-      throw new Error(".env is missing; rerun .devcontainer/setup-agents.");
-    }
-    throw error;
-  }
-
-  if (metadata.isSymbolicLink() || !metadata.isFile()) {
-    throw new Error(".env must be a regular file, not a link.");
-  }
-  if (typeof process.getuid === "function" && metadata.uid !== process.getuid()) {
-    throw new Error(".env must be owned by the current user.");
-  }
-  if ((metadata.mode & 0o777) !== 0o600) {
-    throw new Error(".env must have mode 0600; run: chmod 600 .env");
-  }
-
-  let parsed;
-  try {
-    parsed = parseEnv(fs.readFileSync(environmentPath, "utf8"));
-  } catch {
-    throw new Error(".env is not valid dotenv syntax.");
-  }
-  const expectedKeys = ["FIRSTDRAFT_API_TOKEN", "FIRSTDRAFT_API_URL"];
-  const actualKeys = Object.keys(parsed).sort();
-  if (actualKeys.join("\0") !== expectedKeys.join("\0")) {
-    throw new Error(".env must contain only FIRSTDRAFT_API_URL and FIRSTDRAFT_API_TOKEN.");
-  }
-
-  return {
-    apiToken: parsed.FIRSTDRAFT_API_TOKEN,
-    apiUrl: parsed.FIRSTDRAFT_API_URL,
-  };
-}
-
-function requiresApiToken(arguments_) {
-  if (arguments_.some((argument) => argument === "--help" || argument === "-h") ||
-      arguments_.length === 0 || arguments_[0] === "--version") {
-    return false;
-  }
-
-  const command = `${arguments_[0] ?? ""} ${arguments_[1] ?? ""}`;
-  return !new Set([
-    "generate uuid",
-    "generate application-key",
-    "plan init",
-  ]).has(command);
-}
 
 function expectedConfiguration(root = repositoryRoot) {
   const versions = parseEnv(fs.readFileSync(
@@ -73,6 +19,37 @@ function expectedConfiguration(root = repositoryRoot) {
   };
 }
 
+// The CLI's own credentials path: an absolute XDG_CONFIG_HOME, otherwise ~/.config.
+function credentialsPath(environment = process.env) {
+  const configHome = environment.XDG_CONFIG_HOME;
+  const base = configHome && path.isAbsolute(configHome) ?
+    configHome :
+    path.join(environment.HOME ?? os.homedir(), ".config");
+  return path.join(base, "firstdraft", "credentials.json");
+}
+
+// Reports whether `firstdraft login` saved a token for the origin, without returning the token.
+function hasSavedLogin(apiUrl, environment = process.env) {
+  let source;
+  try {
+    source = fs.readFileSync(credentialsPath(environment), "utf8");
+  } catch (error) {
+    if (error.code === "ENOENT") return false;
+    throw error;
+  }
+  const token = JSON.parse(source).origins?.[apiUrl]?.access_token;
+  return typeof token === "string" && token.trim().length > 0;
+}
+
+// The CLI prefers an environment token to its saved login. Dropping inherited tokens keeps the
+// production login saved by `firstdraft login --device` as the workspace's only First Draft credential.
+function childEnvironment(environment, apiUrl) {
+  const child = {...environment, FIRSTDRAFT_API_URL: apiUrl};
+  delete child.FIRSTDRAFT_API_TOKEN;
+  delete child.FIRSTDRAFT_STAGING_API_TOKEN;
+  return child;
+}
+
 async function run({
   arguments_ = process.argv.slice(2),
   downstreamCli = path.join(process.env.HOME, ".local", "bin", "firstdraft"),
@@ -80,48 +57,21 @@ async function run({
   root = repositoryRoot,
   stdio = "inherit",
 } = {}) {
-  const configuration = readConfiguration(root);
   const expected = expectedConfiguration(root);
-
-  if (configuration.apiUrl !== expected.apiUrl) {
-    throw new Error(`FIRSTDRAFT_API_URL in .env must be ${expected.apiUrl}.`);
-  }
 
   if (!fs.existsSync(downstreamCli)) {
     throw new Error("the pinned standalone First Draft CLI is missing; rerun .devcontainer/setup-agents.");
   }
 
-  const childEnvironment = {
-    ...environment,
-    FIRSTDRAFT_API_TOKEN: configuration.apiToken,
-    FIRSTDRAFT_API_URL: configuration.apiUrl,
-  };
-  delete childEnvironment.FIRSTDRAFT_BASE_URL;
-  delete childEnvironment.CLAUDE_PLUGIN_OPTION_API_TOKEN;
-  delete childEnvironment.CLAUDE_PLUGIN_OPTION_API_URL;
-  delete childEnvironment.CLAUDE_PLUGIN_OPTION_api_token;
-  delete childEnvironment.CLAUDE_PLUGIN_OPTION_api_url;
-
-  const version = spawnSync(downstreamCli, ["--version"], {
-    encoding: "utf8",
-    env: childEnvironment,
-  });
+  const env = childEnvironment(environment, expected.apiUrl);
+  const version = spawnSync(downstreamCli, ["--version"], {encoding: "utf8", env});
   const versionTokens = (version.stdout ?? "").trim().split(/\s+/);
   if (version.status !== 0 || version.signal || !versionTokens.includes(expected.cliVersion)) {
     throw new Error(`the standalone First Draft CLI must be exactly ${expected.cliVersion}.`);
   }
 
-  if (requiresApiToken(arguments_)) {
-    if (configuration.apiToken.length === 0) {
-      throw new Error("FIRSTDRAFT_API_TOKEN is blank; paste your First Draft token into .env.");
-    }
-  }
-
   return await new Promise((resolve, reject) => {
-    const child = spawn(downstreamCli, arguments_, {
-      env: childEnvironment,
-      stdio,
-    });
+    const child = spawn(downstreamCli, arguments_, {env, stdio});
     child.once("error", reject);
     child.once("exit", (status, signal) => resolve({signal, status}));
   });
@@ -140,4 +90,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = {readConfiguration, requiresApiToken, run};
+module.exports = {childEnvironment, credentialsPath, expectedConfiguration, hasSavedLogin, run};
