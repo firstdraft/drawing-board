@@ -84,6 +84,10 @@ paste one into the chat.
   `render workspace set <ID> --confirm` with its ID. The sign-in's workspace only makes the CLI
   work. Before later `render` commands for an app, set its workspace again if another app's is
   active.
+- Render allows five Hobby workspaces per account. If the **New workspace** form shows Hobby as
+  "Limit reached" and offers Pro instead, never choose Pro or any paid plan. Deploy into an
+  existing workspace instead, the one with the fewest free web services, and tell the user the app
+  shares that workspace's 750 free hours.
 - Run `neonctl` only after `bash ~/.workshop/auth.sh check neon` passes: signed out, it starts a
   browser sign-in that cannot finish here. If it fails, the user runs `/workshop-signin`.
 - Never use `npx get-db`, `neon-new`, neon.new, `neon claim` or any other claimable or no-account
