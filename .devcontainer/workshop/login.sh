@@ -55,6 +55,12 @@ pid_file="$LOG_DIR/$service.pid"
 # The auth.sh check for this service: firstdraft-device -> firstdraft.
 check_service=${service%-device}
 
+# Is the sign-in still running? The Codespace's PID 1 (`sleep infinity`) does not reap exited
+# processes, so a finished sign-in stays a zombie that kill -0 still reports as alive.
+running() {
+    [ -n "${1:-}" ] && kill -0 "$1" 2>/dev/null && ! grep -qs '^State:[[:space:]]*Z' "/proc/$1/status"
+}
+
 stop_previous() {
     local pid
     pid=$(cat "$pid_file" 2>/dev/null) || return 0
@@ -70,7 +76,7 @@ if [ "$action" = stop ]; then
 fi
 if [ "$action" = status ]; then
     pid=$(cat "$pid_file" 2>/dev/null)
-    if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+    if running "$pid"; then
         echo "WAITING: the $service sign-in is still waiting for approval in the browser"
     elif grep -qi 'timed out' "$log" 2>/dev/null; then
         echo "TIMED OUT: the $service sign-in gave up before it was approved; start it again"
@@ -86,10 +92,10 @@ if [ "$action" = wait ]; then
     # approval, and then exits; checking right away would report a sign-in that is about to pass.
     pid=$(cat "$pid_file" 2>/dev/null)
     for _ in $(seq 1 60); do
-        [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null || break
+        running "$pid" || break
         sleep 0.5
     done
-    if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+    if running "$pid"; then
         echo "WAITING: the $service sign-in has not received the approval yet"
     fi
     exec bash "$(dirname "${BASH_SOURCE[0]}")/auth.sh" check "$check_service"
@@ -119,14 +125,14 @@ find_link() {
 # signed in", or an error).
 for _ in $(seq 1 60); do
     [ -n "$(find_link)" ] && break
-    kill -0 "$pid" 2>/dev/null || break
+    running "$pid" || break
     sleep 0.5
 done
 sleep 1   # let a one-time code printed just after the link arrive too
 
 clean=$(sed 's/\x1b\[[0-9;]*[A-Za-z]//g' "$log")
 
-if ! kill -0 "$pid" 2>/dev/null; then
+if ! running "$pid"; then
     rm -f "$pid_file"
     echo "FINISHED: the sign-in command exited without waiting for the browser. Its output:"
     printf '%s\n' "$clean" | tail -n 15
