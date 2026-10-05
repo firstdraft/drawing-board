@@ -10,6 +10,8 @@
 #   bash login.sh start <service>    render | neon | revyl | firstdraft-device | firstdraft
 #   bash login.sh stop <service>     cancel a sign-in that is still waiting
 #   bash login.sh status <service>   is it still waiting, or did it finish / time out?
+#   bash login.sh wait <service>     after the approval: give the sign-in up to 30 seconds to
+#                                    save, then run its auth.sh check
 #
 # Starting again cancels the previous attempt for that service, because its link no longer works
 # once a new one is created. Set WORKSHOP_NO_OPEN=1 to skip opening the browser (for tests).
@@ -44,7 +46,7 @@ case "$service" in
     # Desktop forwards, so the skill tries this second.
     firstdraft) command=(env -u FIRSTDRAFT_API_TOKEN FIRSTDRAFT_API_URL=https://firstdraft.com firstdraft login) ;;
     *)
-        echo "usage: login.sh start|stop|status render|neon|revyl|firstdraft-device|firstdraft"
+        echo "usage: login.sh start|stop|status|wait render|neon|revyl|firstdraft-device|firstdraft"
         exit 2 ;;
 esac
 
@@ -79,7 +81,20 @@ if [ "$action" = status ]; then
     fi
     exit 0
 fi
-[ "$action" = start ] || { echo "usage: login.sh start|stop|status <service>"; exit 2; }
+if [ "$action" = wait ]; then
+    # A device sign-in saves its credential on the CLI's next poll, a few seconds after the
+    # approval, and then exits; checking right away would report a sign-in that is about to pass.
+    pid=$(cat "$pid_file" 2>/dev/null)
+    for _ in $(seq 1 60); do
+        [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null || break
+        sleep 0.5
+    done
+    if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+        echo "WAITING: the $service sign-in has not received the approval yet"
+    fi
+    exec bash "$(dirname "${BASH_SOURCE[0]}")/auth.sh" check "$check_service"
+fi
+[ "$action" = start ] || { echo "usage: login.sh start|stop|status|wait <service>"; exit 2; }
 
 stop_previous
 : > "$log"
@@ -130,7 +145,7 @@ if [ -n "$url" ]; then
     fi
     echo "WAITING: the sign-in is running in the background until it is approved in the browser."
     [ -n "$expires_after" ] && echo "EXPIRES: this sign-in gives up ${expires_after} seconds after it started; the attendee must approve right away."
-    echo "After the attendee approves it, run: bash ~/.workshop/auth.sh check $check_service"
+    echo "After the attendee approves it, run: bash ~/.workshop/login.sh wait $service"
     exit 0
 fi
 

@@ -34,6 +34,7 @@ bash ~/.workshop/auth.sh check <service>
 bash ~/.workshop/login.sh start <service>   # render | neon | revyl | firstdraft-device | firstdraft
 bash ~/.workshop/login.sh stop <service>
 bash ~/.workshop/login.sh status <service>  # still waiting, ended, or timed out?
+bash ~/.workshop/login.sh wait <service>    # after the approval: let it save, then check
 bash ~/.workshop/render-workspace.sh        # after the Render sign-in (step 3)
 bash ~/.workshop/cloudinary.sh open|save    # Cloudinary key (step 3)
 bash ~/.workshop/neon-key.sh open|save      # Neon API key, only if Neon's browser sign-in fails
@@ -48,7 +49,7 @@ prints one of:
   **Open**. Also show the link as a clickable Markdown link, `[Open the sign-in page](<URL>)`, in
   case the page did not open. If there is a code, show it in **bold** so they can check it
   matches the page. Ask them to approve the sign-in and **tell you when they are done**, then run
-  `auth.sh check <service>`.
+  `login.sh wait <service>`: it gives the sign-in a few seconds to save, then prints its check.
 - `NOT OPENED`: the browser could not be opened; they click the link instead.
 - `EXPIRES`: this sign-in gives up after the stated number of seconds. Ask them to approve
   **right away**.
@@ -56,9 +57,11 @@ prints one of:
   `auth.sh check <service>`.
 - `NO LINK`: show the output and run `login.sh start <service>` once more.
 
-If a check still fails after they approved, run `login.sh status <service>` to see why, then
-`login.sh start <service>` again: each start makes a **new** link, and older links stop working,
-so only ever give them the newest one.
+If `login.sh wait` still ends in `[FAIL]`, run `login.sh status <service>` to see why. `WAITING`
+means the approval has not reached the sign-in yet: ask whether they finished approving, then run
+`login.sh wait <service>` again. Only after `ENDED` or `TIMED OUT`, run `login.sh start <service>`
+again: each start makes a **new** link, and older links stop working, so only ever give them the
+newest one.
 
 `open.sh` prints `OPENED` or `NOT OPENED` the same way: also show the link as a clickable
 Markdown link.
@@ -112,12 +115,13 @@ is not enough time to create an account. So before `login.sh start neon`:
    sign in, if they already have an account), using **Continue with GitHub**, which is quickest.
    They should finish any welcome screens until they see the Neon console, then tell you.
 2. Only then run `login.sh start neon`. They click to approve straight away.
-3. After approving, Neon sends their browser to a page on `127.0.0.1`. In VS Code on their
-   computer, that page says they are signed in and the check passes. In a browser tab, that page
-   usually cannot be reached ("This site can't be reached"); that is expected here, and the check
-   fails. If the check fails, run `login.sh status neon`: `TIMED OUT` after a reachable page
-   means they took over a minute, so start it again once and ask them to approve straight away.
-   Otherwise, run `login.sh stop neon` and use an API key instead:
+3. After approving, Neon sends their browser to a page on `127.0.0.1`. Ask what that page shows,
+   and run `login.sh wait neon`. In VS Code on their computer, the page says they are signed in
+   and the check passes. In a browser tab, the page usually cannot be reached ("This site can't be
+   reached"); that is expected here, and the check fails. If the page was reachable but
+   `login.sh status neon` says `TIMED OUT`, they took over a minute: start it again once and ask
+   them to approve straight away. If the page could not be reached, run `login.sh stop neon` and
+   use an API key instead:
    1. Run `bash ~/.workshop/open.sh https://console.neon.tech`. In the Neon console they open
       **Account settings** from their account menu, then **API keys**, click **Create new API
       key** (a personal key; any name, such as `workshop`), and copy the key. Neon shows it only
@@ -186,8 +190,8 @@ workshop handout. Before you start the sign-in, tell them what they will see:
 Then run `login.sh start firstdraft-device` and check, as above. The link includes the code, so
 they only approve; if the page asks for the code, it is the `CODE:`.
 
-If the check still fails after they approved, run `login.sh status firstdraft-device` and start
-it once more. Do not use `login.sh start firstdraft` in a browser tab: its approval returns to
+If `login.sh wait firstdraft-device` still fails after they approved, follow the retry steps above
+and start it once more. Do not use `login.sh start firstdraft` in a browser tab: its approval returns to
 `127.0.0.1`, which only VS Code on their computer can reach. If it fails twice, get the
 instructor.
 
