@@ -48,17 +48,27 @@ You need a personal GitHub account and a Claude account that includes Claude Cod
 
 When you first try to sign in to First Draft, you'll hit a username/password wall. Ask your instructor for that.
 
-4. Type `/workshop-signin` and press Enter. Claude opens each sign-in page in a new browser tab and shows you any
-   code. If VS Code asks whether to open the website, choose **Open**. Approve each one and tell Claude when you are
-   done, until every account is signed in. GitHub is already signed in.
-   - For Cloudinary, which stores your app's photos, Claude opens a private file in the editor. You copy the three
+4. Type `/workshop-signin` and press Enter. Claude signs you in to the services your app uses, **one at a time, in
+   the order below**. For each one, Claude opens its page in a new browser tab and shows you any code; if VS Code
+   asks whether to open the website, choose **Open**. Sign up or approve there, then come back and tell Claude
+   you're done. **Wait for Claude to ask before you start the next one.**
+   - **GitHub** stores your app's code. You're already signed in; Claude only sets the name and email on your
+     commits.
+   - **Render** puts your app on the internet.
+   - **Neon** runs your app's database on the internet. If the page after you approve says "This site can't be
+     reached", tell Claude. You then make a Neon API key and paste it into a private file, the same way as
+     Cloudinary below.
+   - **Cloudinary** stores the photos people upload to your app. Claude opens a private file in the editor. You copy the three
      values shown below from Cloudinary's website into it, one after each `=`, and save it (`Ctrl+S`, or `Cmd+S` on
      a Mac); Claude saves them without showing them. Before it shows the API Secret, Cloudinary may ask for your
      password or a code it emails you.
 
      ![Cloudinary's API Keys page. Copy 1, the cloud name; 2, the API Key; 3, the API Secret, after clicking the eye to show it.](images/cloudinary-api-keys.png)
-   - For Neon, if the page after you approve says "This site can't be reached", tell Claude. You then make a Neon
-     API key and paste it into a private file the same way.
+   - **Revyl** shows your iPhone and Android app on a phone in your browser.
+   - **First Draft** plans and builds your app. This is where the username and password wall appears: ask your
+     instructor.
+
+   When Claude says you're all signed in, go on to Part 3.
 
 ## Part 3: Build your first app
 
