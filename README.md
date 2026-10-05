@@ -2,6 +2,7 @@
 
 Use this if you cannot install programs on your laptop. Everything happens in a GitHub Codespace: VS Code in your
 browser, with every tool already installed. You type a request to Claude in its terminal, and Claude does the work.
+
 Plan on:
 
 - **Setting up your Codespace:** about 5 minutes.
@@ -19,10 +20,15 @@ You need a personal GitHub account and a Claude account that includes Claude Cod
    ![On the repo page, click Use this template, then Open in a codespace.](images/use-this-template.png)
 2. If VS Code asks, choose **Trust Folder & Continue**. Wait until the terminal at the bottom says
    `Drawing Board setup complete.`
-3. Click in the terminal (if it shows no `$` prompt, open a new one from the &#9776; menu: **Terminal** &rarr; **New
-   Terminal**), type `claude` and press Enter. Sign in with your Claude account: open the link it shows, approve,
-   and if the browser shows a code, paste it into the terminal. If pasting does nothing, press `Ctrl+C`, run
-   `claude auth login`, and then `claude` again.
+
+   ![The Codespace in your browser: files on the left, and the terminal at the bottom showing Drawing Board setup complete.](images/codespace-setup-complete.png)
+3. Click in the terminal, type `claude` and press Enter. If the terminal shows no `$` prompt, first open a new one
+   from the &#9776; menu: **Terminal** &rarr; **New Terminal**.
+
+   Sign in with your Claude account: open the link it shows, approve, and if the browser shows a code, paste it into
+   the terminal. If pasting does nothing, press `Ctrl+C`, run `claude auth login`, and then `claude` again.
+
+   ![In the terminal, Claude shows a sign-in link. Open it, approve, and paste the code from the browser back into the terminal.](images/claude-sign-in.png)
 
 ## Part 2: Sign in to your accounts
 
@@ -31,10 +37,16 @@ When you first try to sign in to First Draft, you'll hit a username/password wal
 4. Type `/workshop-signin` and press Enter. Claude opens each sign-in page in a new browser tab and shows you any
    code. If VS Code asks whether to open the website, choose **Open**. Approve each one and tell Claude when you are
    done, until every account is signed in. GitHub is already signed in.
+
+   ![VS Code asks whether to open the external website. Click Open.](images/vscode-open-website.png)
    - For Cloudinary, which stores your app's photos, Claude opens a private file in the editor. You copy the three
-     values shown below from Cloudinary's website into it and save it; Claude saves them without showing them.
+     values shown below from Cloudinary's website into it, one after each `=`, and save it (`Ctrl+S`, or `Cmd+S` on
+     a Mac); Claude saves them without showing them. Before it shows the API Secret, Cloudinary may ask for your
+     password or a code it emails you.
 
      ![Cloudinary's API Keys page. Copy 1, the cloud name; 2, the API Key; 3, the API Secret, after clicking the eye to show it.](images/cloudinary-api-keys.png)
+
+     ![The private file in the editor, with one line each for CLOUD_NAME, API_KEY and API_SECRET. Paste each value after its equals sign, then save.](images/cloudinary-private-file.png)
    - For Neon, if the page after you approve says "This site can't be reached", tell Claude. You then make a Neon
      API key and paste it into a private file the same way.
 
@@ -103,6 +115,8 @@ Each Codespace holds one app and saves it to one GitHub repository, so your own 
 15. Have sketches, notes, design documents or spreadsheets for your idea? Drag them from your computer onto the
     Explorer on the left side of VS Code, into the top folder. If you designed your app in Claude Design, choose
     **Export** &rarr; **Hand off to Claude Code** there and copy what it gives you.
+
+    ![Drag files from your computer onto the top folder in the Explorer on the left side of VS Code.](images/drag-files-to-explorer.png)
 16. Describe your idea:
     ```text
     /create-full-stack-app A place for my book club to pick the next book and vote on meeting dates.
