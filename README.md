@@ -51,16 +51,12 @@ When you first try to sign in to First Draft, you'll hit a username/password wal
 4. Type `/workshop-signin` and press Enter. Claude opens each sign-in page in a new browser tab and shows you any
    code. If VS Code asks whether to open the website, choose **Open**. Approve each one and tell Claude when you are
    done, until every account is signed in. GitHub is already signed in.
-
-   ![VS Code asks whether to open the external website. Click Open.](images/vscode-open-website.png)
    - For Cloudinary, which stores your app's photos, Claude opens a private file in the editor. You copy the three
      values shown below from Cloudinary's website into it, one after each `=`, and save it (`Ctrl+S`, or `Cmd+S` on
      a Mac); Claude saves them without showing them. Before it shows the API Secret, Cloudinary may ask for your
      password or a code it emails you.
 
      ![Cloudinary's API Keys page. Copy 1, the cloud name; 2, the API Key; 3, the API Secret, after clicking the eye to show it.](images/cloudinary-api-keys.png)
-
-     ![The private file in the editor, with one line each for CLOUD_NAME, API_KEY and API_SECRET. Paste each value after its equals sign, then save.](images/cloudinary-private-file.png)
    - For Neon, if the page after you approve says "This site can't be reached", tell Claude. You then make a Neon
      API key and paste it into a private file the same way.
 
@@ -129,8 +125,6 @@ Each Codespace holds one app and saves it to one GitHub repository, so your own 
 15. Have sketches, notes, design documents or spreadsheets for your idea? Drag them from your computer onto the
     Explorer on the left side of VS Code, into the top folder. If you designed your app in Claude Design, choose
     **Export** &rarr; **Hand off to Claude Code** there and copy what it gives you.
-
-    ![Drag files from your computer onto the top folder in the Explorer on the left side of VS Code.](images/drag-files-to-explorer.png)
 16. Describe your idea:
     ```text
     /create-full-stack-app A place for my book club to pick the next book and vote on meeting dates.
