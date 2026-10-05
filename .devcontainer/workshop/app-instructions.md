@@ -15,6 +15,12 @@ paste one into the chat.
   address. Open `https://$CODESPACE_NAME-3000.$GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN` for the
   user with `bash ~/.workshop/open.sh <URL>`, and also give them that link. Keep port 3000
   **private** for this; the user's own browser is signed in to GitHub and can open it.
+- To restart the web app, including after the Codespace was stopped and reopened: stop it if it is
+  running, wait until `ss -H -ltn 'sport = :3000'` prints nothing, then refresh port 3000 from
+  `/workspaces/drawing-board` with `.firstdraft/design/script/refresh-codespaces-private-port`
+  (`script/refresh-codespaces-private-port` if the app is in `application/`), and start it as
+  above. Without the refresh, the private address of a reopened Codespace can answer 502 while
+  the app runs. The script keeps the port private and refuses while anything listens on 3000.
 - Do not run `bin/ci` while the web app is running: its setup step reinstalls JavaScript packages
   and stops the JavaScript watcher. Stop the web app, run `bin/ci`, then start the web app again
   as above.
