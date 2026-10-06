@@ -47,12 +47,44 @@ check_render_workspace() {
     echo "${current#Active Workspace: }"
 }
 
+NEON_PERSONAL_KEY="create a personal key instead (Neon console, profile menu at the top right, Account settings, API keys; not the organization's API keys) and paste it into the same form: bash ~/.workshop/neon-key.sh open"
+
 check_neon() {
-    # Both the browser sign-in and a saved API key live in this file. 'neonctl me' starts a browser
-    # sign-in when signed out, so only ask it when the file exists, and never let it wait.
-    [ -s "$HOME/.config/neon/credentials.json" ] || { echo "not signed in"; return 1; }
-    timeout 20 neonctl me --output json </dev/null >/dev/null 2>&1 || { echo "sign-in expired or key rejected"; return 1; }
-    echo "signed in"
+    # Ask neonctl which credential it will use. 'profile list' reads it offline and never starts a
+    # sign-in; 'neonctl me' starts a browser sign-in when signed out, so it runs only after that.
+    local profiles scope output status reason
+    profiles=$(neonctl profile list --output json </dev/null 2>&1) || {
+        echo "neonctl could not read its sign-in: $(neon_reason "$profiles")"
+        return 1
+    }
+    scope=$(jq -r 'first(.[] | select(.active == "*")) | if .auth == "-" then "none" else .scope end' <<<"$profiles")
+    case "$scope" in
+        none | "") echo "not signed in"; return 1 ;;
+        # profile create accepts organization and project keys, but they cannot read the user
+        # ('neonctl me' gets "not allowed for organization API keys").
+        org\ * | project\ *) echo "the saved key is an organization or project API key; $NEON_PERSONAL_KEY"; return 1 ;;
+    esac
+    output=$(timeout 20 neonctl me --output json </dev/null 2>&1 >/dev/null)
+    status=$?
+    [ "$status" -eq 0 ] && { echo "signed in"; return 0; }
+    [ "$status" -eq 124 ] && { echo "neonctl did not answer within 20 seconds; check the internet connection and try again"; return 1; }
+    reason=$(neon_reason "$output")
+    case "$reason" in
+        *"organization API key"*) echo "the saved key is an organization API key; $NEON_PERSONAL_KEY" ;;
+        *"rejected"*) echo "Neon rejected the saved key ($reason); $NEON_PERSONAL_KEY" ;;
+        *) echo "neonctl me failed: $reason" ;;
+    esac
+    return 1
+}
+
+neon_reason() {
+    # neonctl's last error, first sentence only (the rest suggests neonctl commands the attendee
+    # should not run), with anything token-length redacted.
+    local line
+    line=$(printf '%s\n' "$1" | grep -v '^[[:space:]]*$' | tail -n 1)
+    line=${line#ERROR: }
+    line=${line%%. *}
+    printf '%s\n' "$line" | sed -E -e 's| \(/[^)]*\)||g' -e 's/[A-Za-z0-9_-]{24,}/[redacted]/g' | cut -c 1-200
 }
 
 check_cloudinary() {

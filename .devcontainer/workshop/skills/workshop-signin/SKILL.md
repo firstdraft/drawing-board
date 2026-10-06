@@ -124,15 +124,20 @@ is not enough time to create an account. So before `login.sh start neon`:
    `login.sh status neon` says `TIMED OUT`, they took over a minute: start it again once and ask
    them to approve straight away. If the page could not be reached, run `login.sh stop neon` and
    use an API key instead:
-   1. Run `bash ~/.workshop/open.sh https://console.neon.tech`. In the Neon console they open
-      **Account settings** from their account menu, then **API keys**, click **Create new API
-      key** (a personal key; any name, such as `workshop`), and copy the key. Neon shows it only
-      once.
+   1. Run `bash ~/.workshop/open.sh https://console.neon.tech`. They need a **personal** API
+      key. In the Neon console they open the profile menu at the top right, then **Account
+      settings**, then **API keys**, click **Create new API key** (any name, such as `workshop`),
+      and copy the key. Neon shows it only once. Tell them not to use the organization's
+      **Settings** > **API keys** page: an organization or project key saves, but neonctl cannot
+      use it to sign in.
    2. Run `bash ~/.workshop/neon-key.sh open`. It opens a private file in the editor. They paste
       the key after `NEON_API_KEY=` and save the file (Ctrl+S, or Cmd+S on a Mac), then tell you.
-   3. Run `bash ~/.workshop/neon-key.sh save` and follow what it prints (`NEXT:` or `INVALID:`:
-      pass on what it says and run `save` again after they fix the file). On `SAVED:`, run
-      `auth.sh check neon`.
+   3. Run `bash ~/.workshop/neon-key.sh save` and follow what it prints. `save` runs
+      `auth.sh check neon` itself, so `SAVED:` means Neon is done. On `NEXT:` or `INVALID:`,
+      pass on what it says and run `save` again after they fix the file. A key that is the wrong
+      kind (an organization or project key) or that Neon rejects is not a reason to get the
+      instructor: they create a new personal key as in step 1 and paste it into the same form in
+      place of the old one. Get the instructor only if a second personal key also fails.
 
 **Cloudinary has no sign-in command.** Their app needs Cloudinary's key, which they copy from
 Cloudinary's website into a private file in the editor, in three pieces. Never ask them to paste
