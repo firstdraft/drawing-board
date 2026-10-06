@@ -3,6 +3,11 @@
 Use this if you cannot install programs on your laptop. Everything happens in a GitHub Codespace: VS Code in your
 browser, with every tool already installed. You type a request to Claude in its terminal, and Claude does the work.
 
+**If you can install one program, install [VS Code](https://code.visualstudio.com/) first** and open the Codespace in
+it (step 2). Its terminal is much smoother than the browser's, and sign-ins are more likely to work on the first
+try. Your privacy stays the same: VS Code is only the window, and Claude and your app still run in the Codespace,
+with no access to your laptop's files.
+
 Plan on:
 
 - **Setting up your Codespace:** about 5 minutes.
@@ -20,6 +25,11 @@ You need a personal GitHub account and a Claude account that includes Claude Cod
    ![On the repo page, click Use this template, then Open in a codespace.](images/use-this-template.png)
 2. If VS Code asks, choose **Trust Folder & Continue**. Wait until the terminal at the bottom says
    `Drawing Board setup complete.`
+
+   **If you installed VS Code:** open the &#9776; menu and choose **Open in VS Code Desktop**. Let your browser open
+   VS Code, and if VS Code asks, install the **GitHub Codespaces** extension and sign in to GitHub. When the
+   Codespace opens in VS Code, close the browser tab and do the rest there. Open a terminal with **Terminal** &rarr;
+   **New Terminal**.
 3. Click in the terminal, type `claude` and press Enter. If the terminal shows no `$` prompt, first open a new one
    from the &#9776; menu: **Terminal** &rarr; **New Terminal**.
 
@@ -31,8 +41,9 @@ You need a personal GitHub account and a Claude account that includes Claude Cod
    Then sign in with your Claude account. Claude shows a long link in the terminal: select all of it, copy it, and
    paste it into a new browser tab.
 
-   Claude may also open a sign-in tab by itself. Close that tab without clicking anything: in a Codespace it ends
-   at "This site can't be reached". If you already clicked **Authorize** there, just use the terminal's link now.
+   Claude may also open a sign-in tab by itself. In the browser Codespace, close that tab without clicking
+   anything: it ends at "This site can't be reached". If you already clicked **Authorize** there, just use the
+   terminal's link now. In VS Code Desktop, that tab may work: if it signs you in, skip the rest of this step.
 
    ![In the terminal, select the whole sign-in link that starts with https://claude.com, copy it, and paste it into a new browser tab.](images/claude-sign-in-link.png)
 
@@ -62,8 +73,8 @@ When you first try to sign in to First Draft, you'll hit a username/password wal
      commits.
    - **Render** puts your app on the internet.
    - **Neon** runs your app's database on the internet. If the page after you approve says "This site can't be
-     reached", tell Claude. You then make a Neon API key and paste it into a private file, the same way as
-     Cloudinary below.
+     reached" (it always does in the browser Codespace), tell Claude. You then make a Neon API key and paste it
+     into a private file, the same way as Cloudinary below.
    - **Cloudinary** stores the photos people upload to your app. Claude opens a private file in the editor. You copy the three
      values shown below from Cloudinary's website into it, one after each `=`, and save it (`Ctrl+S`, or `Cmd+S` on
      a Mac); Claude saves them without showing them. Before it shows the API Secret, Cloudinary may ask for your
@@ -180,6 +191,12 @@ Each Codespace holds one app and saves it to one GitHub repository, so another i
   limited amount of Codespaces use each month.
 - Render's free plan sleeps when nobody visits, so the first visit afterwards takes about a minute.
 - To remove an app from the internet, ask Claude: `Delete this app's Render service and its Neon project.`
+
+## Using a plain terminal
+
+If you have the [GitHub CLI](https://cli.github.com/), `gh codespace ssh` connects your own terminal to your
+Codespace instead. Sign-in pages don't open by themselves there: Claude prints each link, and you open it in your
+browser.
 
 ## Using Codex
 
