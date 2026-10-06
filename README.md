@@ -31,6 +31,9 @@ You need a personal GitHub account and a Claude account that includes Claude Cod
    Then sign in with your Claude account. Claude shows a long link in the terminal: select all of it, copy it, and
    paste it into a new browser tab.
 
+   Claude may also open a sign-in tab by itself. Close that tab without clicking anything: in a Codespace it ends
+   at "This site can't be reached". If you already clicked **Authorize** there, just use the terminal's link now.
+
    ![In the terminal, select the whole sign-in link that starts with https://claude.com, copy it, and paste it into a new browser tab.](images/claude-sign-in-link.png)
 
    Click **Authorize**.
