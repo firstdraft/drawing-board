@@ -77,8 +77,9 @@ upgrade.
      commits.
    - **Render** puts your app on the internet.
    - **Neon** runs your app's database on the internet. If the page after you approve says "This site can't be
-     reached" (it always does in the browser Codespace), tell Claude. You then make a Neon API key and paste it
-     into a private file, the same way as Cloudinary below.
+     reached" (it always does in the browser Codespace), tell Claude. You then make a **personal** Neon API key
+     (profile menu at the top right, **Account settings**, **API keys**; not the organization's API keys) and
+     paste it into a private file, the same way as Cloudinary below.
    - **Cloudinary** stores the photos people upload to your app. Claude opens a private file in the editor. You copy the three
      values shown below from Cloudinary's website into it, one after each `=`, and save it (`Ctrl+S`, or `Cmd+S` on
      a Mac); Claude saves them without showing them. Before it shows the API Secret, Cloudinary may ask for your

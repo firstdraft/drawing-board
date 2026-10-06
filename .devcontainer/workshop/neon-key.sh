@@ -6,7 +6,8 @@
 # VS Code for the Web cannot reach. The attendee creates a personal API key in the Neon console
 # and pastes it into a private file in the editor; 'save' hands it to neonctl on stdin, and
 # neonctl checks it and keeps it in ~/.config/neon/credentials.json (mode 600), the same file its
-# browser sign-in uses.
+# browser sign-in uses. neonctl also accepts organization and project keys, which cannot read the
+# user ('neonctl me' fails), so 'save' then runs the auth.sh check and keeps the form if it fails.
 # Installed to ~/.workshop/neon-key.sh by .devcontainer/setup-agents; used by the sign-in skill.
 #
 #   bash neon-key.sh open      create the private form and open it in the editor
@@ -18,6 +19,7 @@ export PATH="$HOME/.local/bin:$PATH"
 export BROWSER=/bin/false
 
 WORKSHOP_DIR="$HOME/.workshop"
+HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 FORM_FILE="$WORKSHOP_DIR/neon-key.txt"
 AGAIN='then run: bash ~/.workshop/neon-key.sh save'
 
@@ -27,8 +29,9 @@ open_form() {
         (umask 077 && printf '%s\n' \
             "# Paste your Neon API key after the = sign, then save this file (Ctrl+S, or Cmd+S on a Mac)." \
             "# Do not paste it into the chat. Your agent saves it for neonctl without showing it, then deletes this file." \
-            "# Create the key in the Neon console: Account settings (in your account menu), API keys, Create new API key." \
-            "# Neon shows the key only once." \
+            "# Create a personal key in the Neon console: open the profile menu at the top right, then" \
+            "# Account settings, API keys, Create new API key. Not the organization's API keys (under the" \
+            "# organization's Settings): those cannot sign neonctl in. Neon shows the key only once." \
             "NEON_API_KEY=" > "$FORM_FILE") || { echo "[FAIL] could not write $FORM_FILE"; return 1; }
     fi
     if command -v code >/dev/null 2>&1 && code --reuse-window "$FORM_FILE" >/dev/null 2>&1; then
@@ -39,7 +42,7 @@ open_form() {
 }
 
 save() {
-    local line key="" output
+    local line key="" output check
     [ -f "$FORM_FILE" ] || { echo "INVALID: there is no form to read. Run: bash ~/.workshop/neon-key.sh open"; return 1; }
     while IFS= read -r line || [ -n "$line" ]; do
         [[ $line =~ ^[[:space:]]*(export[[:space:]]+)?NEON_API_KEY[[:space:]]*=[[:space:]]*[\"\']?([^\"\'[:space:]]*) ]] || continue
@@ -56,12 +59,16 @@ save() {
     fi
     # neonctl reads the key from stdin, never from a command line, and checks it with Neon first.
     if ! output=$(printf '%s\n' "$key" | timeout 60 neonctl profile create DEFAULT --api-key - 2>&1); then
-        echo "INVALID: neonctl did not accept the key. Ask the attendee to create a new key and paste it into the same file, $AGAIN. neonctl said:"
-        printf '%s\n' "$output" | tail -n 5
+        echo "INVALID: neonctl did not accept the key. Ask the attendee to create a new personal key (profile menu at the top right, Account settings, API keys) and paste it into the same file in place of the old one, $AGAIN. neonctl said:"
+        printf '%s\n' "$output" | tail -n 5 | sed -E 's/[A-Za-z0-9_-]{24,}/[redacted]/g'
+        return 1
+    fi
+    if ! check=$(bash "$HERE/auth.sh" check neon); then
+        echo "INVALID: neonctl stored the key, but it does not work: ${check#\[FAIL\] neon: }. The form was kept; the attendee pastes the new key in place of the old one and saves it, $AGAIN"
         return 1
     fi
     rm -f "$FORM_FILE"
-    echo "SAVED: neonctl is signed in with the API key (in ~/.config/neon/credentials.json, readable only by this user). The form was deleted; the attendee can close its editor tab. Run: bash ~/.workshop/auth.sh check neon"
+    echo "SAVED: neonctl is signed in with the API key (in ~/.config/neon/credentials.json, readable only by this user) and auth.sh check neon passes. The form was deleted; the attendee can close its editor tab."
 }
 
 case "${1:-}" in
