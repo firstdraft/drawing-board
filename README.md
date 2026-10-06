@@ -65,6 +65,10 @@ You need a personal GitHub account and a Claude account that includes Claude Cod
 
 When you first try to sign in to First Draft, you'll hit a username/password wall. Ask your instructor for that.
 
+Every service in this part has a free plan, and the free plan is all you need for the workshop. Some sites make
+it hard to find, or push a paid trial first: don't be fooled. Look for **Free**, **Hobby**, or a way to skip the
+upgrade.
+
 4. Type `/workshop-signin` and press Enter. Claude signs you in to the services your app uses, **one at a time, in
    the order below**. For each one, Claude opens its page in a new browser tab and shows you any code; if VS Code
    asks whether to open the website, choose **Open**. Sign up or approve there, then come back and tell Claude
