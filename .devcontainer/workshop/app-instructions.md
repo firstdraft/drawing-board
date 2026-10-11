@@ -1,16 +1,40 @@
 # Workshop apps in this Codespace
 
 Added by the Drawing Board. Where these notes differ from an app's own guides or a provider's
-guidance, follow these notes. Never print secrets, show a file that holds one, or ask the user to
-paste one into the chat.
+guidance, follow these notes, except on testing, where the app's `AGENTS.md` and README govern.
+Never print secrets, show a file that holds one, or ask the user to paste one into the chat.
 
 ## Files the user wants to use
 - The user adds files, such as a design zip, by dragging them into VS Code's file list. Unzip a
   design into the project folder before the first Compile. Compiling into the current folder keeps
   it under `.firstdraft/design/`.
 
+## Setup and specs
+- After Compile, set up the app, build its assets and run its specs as its README says, before the
+  first preview. In that first run, a `NotImplementedError` that names behavior listed under the
+  README's **Behavior to write** is work to do: write that behavior until its specs pass. Any other
+  failure in that run is a First Draft defect: tell the user which spec failed and its error. Never
+  edit or delete a generated spec to make it pass.
+- System specs need a Selenium browser that this Codespace does not start by itself. From the app's
+  root, start it before every spec run (all specs, one spec file, or `bin/ci`) and stop it
+  afterward, even when specs fail. Run these lines as one command, with your spec command in place
+  of `bundle exec rspec`. They run the specs only once the browser is ready, stop the browser
+  either way, and fail if any step fails. The app's Compose file starts the browser in this
+  Codespace's Compose project, where it and Rails can reach each other. The first start downloads
+  the browser image and can take a few minutes.
+
+  ```sh
+  spec_run_status=0
+  project="$(docker inspect --format '{{ index .Config.Labels "com.docker.compose.project" }}' "$HOSTNAME")" &&
+    docker compose --project-name "$project" --file .devcontainer/compose.yaml up --detach --wait selenium &&
+    bundle exec rspec || spec_run_status=$?
+  docker compose --project-name "$project" --file .devcontainer/compose.yaml stop selenium || spec_run_status=1
+  (exit "$spec_run_status")
+  ```
+
 ## Web app
-- Start the web app in the background and keep it running all session:
+- Once the specs have run after Compile, start the web app in the background and keep it
+  running all session:
   `bin/dev </dev/null >log/bin-dev.log 2>&1`. Rails already admits this Codespace's forwarded
   address. Open `https://$CODESPACE_NAME-3000.$GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN` for the
   user with `bash ~/.workshop/open.sh <URL>`, and also give them that link. Keep port 3000
