@@ -19,10 +19,10 @@ notes own starting the web app, Cloudinary, Revyl previews, and the Render deplo
 - The planning `.firstdraft/` is ignored by Git. Review the current Plan directly; do not infer its state from a
   Git diff. Root adoption moves this private state into `.firstdraft/design/.firstdraft/`; the new root
   `.firstdraft/` contains the generated app's submitted Plan and reviewed GapSet instead.
-- Run `bin/firstdraft plan compile --output .` from the physical workspace root. Obtain explicit approval of the
-  reviewed Plan, its gaps, and the move of this Drawing Board into `.firstdraft/design/` first; a generic Compile
-  request does not authorize that move. If root eligibility fails, preserve the workspace and explain the exact
-  refusal; do not delete files or switch modes to force it through.
+- Run `bin/firstdraft plan compile --output .` from the physical workspace root once the Skill's read-back allows
+  Compile. Moving this Drawing Board into `.firstdraft/design/` is the designed workshop path and needs no separate
+  approval. If root eligibility fails, preserve the workspace and explain the exact refusal; do not delete files or
+  switch modes to force it through.
 - After root adoption, keep the existing `.git` and any remote. Inspect and commit the staged generated baseline,
   checking that no real credentials or private CLI state are staged. Reviewed public demo logins in the generated
   README, development seeds, and submitted Plan are expected; preserve them. When the user asks to save the app to
@@ -40,9 +40,9 @@ notes own starting the web app, Cloudinary, Revyl previews, and the Render deplo
   precondition. Stop and ask the user whether to continue in the existing application, push its nested `main` to an
   approved remote, or preserve it under the Drawing Board's ignored, bind-mounted `tmp/` before starting a different
   Compile. Do not use `/tmp`, the container home, or another path that a Codespace rebuild discards.
-- If a Codespaces forwarded-port URL reaches Rails' **Blocked hosts** page, preserve the exact generated revision,
-  report the observed response, and stop. Do not edit or clear `config.hosts`, or add host-admission environment
-  variables to the Drawing Board or the generated application.
+- If a Codespaces forwarded-port URL reaches Rails' **Blocked hosts** page, add that exact forwarded host to
+  development's `config.hosts`, note it under "First Draft defects" in `.firstdraft/design/implementation-notes.md`,
+  and continue. Do not clear `config.hosts`.
 - Do not use `plan compile --github`: the workshop saves this Codespace's own repository instead. No Compile mode
   deploys the application.
 - Use `bin/firstdraft` for every First Draft command. When the installed Skill shows `firstdraft ...`, pass those
