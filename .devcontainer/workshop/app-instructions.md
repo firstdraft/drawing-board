@@ -11,10 +11,11 @@ Never print secrets, show a file that holds one, or ask the user to paste one in
 
 ## Setup and specs
 - After Compile, set up the app, build its assets and run its specs as its README says, before the
-  first preview. In that first run, a `NotImplementedError` that names behavior listed under the
-  README's **Behavior to write** is work to do: write that behavior until its specs pass. Any other
-  failure in that run is a First Draft defect: tell the user which spec failed and its error. Never
-  edit or delete a generated spec to make it pass.
+  first preview. In that first run, a spec that fails through behavior the README's
+  **Behavior to write** lists is work to do: write that behavior until its specs pass. A stub
+  raises `NotImplementedError`, and a deletion outcome First Draft left out fails its spec with
+  `RecordNotDestroyed`. Any other failure in that run is a First Draft defect: tell the user which
+  spec failed and its error. Never edit or delete a generated spec to make it pass.
 - System specs need a Selenium browser that this Codespace does not start by itself. From the app's
   root, start it before every spec run (all specs, one spec file, or `bin/ci`) and stop it
   afterward, even when specs fail. Run these lines as one command, with your spec command in place
