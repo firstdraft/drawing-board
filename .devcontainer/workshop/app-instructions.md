@@ -10,14 +10,8 @@ Never print secrets, show a file that holds one, or ask the user to paste one in
   it under `.firstdraft/design/`.
 
 ## Setup and specs
-- After Compile, set up the app, build its assets and run its specs as its README says, before the
-  first preview. In that first run, a spec that fails through behavior the README's
-  **Behavior to write** lists is work to do: write that behavior until its specs pass. A stubbed
-  scope or event raises `NotImplementedError`, a stubbed Policy rule returns `false`, and a
-  deletion outcome First Draft left out fails its spec with `RecordNotDestroyed`. Write every item
-  that section lists, including a denying rule no failing spec names. Any other failure in that
-  run is a First Draft defect: tell the user which spec failed and its error. Never edit or delete
-  a generated spec to make it pass.
+- After Compile, set up the app, build its assets and run its specs as its README says. The app's
+  `AGENTS.md` says how to treat the results and when to start the preview.
 - System specs need a Selenium browser that this Codespace does not start by itself. From the app's
   root, start it before every spec run (all specs, one spec file, or `bin/ci`) and stop it
   afterward, even when specs fail. Run these lines as one command, with your spec command in place
@@ -36,8 +30,7 @@ Never print secrets, show a file that holds one, or ask the user to paste one in
   ```
 
 ## Web app
-- Once the specs have run after Compile, start the web app in the background and keep it
-  running all session:
+- To start the preview, run the web app in the background and keep it running all session:
   `bin/dev </dev/null >log/bin-dev.log 2>&1`. Rails already admits this Codespace's forwarded
   address. Open `https://$CODESPACE_NAME-3000.$GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN` for the
   user with `bash ~/.workshop/open.sh <URL>`, and also give them that link. Keep port 3000
