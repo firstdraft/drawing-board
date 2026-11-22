@@ -17,6 +17,7 @@ SERVICES="github git-identity render render-workspace neon cloudinary revyl firs
 export PATH="$HOME/.local/bin:$HOME/.revyl/bin:$PATH"
 # Checks must never open a browser to start a sign-in.
 export BROWSER=/bin/false
+helpers=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd) || exit 1
 cd "$HOME" || exit 1
 
 
@@ -105,12 +106,32 @@ check_revyl() {
 }
 
 check_firstdraft() {
-    # The CLI has no status command; 'firstdraft login' saves a token per origin in this file. jq
-    # checks that a production token exists without printing it.
-    local credentials="${XDG_CONFIG_HOME:-$HOME/.config}/firstdraft/credentials.json"
-    jq -e '.origins["https://firstdraft.com"].access_token | type == "string" and length > 0' \
-        "$credentials" >/dev/null 2>&1 || { echo "not signed in"; return 1; }
-    echo "signed in"
+    # The plugin's 'firstdraft start' says whether this computer has a saved login and whether
+    # First Draft accepts it, in fixed sentences that never include the token.
+    local output errors status error reason
+    errors=$(mktemp)
+    output=$(bash "$helpers/firstdraft.sh" start 2>"$errors")
+    status=$?
+    if [ "$status" -eq 0 ]; then
+        rm -f "$errors"
+        echo "signed in"
+        return 0
+    fi
+    # Only authentication_required calls for a login: then the reason is First Draft refusing a
+    # login or a token, or else no saved login. Any other handled error, such as First Draft being
+    # unavailable or requiring an update, is the reason itself, with the CLI's detail that says
+    # what to do. A "First Draft: " update line can come before the error.
+    error=$(grep -v '^First Draft: ' "$errors" | jq -r '.error // empty' 2>/dev/null)
+    if [ "$error" = authentication_required ]; then
+        printf '%s\n' "$output" | grep -m 1 '^Not logged in: ' ||
+            printf '%s\n' "$output" | grep -m 1 '^This computer has no saved login' ||
+            echo "not signed in"
+    else
+        reason=$(grep -v '^First Draft: ' "$errors" | jq -r '[.error, .detail] | map(select(.)) | join(": ")' 2>/dev/null)
+        echo "firstdraft start failed: ${reason:-$(grep -m 1 -v -e '^[[:space:]]*$' -e '^First Draft: ' "$errors")}"
+    fi
+    rm -f "$errors"
+    return 1
 }
 
 

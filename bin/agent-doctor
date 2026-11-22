@@ -49,40 +49,22 @@ check_version() {
   fi
 }
 
-check_workspace_cli() {
-  local expected="$repository_root/bin/firstdraft"
-  local resolved
-  resolved="$(command -v firstdraft 2>/dev/null || true)"
-  if [[ "$resolved" == "$expected" ]]; then
-    printf '%-24s %s\n' "First Draft command" "$resolved"
+# Each agent installs the First Draft plugin from its catalog with the agent's own plugin commands.
+check_firstdraft_plugin() {
+  local label="$1" filter="$2"
+  shift 2
+  local version
+  if version="$("$@" 2>/dev/null | jq -er "$filter")"; then
+    printf '%-24s firstdraft@firstdraft-skills %s\n' "$label" "$version"
   else
-    printf '%-24s expected %s, found %s\n' \
-      "First Draft command" "$expected" "${resolved:-unavailable}"
-    status=1
-  fi
-}
-
-check_firstdraft_login() {
-  local login_state
-  if ! login_state="$(node -e '
-    const {hasSavedLogin} = require(process.argv[1]);
-    process.stdout.write(String(hasSavedLogin(process.argv[2])));
-  ' "$repository_root/bin/firstdraft" "$FIRSTDRAFT_CLI_DEFAULT_API_URL" 2>/dev/null)"; then
-    printf '%-24s unreadable; run /workshop-signin again\n' "First Draft login"
-    status=1
-    return
-  fi
-  if [[ "$login_state" == "true" ]]; then
-    printf '%-24s saved for %s (token not shown)\n' "First Draft login" "$FIRSTDRAFT_CLI_DEFAULT_API_URL"
-  else
-    printf '%-24s missing; run /workshop-signin, or: firstdraft login --device\n' "First Draft login"
+    printf '%-24s not installed and enabled; rerun .devcontainer/setup-agents\n' "$label"
     status=1
   fi
 }
 
 check_workshop_helpers() {
   local helper skill missing=""
-  for helper in auth.sh cloudinary.sh git-identity.sh login.sh neon-key.sh open.sh render-workspace.sh; do
+  for helper in auth.sh cloudinary.sh firstdraft.sh git-identity.sh login.sh neon-key.sh open.sh render-workspace.sh; do
     [[ -x "$HOME/.workshop/$helper" ]] || missing="$missing $helper"
   done
   for skill in "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/skills/workshop-signin/SKILL.md" \
@@ -97,25 +79,37 @@ check_workshop_helpers() {
   fi
 }
 
+# `firstdraft start` says whether this computer has a saved First Draft login and whether First
+# Draft accepts it, in fixed sentences that never include a token.
+check_firstdraft_login() {
+  local output errors
+  errors="$(mktemp)"
+  if output="$(bash "$HOME/.workshop/firstdraft.sh" start 2>"$errors")"; then
+    printf '%-24s ready\n' "First Draft login"
+    printf '%s\n' "$output" | sed 's/^/  /'
+  else
+    printf '%-24s not ready; firstdraft start says why:\n' "First Draft login"
+    status=1
+    # Its sentences, then its handled error, which names a failure the sentences do not.
+    printf '%s\n' "$output" | sed 's/^/  /'
+    sed 's/^/  /' "$errors"
+  fi
+  rm -f "$errors"
+}
 
 check_version "Claude Code" latest claude --version
 check_version "Codex" "$CODEX_VERSION" codex --version
-check_version "First Draft CLI" "$FIRSTDRAFT_CLI_VERSION" \
-  "$HOME/.local/bin/firstdraft" --version
+check_firstdraft_plugin "First Draft in Claude" \
+  'first(.[] | select(.id == "firstdraft@firstdraft-skills" and .enabled) | .folderVersion // .version)' \
+  claude plugin list --json
+check_firstdraft_plugin "First Draft in Codex" \
+  'first(.installed[] | select(.pluginId == "firstdraft@firstdraft-skills" and .installed and .enabled) | .version)' \
+  codex plugin list --json
+check_version "First Draft CLI" latest bash "$HOME/.workshop/firstdraft.sh" --version
 check_version "Render CLI" "v$RENDER_CLI_VERSION" render --version
 check_version "Neon CLI" "$NEONCTL_VERSION" neonctl --version
 check_version "Revyl CLI" "v$REVYL_CLI_VERSION" revyl --version
-check_workspace_cli
 check_workshop_helpers
-if ! node "$repository_root/.devcontainer/agent-skills.mjs" check \
-  --checkout "$HOME/.cache/firstdraft/skills/$FIRSTDRAFT_SKILLS_REVISION" \
-  --revision "$FIRSTDRAFT_SKILLS_REVISION" \
-  --claude-root "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/skills" \
-  --codex-root "$HOME/.agents/skills" \
-  --claude-authoring-name "$FIRSTDRAFT_CLAUDE_SKILL_NAME" \
-  --codex-authoring-name "$FIRSTDRAFT_CODEX_SKILL_NAME"; then
-  status=1
-fi
 
 if [[ "$installation_only" == "true" ]]; then
   if claude auth status --help >/dev/null 2>&1 &&

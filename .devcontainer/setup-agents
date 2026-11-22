@@ -35,18 +35,15 @@ if [[ -x /usr/sbin/sshd && -f /etc/environment ]]; then
   rm "$environment_snapshot"
 fi
 
-skills_cache_root="$HOME/.cache/firstdraft/skills"
-claude_skills_root="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/skills"
+claude_config="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+claude_skills_root="$claude_config/skills"
 codex_skills_root="$HOME/.agents/skills"
 mkdir -p \
   "$claude_skills_root" \
   "$codex_skills_root" \
-  "$skills_cache_root" \
   "$NPM_CONFIG_CACHE" \
   "$HOME/.local"
 
-npm install --global --prefix "$HOME/.local" \
-  "@firstdraft.com/cli@$FIRSTDRAFT_CLI_VERSION"
 npm install --global --prefix "$HOME/.local" "neonctl@$NEONCTL_VERSION"
 
 case "$(uname -m)" in
@@ -101,37 +98,34 @@ curl -fsSL https://claude.ai/install.sh | bash
 curl -fsSL https://chatgpt.com/codex/install.sh | \
   CODEX_NON_INTERACTIVE=1 sh -s -- --release "$CODEX_VERSION"
 
-skills_checkout="$skills_cache_root/$FIRSTDRAFT_SKILLS_REVISION"
-
-if [[ ! -d "$skills_checkout/.git" ]]; then
-  if [[ -e "$skills_checkout" ]]; then
-    echo "Incomplete First Draft Skill cache at $skills_checkout; preserve it for inspection." >&2
-    exit 1
-  fi
-
-  temporary_checkout="$(mktemp -d "$skills_cache_root/.checkout.XXXXXX")"
-  git -C "$temporary_checkout" init --quiet
-  git -C "$temporary_checkout" remote add origin https://github.com/firstdraft/skills.git
-  git -C "$temporary_checkout" fetch --quiet --depth=1 origin "$FIRSTDRAFT_SKILLS_REVISION"
-  git -C "$temporary_checkout" checkout --quiet --detach FETCH_HEAD
-  mv "$temporary_checkout" "$skills_checkout"
-fi
-
-node "$devcontainer_dir/agent-skills.mjs" link \
-  --checkout "$skills_checkout" \
-  --revision "$FIRSTDRAFT_SKILLS_REVISION" \
-  --claude-root "$claude_skills_root" \
-  --codex-root "$codex_skills_root" \
-  --claude-authoring-name "$FIRSTDRAFT_CLAUDE_SKILL_NAME" \
-  --codex-authoring-name "$FIRSTDRAFT_CODEX_SKILL_NAME"
-
+# Before any Codex plugin command: it seeds Codex's defaults only while config.toml is absent.
 node "$devcontainer_dir/configure-codex.mjs"
+
+# The First Draft plugin holds the Skill and the CLI it was tested with, and is the only First Draft
+# install. Each agent installs it from First Draft's catalog, whose version a new Codespace follows.
+# Maintainers can point FIRSTDRAFT_PLUGIN_CATALOG at a local catalog to try an unreleased plugin.
+firstdraft_catalog="${FIRSTDRAFT_PLUGIN_CATALOG:-firstdraft/skills}"
+claude plugin marketplace add "$firstdraft_catalog" --scope user
+claude plugin install firstdraft@firstdraft-skills --scope user
+# Claude Code updates a third-party catalog's plugins only when that catalog's settings entry turns
+# on autoUpdate; `marketplace add` has just written the entry.
+CLAUDE_SETTINGS="$claude_config/settings.json" node -e '
+  const fs = require("node:fs");
+  const file = process.env.CLAUDE_SETTINGS;
+  const settings = JSON.parse(fs.readFileSync(file, "utf8"));
+  const catalog = settings.extraKnownMarketplaces?.["firstdraft-skills"];
+  if (!catalog) throw new Error(`${file} does not declare the firstdraft-skills catalog.`);
+  catalog.autoUpdate = true;
+  fs.writeFileSync(file, JSON.stringify(settings, null, 2) + "\n");
+'
+codex plugin marketplace add "$firstdraft_catalog"
+codex plugin add firstdraft@firstdraft-skills
 
 # The laptop kit's sign-in helpers, sign-in Skill and app-session notes. Helpers and notes are
 # copied, not linked: root Compile moves this Drawing Board under .firstdraft/design/.
 workshop_source="$devcontainer_dir/workshop"
 install -d -m 0700 "$HOME/.workshop"
-for helper in auth.sh cloudinary.sh git-identity.sh login.sh neon-key.sh open.sh render-workspace.sh; do
+for helper in auth.sh cloudinary.sh firstdraft.sh git-identity.sh login.sh neon-key.sh open.sh render-workspace.sh; do
   install -m 0755 "$workshop_source/$helper" "$HOME/.workshop/$helper"
 done
 for skills_root in "$claude_skills_root" "$codex_skills_root"; do
@@ -141,12 +135,12 @@ for skills_root in "$claude_skills_root" "$codex_skills_root"; do
 done
 # Every Claude and Codex session loads these user-level files, before and after root Compile.
 node "$devcontainer_dir/workshop-notes.mjs" "$workshop_source/app-instructions.md" \
-  "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/CLAUDE.md" \
+  "$claude_config/CLAUDE.md" \
   "${CODEX_HOME:-$HOME/.codex}/AGENTS.md"
 
 claude --version
 codex --version
-firstdraft --version
+bash "$HOME/.workshop/firstdraft.sh" --version
 render --version
 neonctl --version
 revyl --version

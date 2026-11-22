@@ -108,12 +108,12 @@ Build your own idea. No idea yet? Step 6 has a family social network you can bui
    When Claude builds your app, it moves these materials into `.firstdraft/design`.
 6. Type `/clear` for a fresh conversation, then describe your idea in a sentence or two:
    ```text
-   /create-full-stack-app A place for my book club to pick the next book and vote on meeting dates. Read the materials in this folder first.
+   /firstdraft:create-full-stack-app A place for my book club to pick the next book and vote on meeting dates. Read the materials in this folder first.
    ```
    Leave out the last sentence if you didn't bring any materials, and paste a Claude Design handoff after your
    idea. No idea yet? Type this instead:
    ```text
-   /create-full-stack-app Help me build a social network for just my family. It should work and look like Instagram so that it's familiar.
+   /firstdraft:create-full-stack-app Help me build a social network for just my family. It should work and look like Instagram so that it's familiar.
    ```
 7. Claude first looks up how similar apps work, then asks a few questions, one at a time. Answer in your own words,
    or say "you pick". At any point you can say "make the rest of the decisions for me".
@@ -206,7 +206,7 @@ browser.
 
 Codex is also installed. In step 3, run `codex login --device-auth`: open the link it shows, sign in to ChatGPT,
 and enter the code from the terminal. Then run `codex`. Type `$workshop-signin` instead of `/workshop-signin`,
-`/new` instead of `/clear`, and `$firstdraft:create-full-stack-app` instead of `/create-full-stack-app`. Everything
-else is the same; to pick up later, run `codex resume`.
+`/new` instead of `/clear`, and `$firstdraft:create-full-stack-app` instead of `/firstdraft:create-full-stack-app`.
+Everything else is the same; to pick up later, run `codex resume`.
 
 Maintaining this template? Read the [maintainer guide](https://github.com/firstdraft/dockerfiles/blob/main/drawing-board/README.md).

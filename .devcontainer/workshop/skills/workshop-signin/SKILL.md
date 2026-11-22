@@ -31,9 +31,9 @@ before they see it. They are already signed in to you and to GitHub.
 ```
 bash ~/.workshop/auth.sh check all          # one [PASS]/[FAIL] line per service
 bash ~/.workshop/auth.sh check <service>
-bash ~/.workshop/login.sh start <service>   # render | neon | revyl | firstdraft-device | firstdraft
-bash ~/.workshop/login.sh stop <service>
-bash ~/.workshop/login.sh status <service>  # still waiting, ended, or timed out?
+bash ~/.workshop/login.sh start <service>   # render | neon | revyl | firstdraft
+bash ~/.workshop/login.sh stop <service>    # not for firstdraft
+bash ~/.workshop/login.sh status <service>  # still waiting, ended, or timed out? (not for firstdraft)
 bash ~/.workshop/login.sh wait <service>    # after the approval: let it save, then check
 bash ~/.workshop/render-workspace.sh        # after the Render sign-in (step 3)
 bash ~/.workshop/cloudinary.sh open|save    # Cloudinary key (step 3)
@@ -41,8 +41,8 @@ bash ~/.workshop/neon-key.sh open|save      # Neon API key, only if Neon's brows
 bash ~/.workshop/open.sh <link>             # open any page in the attendee's browser
 ```
 
-`login.sh start` starts the sign-in in the background and returns within about 30 seconds. It
-prints one of:
+`login.sh start` starts the sign-in in the background and returns within about 30 seconds
+(First Draft's works differently; see step 4). It prints one of:
 
 - `URL:` (and sometimes `CODE:`), then `OPENED`, then `WAITING`. The sign-in page opened in a new
   tab of their browser. VS Code may first ask whether to open the external website: they choose
@@ -191,16 +191,36 @@ instructor. Before you start the sign-in, tell them what they will see:
    the username and password and type them themselves. **Never** ask for, type, or repeat them. If
    the box refuses them, get the instructor.
 2. GitHub may ask them to sign in to First Draft: they approve.
-3. First Draft asking them to approve the sign-in for this Codespace: they approve, then tell
-   you.
+3. First Draft asking them to approve the sign-in for this Codespace: they check that the page
+   shows the code you showed them, approve, then tell you. First Draft may also ask whether
+   their coding agent may send it reports about the code it generates: that is their choice,
+   and they can change it later on their account page.
 
-Then run `login.sh start firstdraft-device` and check, as above. The link includes the code, so
-they only approve; if the page asks for the code, it is the `CODE:`.
+If its check names a token variable First Draft did not accept, do not start a login; see the
+last item below. If it says `firstdraft start failed:`, First Draft did not answer the check:
+do not start a login either. For `account_unavailable` or `rate_limited`, wait as long as it
+says (a minute when it names no time) and run the check again; for anything else, such as
+`update_required`, show them what it says. Otherwise run
+`login.sh start firstdraft`. It runs the First Draft plugin's own CLI and returns at once:
+nothing waits in the background. It prints `URL:` and `CODE:`, then `OPENED` or `NOT OPENED`,
+then when the link and the code expire, or `NO LINK` as above. Show them as above; the link
+usually includes the code, so they only approve, and if the page asks for the code, it is the
+`CODE:`. When they say they approved, run `login.sh wait firstdraft`.
+It finishes the login and prints First Draft's answer, then the check. An answer that starts
+`NOT FINISHED:` is the CLI's error and says what to do: always show it to them and follow it,
+for example running `login.sh wait firstdraft` again when it says to retry. Otherwise a `[PASS]`
+check means First Draft is done, whatever the answer above it. With `[FAIL]`:
 
-If `login.sh wait firstdraft-device` still fails after they approved, follow the retry steps above
-and start it once more. Do not use `login.sh start firstdraft` in a browser tab: its approval returns to
-`127.0.0.1`, which only VS Code on their computer can reach. If it fails twice, get the
-instructor.
+- `Still waiting:`: First Draft has not seen the approval yet. Ask whether they finished
+  approving, then run `login.sh wait firstdraft` again.
+- `Expired:` or `No login is waiting:`, or a `NOT FINISHED:` error that does not say to retry:
+  run `login.sh start firstdraft` again and give them only the new link.
+- `Refused:`: they denied it. Ask them before you start another.
+- A check that names a token variable First Draft did not accept: show them what it says. A
+  token set in this Codespace, for example from their Codespaces secrets, takes the place of
+  any login, so signing in again does not help until they replace or remove it.
+
+If it fails twice, get the instructor. `stop` and `status` do not apply to First Draft.
 
 ## Finishing
 
