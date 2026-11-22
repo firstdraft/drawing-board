@@ -7,11 +7,11 @@
 # The Codespaces copy of the laptop kit's login.sh; GitHub is already signed in inside a Codespace.
 # Installed to ~/.workshop/login.sh by .devcontainer/setup-agents; used by the sign-in skill.
 #
-#   bash login.sh start <service>    render | neon | revyl | firstdraft-device | firstdraft
-#   bash login.sh stop <service>     cancel a sign-in that is still waiting
-#   bash login.sh status <service>   is it still waiting, or did it finish / time out?
+#   bash login.sh start <service>    render | neon | revyl | firstdraft
+#   bash login.sh stop <service>     cancel a sign-in that is still waiting (not firstdraft)
+#   bash login.sh status <service>   is it still waiting, or did it finish / time out? (not firstdraft)
 #   bash login.sh wait <service>     after the approval: give the sign-in up to 30 seconds to
-#                                    save, then run its auth.sh check
+#                                    save (firstdraft: finish it), then run its auth.sh check
 #
 # Starting again cancels the previous attempt for that service, because its link no longer works
 # once a new one is created. Set WORKSHOP_NO_OPEN=1 to skip opening the browser (for tests).
@@ -30,6 +30,54 @@ mkdir -p "$LOG_DIR"
 action=${1:-}
 service=${2:-}
 expires_after=""          # set for CLIs whose sign-in gives up quickly
+helpers="$(dirname "${BASH_SOURCE[0]}")"
+
+# First Draft's device login is two short commands of the plugin's CLI, so nothing waits in the
+# background: start gets a link and a code, and wait finishes the login once it is approved. Each
+# prints only the link, the code and First Draft's answer, because the CLI's own next steps name
+# CLI commands that the sign-in skill replaces with these.
+if [ "$service" = firstdraft ]; then
+    case "$action" in
+        start)
+            output=$(bash "$helpers/firstdraft.sh" login --no-wait 2>&1)
+            status=$?
+            # The link is the line that holds only a URL, and usually includes the code, which First
+            # Draft prints as ABCD-EFGH. The first line names the origin, which is not the link.
+            url=$(printf '%s\n' "$output" | grep -m 1 -xE 'https?://[^ ]+')
+            if [ "$status" -ne 0 ] || [ -z "$url" ]; then
+                echo "NO LINK: First Draft's login did not start. Its output:"
+                printf '%s\n' "$output" | tail -n 20
+                exit 1
+            fi
+            code=$(printf '%s\n' "$output" | grep -m 1 -oE '\b[A-Z0-9]{4}(-[A-Z0-9]{4})+\b')
+            echo "URL: $url"
+            [ -n "$code" ] && echo "CODE: $code"
+            if [ "${WORKSHOP_NO_OPEN:-}" != 1 ]; then
+                bash "$helpers/open.sh" "$url"
+            fi
+            printf '%s\n' "$output" | grep -m 1 '^The link and the code expire'
+            echo "After the attendee approves it, run: bash ~/.workshop/login.sh wait firstdraft"
+            exit 0 ;;
+        wait)
+            errors=$(mktemp)
+            output=$(bash "$helpers/firstdraft.sh" login --finish 2>"$errors")
+            # First Draft's answer is the CLI's first sentence. When the CLI prints none, its handled
+            # error, such as a login it could not save, says what happened and what to do instead;
+            # a "First Draft: " update line can come before it.
+            if [ -n "$output" ]; then
+                printf '%s\n' "$output" | head -n 1
+            else
+                echo "NOT FINISHED: $(grep -v '^First Draft: ' "$errors" |
+                    jq -r '[.error, .detail] | map(select(.)) | join(": ")' 2>/dev/null ||
+                    grep -m 1 -v -e '^[[:space:]]*$' -e '^First Draft: ' "$errors")"
+            fi
+            rm -f "$errors"
+            exec bash "$helpers/auth.sh" check firstdraft ;;
+        *)
+            echo "usage: login.sh start|wait firstdraft"
+            exit 2 ;;
+    esac
+fi
 
 case "$service" in
     render) command=(render login) ;;
@@ -39,21 +87,14 @@ case "$service" in
         # cannot reach it; VS Code Desktop forwards the port. The skill falls back to an API key.
         command=(neonctl auth); expires_after=60 ;;
     revyl)  command=(revyl auth login) ;;
-    # Approve with a code (the skill's first choice): nothing has to reach the Codespace from the
-    # browser.
-    firstdraft-device) command=(env -u FIRSTDRAFT_API_TOKEN FIRSTDRAFT_API_URL=https://firstdraft.com firstdraft login --device) ;;
-    # The browser sends the approval back to 127.0.0.1 inside the Codespace, which only VS Code
-    # Desktop forwards, so the skill tries this second.
-    firstdraft) command=(env -u FIRSTDRAFT_API_TOKEN FIRSTDRAFT_API_URL=https://firstdraft.com firstdraft login) ;;
     *)
-        echo "usage: login.sh start|stop|status|wait render|neon|revyl|firstdraft-device|firstdraft"
+        echo "usage: login.sh start|stop|status|wait render|neon|revyl, or login.sh start|wait firstdraft"
         exit 2 ;;
 esac
 
 log="$LOG_DIR/$service.log"
 pid_file="$LOG_DIR/$service.pid"
-# The auth.sh check for this service: firstdraft-device -> firstdraft.
-check_service=${service%-device}
+check_service=$service
 
 # Is the sign-in still running? The Codespace's PID 1 (`sleep infinity`) does not reap exited
 # processes, so a finished sign-in stays a zombie that kill -0 still reports as alive.
@@ -109,8 +150,7 @@ pid=$!
 echo "$pid" > "$pid_file"
 
 # The sign-in link in the output:
-#   - a link that already includes the code, if there is one (First Draft's device sign-in prints
-#     the link both without and with the code);
+#   - a link that already includes the code, if there is one (Revyl's does);
 #   - otherwise the longest link: sign-in links carry long parameters, while other links in the
 #     text are short (Revyl's banner links to its docs, which are skipped anyway).
 find_link() {
@@ -141,7 +181,7 @@ if ! running "$pid"; then
 fi
 
 url=$(find_link)
-# One-time codes: First Draft prints ABCD-EFGH, Render prints ABCD-EFGH-IJKL-MNOP.
+# One-time codes: Render prints ABCD-EFGH-IJKL-MNOP.
 code=$(printf '%s\n' "$clean" | grep -oE '\b[A-Z0-9]{4}(-[A-Z0-9]{4})+\b' | head -n 1)
 if [ -n "$url" ]; then
     echo "URL: $url"
