@@ -17,6 +17,13 @@ Plan on:
 You need a personal GitHub account and a Claude account that includes Claude Code. To use Codex instead, see
 [Using Codex](#using-codex).
 
+**Built an app with First Draft before?** Start a new one: follow these steps from Part 1 in a new Codespace, which
+installs the current First Draft. Keep an earlier app only if it has real work in it, is deployed, or has users. For
+that app, give Claude the prompt under
+[Reviewing updates](https://github.com/firstdraft/skills/blob/main/CHANGELOG.md#reviewing-updates) in First Draft's
+public changelog, in the app's folder: its Codespace if it still exists, or otherwise a copy of the app's GitHub
+repository.
+
 ## Part 1: Set up your Codespace
 
 1. Sign in to GitHub, open [firstdraft/drawing-board](https://github.com/firstdraft/drawing-board), and choose
@@ -63,8 +70,6 @@ You need a personal GitHub account and a Claude account that includes Claude Cod
 
 ## Part 2: Sign in to your accounts
 
-When you first try to sign in to First Draft, you'll hit a username/password wall. Ask your instructor for that.
-
 Every service in this part has a free plan, and the free plan is all you need for the workshop. Some sites make
 it hard to find, or push a paid trial first: don't be fooled. Look for **Free**, **Hobby**, or a way to skip the
 upgrade.
@@ -87,10 +92,15 @@ upgrade.
 
      ![Cloudinary's API Keys page. Copy 1, the cloud name; 2, the API Key; 3, the API Secret, after clicking the eye to show it.](images/cloudinary-api-keys.png)
    - **Revyl** shows your iPhone and Android app on a phone in your browser.
-   - **First Draft** plans and builds your app. This is where the username and password wall appears: ask your
-     instructor.
+   - **First Draft** plans and builds your app. You sign in with your GitHub account. The first time, First Draft
+     asks you to agree to its [terms of service](https://firstdraft.com/terms) and
+     [privacy notice](https://firstdraft.com/privacy). Then it shows the code Claude showed you and asks you to
+     approve the sign-in for this Codespace. Until you have answered it once, the same page also asks one question
+     about what Claude may send to First Draft. Either answer works. You can change that answer, or delete your
+     account, at [firstdraft.com/account](https://firstdraft.com/account).
 
-   When Claude says you're all signed in, go on to Part 3.
+   When Claude says you're all signed in, go on to Part 3. If Claude says some are still missing, you can go on
+   once First Draft is signed in, and type `/workshop-signin` again later for the rest.
 
 ## Part 3: Build your app
 
@@ -171,8 +181,9 @@ Build your own idea. No idea yet? Step 6 has a family social network you can bui
 Each Codespace holds one app and saves it to one GitHub repository, so another idea gets a new Codespace.
 
 14. Repeat Part 1 to open a new Codespace from [firstdraft/drawing-board](https://github.com/firstdraft/drawing-board).
-15. Type `/workshop-signin` again. Your accounts already exist, so each sign-in only needs your approval. Paste your
-    Cloudinary values (and Neon key, if you made one) again: each Codespace keeps its own copy.
+15. Type `/workshop-signin` again. An account you already made only needs your approval; for one you skipped,
+    Claude helps you sign up as in Part 2. Paste your Cloudinary values (and Neon key, if you made one) again: each
+    Codespace keeps its own copy.
 16. Repeat steps 5 to 13 in the new Codespace.
 
 ## If something goes wrong
@@ -184,7 +195,13 @@ Each Codespace holds one app and saves it to one GitHub repository, so another i
   what you asked for.
 - **The Codespace stopped or you closed its tab:** open [your codespaces](https://github.com/codespaces) and choose
   the same one, not a new one. In its terminal, type `claude --continue` to pick up where you left off.
-- **The same step fails twice:** raise your hand, and leave the error on screen for the instructor.
+- **First Draft says you reached a daily limit:** each account can compile 50 times and start 20 new projects in
+  any 24 hours. Try again at the time it gives.
+- **First Draft says an update is available, or that it is out of date:** follow the steps on
+  [Update First Draft](https://firstdraft.com/update). This Codespace installed First Draft as a plugin in Claude
+  Code and in Codex, and turned on automatic updates for it in Claude Code only.
+- **The same step fails twice:** ask Claude to explain the error and what you can do about it. If it was a sign-in,
+  you can try it again later: `/workshop-signin` redoes only what is missing.
 
 ## After the workshop
 

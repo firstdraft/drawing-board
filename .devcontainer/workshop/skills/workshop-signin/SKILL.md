@@ -23,8 +23,10 @@ before they see it. They are already signed in to you and to GitHub.
   already signs GitHub in.
 - Use the helper scripts below rather than running sign-in commands yourself: a sign-in command
   run directly waits for the browser, and you would never see its link.
-- If the same step fails twice, stop and tell the attendee to raise their hand for the
-  instructor. Show them the error.
+- If the same step fails twice, stop that step. Show them the error, explain it in a sentence,
+  and go on to the next sign-in. Tell them they can run `/workshop-signin` (in Codex,
+  `$workshop-signin`) again later: it redoes only what is missing. They may be working on their
+  own, so never tell them to ask someone for help.
 
 ## Helpers
 
@@ -74,7 +76,7 @@ do only the [FAIL] ones, in this order.
 ### 1. GitHub (`github`)
 
 The Codespace is already signed in to GitHub with the account that created it. If this check
-fails, get the instructor; do not start a GitHub sign-in.
+fails, do not start a GitHub sign-in: treat it as a step that failed twice (see Rules).
 
 ### 2. Git name and email (`git-identity`)
 
@@ -102,10 +104,10 @@ is the quickest).
    ID. Any one will do: it only makes the Render CLI work. Before each app's first deploy, the
    deploy step has them create that app's own workspace and sets it, so they need not choose one
    for their apps now.
-2. **Render on GitHub** (no check). Render needs permission to read the code they will put on
-   GitHub later. Run `bash ~/.workshop/open.sh https://github.com/apps/render/installations/new`.
-   On that GitHub page they choose their own account, choose **All repositories** (their app's
-   repository does not exist yet), and click **Install**. If GitHub sends them on to Render and
+2. **Render on GitHub** (no check). Render needs permission to read the code they put on GitHub.
+   Run `bash ~/.workshop/open.sh https://github.com/apps/render/installations/new`. On that
+   GitHub page they choose their own account, choose **All repositories** (their app's
+   repository may not exist yet), and click **Install**. If GitHub sends them on to Render and
    asks them to sign in or confirm, they do. Ask them to tell you when they are done. If GitHub
    shows Render is already installed, there is nothing to do. Since nothing can check this step,
    do it whenever you did the Render sign-in; otherwise ask whether they already installed Render
@@ -135,9 +137,9 @@ is not enough time to create an account. So before `login.sh start neon`:
    3. Run `bash ~/.workshop/neon-key.sh save` and follow what it prints. `save` runs
       `auth.sh check neon` itself, so `SAVED:` means Neon is done. On `NEXT:` or `INVALID:`,
       pass on what it says and run `save` again after they fix the file. A key that is the wrong
-      kind (an organization or project key) or that Neon rejects is not a reason to get the
-      instructor: they create a new personal key as in step 1 and paste it into the same form in
-      place of the old one. Get the instructor only if a second personal key also fails.
+      kind (an organization or project key) or that Neon rejects does not count as a failed
+      step: they create a new personal key as in step 1 and paste it into the same form in place
+      of the old one. If that second personal key also fails, stop Neon as the Rules say.
 
 **Cloudinary has no sign-in command.** Their app needs Cloudinary's key, which they copy from
 Cloudinary's website into a private file in the editor, in three pieces. Never ask them to paste
@@ -171,8 +173,9 @@ Revyl with the same account. So before `login.sh start revyl`:
    phone preview opens later.
 3. Only then run `login.sh start revyl`; they approve in that same browser.
 
-If Revyl's sign-up page shows an error or a security check, have them raise their hand: the
-instructor may move them to a phone hotspot.
+If Revyl's sign-up page shows an error or a security check, the network may be blocking it:
+suggest they try again on another network, such as their phone's hotspot. If they cannot, or it
+still fails, stop Revyl as the Rules say.
 
 Once the check passes, tell them in a few sentences how the phone preview works later: the link
 opens a phone in this browser; one phone runs at a time, and they ask you to stop it when they
@@ -182,19 +185,18 @@ under Sessions). The free plan is enough, so they ignore any offer to upgrade.
 
 ### 4. First Draft (`firstdraft`)
 
-First Draft is what they will use to plan and build their app in this workshop. It is in
-pre-alpha, so its pages are behind a username and password that the attendee gets from their
-instructor. Before you start the sign-in, tell them what they will see:
+First Draft is what they will use to plan and build their app. They sign in with their GitHub
+account. Before you start the sign-in, tell them what they will see:
 
-1. Their browser asks for a username and password: this is the **First Draft pre-alpha** sign-in
-   (the box itself usually just says "Sign in" and firstdraft.com). They ask their instructor for
-   the username and password and type them themselves. **Never** ask for, type, or repeat them. If
-   the box refuses them, get the instructor.
-2. GitHub may ask them to sign in to First Draft: they approve.
-3. First Draft asking them to approve the sign-in for this Codespace: they check that the page
-   shows the code you showed them, approve, then tell you. First Draft may also ask whether
-   their coding agent may send it reports about the code it generates: that is their choice,
-   and they can change it later on their account page.
+1. If First Draft's page asks them to sign in, they choose **Sign in with GitHub**. GitHub may
+   ask them to authorize First Draft: they approve.
+2. The first time, First Draft asks them to agree to its terms of service and privacy notice.
+   They read them and decide themselves; never agree for them.
+3. First Draft shows the code: they check that it is the code you showed them and choose
+   **Continue**. The next page asks them to approve the sign-in for this Codespace. Until they
+   have answered it once, the same page also asks one question about what their coding agent
+   may send to First Draft. Either answer works, and they can change it later at
+   https://firstdraft.com/account. They approve, then tell you.
 
 If its check names a token variable First Draft did not accept, do not start a login; see the
 last item below. If it says `firstdraft start failed:`, First Draft did not answer the check:
@@ -204,8 +206,8 @@ says (a minute when it names no time) and run the check again; for anything else
 `login.sh start firstdraft`. It runs the First Draft plugin's own CLI and returns at once:
 nothing waits in the background. It prints `URL:` and `CODE:`, then `OPENED` or `NOT OPENED`,
 then when the link and the code expire, or `NO LINK` as above. Show them as above; the link
-usually includes the code, so they only approve, and if the page asks for the code, it is the
-`CODE:`. When they say they approved, run `login.sh wait firstdraft`.
+usually includes the code, so the page already shows it, and if the page asks for the code, it
+is the `CODE:`. When they say they approved, run `login.sh wait firstdraft`.
 It finishes the login and prints First Draft's answer, then the check. An answer that starts
 `NOT FINISHED:` is the CLI's error and says what to do: always show it to them and follow it,
 for example running `login.sh wait firstdraft` again when it says to retry. Otherwise a `[PASS]`
@@ -220,11 +222,19 @@ check means First Draft is done, whatever the answer above it. With `[FAIL]`:
   token set in this Codespace, for example from their Codespaces secrets, takes the place of
   any login, so signing in again does not help until they replace or remove it.
 
-If it fails twice, get the instructor. `stop` and `status` do not apply to First Draft.
+If it fails twice, stop as the Rules say. `stop` and `status` do not apply to First Draft.
 
 ## Finishing
 
-Run `bash ~/.workshop/auth.sh check all`. When every line shows [PASS], tell the attendee:
+Run `bash ~/.workshop/auth.sh check all`. When every line shows [PASS] and you did not stop
+**Render on GitHub**, tell the attendee:
 
 > You're all signed in! To start building, type `/clear` for a fresh conversation (in Codex,
 > `/new`). Then follow **Part 3** of the workshop instructions.
+
+When some lines still show [FAIL], or you stopped **Render on GitHub** (it has no check), tell
+them which sign-ins passed and which are missing, with what each missing one is for; Render on
+GitHub is needed before the first deploy. If First Draft passed, they can start Part 3 now, as
+above. If First Draft is missing, they need it before Part 3. Either way, they can run
+`/workshop-signin` (in Codex, `$workshop-signin`) again later: it redoes only what is missing,
+and it comes back to Render on GitHub as well.
